@@ -1,0 +1,7 @@
+{
+  "name": "HocalaraGeldik Eğitim Platformu",
+  "description": "Türkiye genelinde faaliyet gösteren eğitim kurumlarını tek bir çatı altında toplayan, merkez ve şube yapısına sahip kurumsal eğitim yönetim platformu.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

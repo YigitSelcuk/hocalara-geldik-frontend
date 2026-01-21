@@ -1,0 +1,82 @@
+import React from 'react';
+import { Plus, Settings2, Trash } from 'lucide-react';
+import { AdminUser, UserRole, Branch } from '../../types';
+
+interface UserManagerProps {
+    adminUsers: AdminUser[];
+    branches: Branch[];
+    handleAdd: (type: 'user') => void;
+    handleEdit: (type: 'user', item: AdminUser) => void;
+    handleDelete: (type: 'user', id: string) => void;
+}
+
+export const UserManager: React.FC<UserManagerProps> = ({
+    adminUsers,
+    branches,
+    handleAdd,
+    handleEdit,
+    handleDelete
+}) => (
+    <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm">
+            <div>
+                <h1 className="text-3xl font-black text-brand-dark capitalize tracking-tight leading-none">Kullanıcı <span className="text-brand-blue italic">Yönetimi</span></h1>
+                <p className="text-slate-500 font-bold text-[13px] mt-2 tracking-wide">Sistem yöneticilerini ve şube yetkililerini yönetin.</p>
+            </div>
+            <button
+                onClick={() => handleAdd('user')}
+                className="px-8 py-4 bg-brand-blue text-white font-black rounded-2xl hover:bg-brand-dark shadow-xl shadow-brand-blue/20 transition-all flex items-center space-x-2"
+            >
+                <Plus className="w-5 h-5" />
+                <span>Yeni Yetkili Ekle</span>
+            </button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
+            {adminUsers.map((admin) => (
+                <div key={admin.id} className="bg-white p-6 rounded-[24px] border border-slate-100 flex items-center justify-between hover:shadow-lg transition-all">
+                    <div className="flex items-center space-x-5">
+                        <img src={admin.avatar} className="w-14 h-14 rounded-2xl object-cover shadow-sm" alt="" />
+                        <div>
+                            <h3 className="font-black text-brand-dark capitalize tracking-tight">{admin.name}</h3>
+                            <p className="text-xs text-slate-400 font-bold">{admin.email}</p>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center space-x-12">
+                        <div className="text-center">
+                            <p className="text-[10px] font-black text-slate-400 capitalize tracking-widest mb-1">Rol</p>
+                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black capitalize tracking-widest ${admin.role === UserRole.SUPER_ADMIN ? 'bg-red-50 text-red-600' :
+                                admin.role === UserRole.BRANCH_ADMIN ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'
+                                }`}>
+                                {admin.role.replace('_', ' ')}
+                            </span>
+                        </div>
+
+                        {admin.assignedBranchId && (
+                            <div className="text-center min-w-[120px]">
+                                <p className="text-[10px] font-black text-slate-400 capitalize tracking-widest mb-1">Atanan Şube</p>
+                                <p className="text-xs font-black text-brand-dark capitalize">{branches.find(b => b.id === admin.assignedBranchId)?.name.split(' ')[1] || 'Bilinmiyor'}</p>
+                            </div>
+                        )}
+
+                        <div className="flex space-x-2">
+                            <button
+                                onClick={() => handleEdit('user', admin)}
+                                className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-brand-blue hover:text-white transition-all"
+                            >
+                                <Settings2 className="w-4 h-4" />
+                            </button>
+                            <button
+                                onClick={() => handleDelete('user', admin.id)}
+                                className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-red-500 hover:text-white transition-all"
+                            >
+                                <Trash className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </div>
+);

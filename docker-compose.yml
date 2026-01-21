@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: hocalara-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hocalara_admin
+      POSTGRES_PASSWORD: hocalara_secure_2024
+      POSTGRES_DB: hocalara_cms
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hocalara-network
+
+  # Frontend React/Vite Application
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hocalara-frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_URL: http://backend:4000
+      VITE_SITE_NAME: Hocalara Geldik
+      VITE_SITE_URL: http://localhost:3003
+    ports:
+      - "3003:3003"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/backend
+    depends_on:
+      - backend
+    networks:
+      - hocalara-network
+    command: npm run dev -- --host 0.0.0.0
+
+  # Backend API Server
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: hocalara-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: development
+      DATABASE_URL: postgresql://hocalara_admin:hocalara_secure_2024@postgres:5432/hocalara_cms
+      JWT_SECRET: your-super-secret-jwt-key-change-in-production
+      JWT_REFRESH_SECRET: your-super-secret-refresh-key-change-in-production
+      PORT: 4000
+      CORS_ORIGIN: http://localhost:3003
+      REDIS_URL: redis://redis:6379
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+      - ./uploads:/app/uploads
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - hocalara-network
+    command: npm run dev
+
+  # Redis (for caching and sessions)
+  redis:
+    image: redis:7-alpine
+    container_name: hocalara-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - hocalara-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+
+networks:
+  hocalara-network:
+    driver: bridge
