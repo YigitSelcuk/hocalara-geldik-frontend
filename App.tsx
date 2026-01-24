@@ -76,6 +76,7 @@ const BranchWrapper: React.FC = () => {
 
 // Protected Admin Route Component
 const ProtectedAdminRoute = ({ user, setUser }: { user: AdminUser | null; setUser: (user: AdminUser | null) => void }) => {
+  const [loading, setLoading] = React.useState(true);
   const token = localStorage.getItem('adminToken');
 
   React.useEffect(() => {
@@ -96,10 +97,23 @@ const ProtectedAdminRoute = ({ user, setUser }: { user: AdminUser | null; setUse
         console.error('Error parsing user data:', error);
       }
     }
+    setLoading(false);
   }, [setUser]);
 
   if (!token) {
     return <Navigate to="/admin/login" replace />;
+  }
+
+  // Show loading while user data is being loaded
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-blue mx-auto mb-4"></div>
+          <p className="text-slate-600 font-bold">Yükleniyor...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

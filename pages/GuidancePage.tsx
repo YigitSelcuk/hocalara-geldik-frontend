@@ -1,8 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Users, Heart, Brain, Target, CheckCircle2, MessageCircle, TrendingUp, Award, BookOpen, Sparkles, Phone, Mail } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 const GuidancePage: React.FC = () => {
+    // SEO Hook
+    useSEO('guidance');
+    
     return (
         <div className="min-h-screen bg-white">
             {/* Hero Section */}

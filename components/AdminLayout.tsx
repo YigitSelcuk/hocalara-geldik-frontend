@@ -5,7 +5,7 @@ import {
     LayoutDashboard, ImageIcon, FileText, Building2,
     Video, Package, Users, Settings, LogOut,
     ChevronRight, Search, Map, List, HardDrive,
-    MessageSquare, Menu, Layers, Trophy, Bell, X, Newspaper
+    MessageSquare, Menu, Layers, Trophy, Bell, X, Newspaper, Award, UserPlus
 } from 'lucide-react';
 import { AdminUser, UserRole } from '../types';
 import axios from 'axios';
@@ -109,25 +109,23 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
         { label: 'Şubem', icon: Building2, path: `/admin/branch/${user?.branchId || ''}`, roles: [UserRole.BRANCH_ADMIN], condition: !!user?.branchId },
         { label: 'Paketler', icon: Package, path: '/admin/branch-packages', roles: [UserRole.BRANCH_ADMIN] },
         { label: 'Haberler', icon: Newspaper, path: '/admin/branch-news', roles: [UserRole.BRANCH_ADMIN] },
+        { label: 'Başarılar', icon: Award, path: '/admin/branch-successes', roles: [UserRole.BRANCH_ADMIN] },
+        { label: 'Ön Kayıtlar', icon: UserPlus, path: '/admin/branch-leads', roles: [UserRole.BRANCH_ADMIN] },
     ];
 
     // Genel admin menüsü
     const generalMenuItems = [
         { label: 'Dashboard', icon: LayoutDashboard, path: '/admin', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
         { label: 'Onaylar', icon: Bell, path: '/admin/approvals', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN], badge: pendingRequests.length },
-        { label: 'Anasayfa İçerik', icon: LayoutDashboard, path: '/admin/home-content', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
         { label: 'Sayfa İçerikleri', icon: Layers, path: '/admin/content-sections', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
-        { label: 'Menü Yönetimi', icon: Menu, path: '/admin/menus', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
-        { label: 'Sayfalar', icon: FileText, path: '/admin/pages', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
-        { label: 'Kategoriler', icon: List, path: '/admin/categories', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
         { label: 'Slider Yönetimi', icon: ImageIcon, path: '/admin/sliders', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
         { label: 'Haberler', icon: FileText, path: '/admin/news', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
         { label: 'Şubeler', icon: Building2, path: '/admin/branches', roles: [UserRole.SUPER_ADMIN] },
         { label: 'Videolar', icon: Video, path: '/admin/videos', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
         { label: 'Paketler', icon: Package, path: '/admin/packages', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
         { label: 'Başarılar', icon: Trophy, path: '/admin/successes', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
-        { label: 'Medya Kütüphanesi', icon: HardDrive, path: '/admin/media', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
-        { label: 'Başvurular', icon: MessageSquare, path: '/admin/leads', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
+        { label: 'Ön Kayıtlar', icon: UserPlus, path: '/admin/leads', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
+        { label: 'Franchise Başvuruları', icon: Building2, path: '/admin/franchise', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
         { label: 'Kullanıcılar', icon: Users, path: '/admin/users', roles: [UserRole.SUPER_ADMIN] },
         { label: 'Ayarlar', icon: Settings, path: '/admin/settings', roles: [UserRole.SUPER_ADMIN] },
     ];

@@ -12,12 +12,15 @@ import {
 } from '../../services/homepage.service';
 import { SliderItem, BannerCard, Statistic, Feature, YouTubeChannel, HomeSection, EducationPackage } from '../../types';
 import { API_BASE_URL } from '../../services/api';
+import { useAlert } from '../../hooks/useAlert';
+import Alert from '../Alert';
 
 type TabType = 'sliders' | 'bannerCards' | 'statistics' | 'features' | 'youtube' | 'digital' | 'global' | 'blog' | 'calculator' | 'tools' | 'packages' | 'cta' | 'header' | 'footer';
 
 export const HomePageManager = () => {
   const [activeTab, setActiveTab] = useState<TabType>('sliders');
   const [loading, setLoading] = useState(true);
+  const { alert, showAlert } = useAlert();
   
   // Data states
   const [sliders, setSliders] = useState<SliderItem[]>([]);
@@ -760,11 +763,12 @@ export const HomePageManager = () => {
           await fetchAllData();
           
           console.log('✅ BAŞARILI - Modal kapatılıyor');
+          showAlert('success', 'Başarıyla kaydedildi!');
           setShowModal(false);
           return;
         } catch (error) {
           console.error('❌ HATA:', error);
-          alert('Kaydetme hatası: ' + (error as any).message);
+          showAlert('error', 'Kaydetme hatası: ' + (error as any).message);
           return;
         }
       }
@@ -4142,6 +4146,15 @@ export const HomePageManager = () => {
 
   return (
     <div className="space-y-6">
+      {/* Alert */}
+      {alert.show && (
+        <Alert
+          type={alert.type}
+          message={alert.message}
+          onClose={() => {}}
+        />
+      )}
+      
       {/* Tabs */}
       <div className="flex flex-wrap gap-2">
         {tabs.map(tab => (

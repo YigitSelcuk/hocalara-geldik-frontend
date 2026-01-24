@@ -4,6 +4,9 @@ import { Branch, SliderItem, NewsItem } from '../types';
 import { MapPin, MessageCircle, Calendar, Users, Phone, GraduationCap, Zap, Cpu, ChevronRight, FileText, TrendingUp, Mail } from 'lucide-react';
 import { sliderService, pageService } from '../services/cms.service';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
+import Alert from '../components/Alert';
+import { useAlert } from '../hooks/useAlert';
 
 interface BranchHomeProps {
   branch: Branch;
@@ -13,15 +16,24 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
   const [activeSlide, setActiveSlide] = useState(0);
   const [news, setNews] = useState<NewsItem[]>([]);
   const [sliders, setSliders] = useState<SliderItem[]>([]);
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
+  const [formData, setFormData] = useState({
+    name: '',
+    surname: '',
+    phone: '',
+    email: ''
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const { alert, showAlert, hideAlert } = useAlert();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [newsRes, slidersRes] = await Promise.all([
-          pageService.getAll({ type: 'NEWS', branchId: branch.id, status: 'PUBLISHED', isApproved: true }),
+          axios.get(`/api/blog-posts?branchId=${branch.id}&isActive=true`),
           sliderService.getAll({ target: branch.id, isActive: true })
         ]);
-        setNews(newsRes.data.pages);
+        setNews(newsRes.data.data || []);
         setSliders(slidersRes.data.sliders);
       } catch (error) {
         console.error('Error fetching branch specific data:', error);
@@ -29,6 +41,35 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
     };
     fetchData();
   }, [branch.id]);
+
+  const handleSubmitRegistration = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.surname || !formData.phone) {
+      showAlert('error', 'Lütfen zorunlu alanları doldurun');
+      return;
+    }
+
+    setSubmitting(true);
+    
+    try {
+      const response = await axios.post('/api/leads', {
+        ...formData,
+        branchId: branch.id
+      });
+      
+      if (response.data.success) {
+        showAlert('success', response.data.message || 'Ön kaydınız başarıyla alındı! En kısa sürede sizinle iletişime geçeceğiz.');
+        setShowRegistrationForm(false);
+        setFormData({ name: '', surname: '', phone: '', email: '' });
+      }
+    } catch (error: any) {
+      console.error('Lead submission error:', error);
+      showAlert('error', error.response?.data?.error || 'Bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const slidersToDisplay = sliders.length > 0 ? sliders : [
     {
@@ -55,6 +96,97 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
 
   return (
     <div className="mesh-bg min-h-screen">
+      {alert.show && (
+        <Alert
+          type={alert.type}
+          message={alert.message}
+          onClose={hideAlert}
+        />
+      )}
+      
+      {/* Registration Form Modal */}
+      {showRegistrationForm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full">
+            <div className="p-8">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-brand-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <GraduationCap className="w-8 h-8 text-brand-blue" />
+                </div>
+                <h3 className="text-2xl font-black text-brand-dark mb-2">Ön Kayıt Formu</h3>
+                <p className="text-slate-600">{branch.name} şubemize ön kayıt yapın</p>
+              </div>
+
+              <form onSubmit={handleSubmitRegistration} className="space-y-4">
+                <div>
+                  <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Ad *</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                    placeholder="Adınız"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Soyad *</label>
+                  <input
+                    type="text"
+                    value={formData.surname}
+                    onChange={e => setFormData({ ...formData, surname: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                    placeholder="Soyadınız"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Telefon *</label>
+                  <input
+                    type="tel"
+                    value={formData.phone}
+                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                    placeholder="0555 555 55 55"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-black text-slate-400 uppercase mb-2 block">E-posta</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                    placeholder="ornek@email.com"
+                  />
+                </div>
+
+                <div className="flex items-center space-x-4 pt-4">
+                  <button
+                    type="button"
+                    onClick={() => setShowRegistrationForm(false)}
+                    className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-all"
+                  >
+                    İptal
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    className="flex-1 px-6 py-3 bg-brand-blue text-white rounded-xl font-bold hover:bg-brand-dark transition-all disabled:opacity-50"
+                  >
+                    {submitting ? 'Gönderiliyor...' : 'Kayıt Ol'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Hero Slider - Enhanced */}
       <section className="relative h-[700px] bg-brand-dark overflow-hidden">
         {slidersToDisplay.map((slide, index) => (
@@ -212,20 +344,20 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
                   )}
                 </div>
 
-                <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {news.length > 0 ? news.slice(0, 3).map(n => (
-                    <Link key={n.id} to={`/haberler/${n.id}`} className="group flex gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors">
-                      <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden">
-                        <img src={n.image || '/uploads/placeholder.jpg'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={n.title} />
+                    <Link key={n.id} to={`/haberler/${n.id}`} className="group bg-slate-50 rounded-xl overflow-hidden hover:shadow-lg transition-all">
+                      <div className="aspect-video w-full overflow-hidden bg-slate-100">
+                        <img src={n.image || '/uploads/placeholder.jpg'} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" alt={n.title} />
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs text-slate-400 font-medium mb-1">{n.publishedAt ? new Date(n.publishedAt).toLocaleDateString('tr-TR') : ''}</p>
-                        <h3 className="text-base font-bold text-brand-dark group-hover:text-brand-blue transition-colors line-clamp-2 mb-1">{n.title}</h3>
+                      <div className="p-4">
+                        <p className="text-xs text-slate-400 font-medium mb-2">{n.publishedAt ? new Date(n.publishedAt).toLocaleDateString('tr-TR') : ''}</p>
+                        <h3 className="text-base font-bold text-brand-dark group-hover:text-brand-blue transition-colors line-clamp-2 mb-2">{n.title}</h3>
                         <p className="text-sm text-slate-600 line-clamp-2">{n.excerpt}</p>
                       </div>
                     </Link>
                   )) : (
-                    <div className="p-12 bg-slate-50 rounded-xl text-center">
+                    <div className="col-span-full p-12 bg-slate-50 rounded-xl text-center">
                       <FileText className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                       <p className="text-slate-400 font-medium">Henüz duyuru bulunmamaktadır.</p>
                     </div>
@@ -310,14 +442,27 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
                   <p className="text-slate-600 text-sm">Hafta sonu: 09:00 - 18:00</p>
                 </div>
 
-                <div className="aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden relative group cursor-pointer">
-                  <div className="absolute inset-0 bg-[url('https://maps.googleapis.com/maps/api/staticmap?center=39.9208,32.8541&zoom=15&size=600x400&sensor=false')] bg-cover bg-center"></div>
-                  <div className="absolute inset-0 bg-brand-dark/0 group-hover:bg-brand-dark/30 transition-colors flex items-center justify-center">
-                    <MapPin className="w-10 h-10 text-brand-blue drop-shadow-lg" />
+                <a
+                  href={`https://www.google.com/maps?q=${branch.lat},${branch.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="block aspect-[4/3] bg-slate-100 rounded-xl overflow-hidden relative group cursor-pointer"
+                >
+                  <iframe
+                    src={`https://www.google.com/maps?q=${branch.lat},${branch.lng}&output=embed`}
+                    className="w-full h-full border-0"
+                    loading="lazy"
+                    referrerPolicy="no-referrer-when-downgrade"
+                  ></iframe>
+                  <div className="absolute inset-0 bg-brand-dark/0 group-hover:bg-brand-dark/20 transition-colors flex items-center justify-center pointer-events-none">
+                    <MapPin className="w-10 h-10 text-brand-blue drop-shadow-lg opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                </div>
+                </a>
 
-                <button className="w-full py-4 bg-brand-blue text-white font-bold rounded-xl hover:bg-brand-dark transition-colors text-sm">
+                <button
+                  onClick={() => setShowRegistrationForm(true)}
+                  className="w-full py-4 bg-brand-blue text-white font-bold rounded-xl hover:bg-brand-dark transition-colors text-sm"
+                >
                   Şubemize Ön Kayıt Yap
                 </button>
               </div>

@@ -1,78 +1,86 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Phone, Mail, Calendar, CheckCircle, Clock, X, Eye, Trash2 } from 'lucide-react';
+import { Building2, Phone, Mail, MapPin, Calendar, CheckCircle, Clock, X, Eye, Trash2 } from 'lucide-react';
 import axios from 'axios';
 
-interface Lead {
+interface FranchiseApplication {
   id: string;
   name: string;
   surname: string;
   phone: string;
-  email?: string;
-  status: 'NEW' | 'CONTACTED' | 'CONVERTED' | 'REJECTED';
+  email: string;
+  city?: string;
+  message?: string;
+  status: 'NEW' | 'CONTACTED' | 'APPROVED' | 'REJECTED';
   notes?: string;
   createdAt: string;
-  branch?: {
-    id: string;
-    name: string;
-  };
 }
 
-interface LeadManagerProps {
-  branchId?: string;
-}
-
-const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
-  const [leads, setLeads] = useState<Lead[]>([]);
+const FranchiseManager: React.FC = () => {
+  const [applications, setApplications] = useState<FranchiseApplication[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<FranchiseApplication | null>(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useEffect(() => {
-    fetchLeads();
-  }, [branchId]);
+    fetchApplications();
+  }, []);
 
-  const fetchLeads = async () => {
+  const fetchApplications = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
-      const url = branchId ? `/api/leads?branchId=${branchId}` : '/api/leads';
-      const response = await axios.get(url, {
+      const response = await axios.get('/api/franchise', {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setLeads(response.data.data || []);
+      setApplications(response.data.data || []);
     } catch (error) {
-      console.error('Error fetching leads:', error);
+      console.error('Error fetching franchise applications:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleUpdateStatus = async (leadId: string, status: Lead['status'], notes?: string) => {
+  const handleUpdateStatus = async (applicationId: string, status: FranchiseApplication['status'], notes?: string) => {
     try {
       setUpdatingStatus(true);
       const token = localStorage.getItem('accessToken');
-      await axios.patch(`/api/leads/${leadId}`, 
+      await axios.patch(`/api/franchise/${applicationId}`, 
         { status, notes },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      await fetchLeads();
+      await fetchApplications();
       setShowDetailModal(false);
-      setSelectedLead(null);
+      setSelectedApplication(null);
     } catch (error) {
-      console.error('Error updating lead:', error);
+      console.error('Error updating application:', error);
       alert('Durum güncellenirken hata oluştu');
     } finally {
       setUpdatingStatus(false);
     }
   };
 
-  const getStatusBadge = (status: Lead['status']) => {
+  const handleDelete = async (applicationId: string) => {
+    if (!window.confirm('Bu başvuruyu silmek istediğinize emin misiniz?')) return;
+    
+    try {
+      const token = localStorage.getItem('accessToken');
+      await axios.delete(`/api/franchise/${applicationId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      await fetchApplications();
+    } catch (error) {
+      console.error('Error deleting application:', error);
+      alert('Başvuru silinirken hata oluştu');
+    }
+  };
+
+  const getStatusBadge = (status: FranchiseApplication['status']) => {
     const badges = {
       NEW: { bg: 'bg-blue-100', text: 'text-blue-700', label: 'Yeni' },
       CONTACTED: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'İletişime Geçildi' },
-      CONVERTED: { bg: 'bg-green-100', text: 'text-green-700', label: 'Kayıt Oldu' },
-      REJECTED: { bg: 'bg-red-100', text: 'text-red-700', label: 'İptal' }
+      APPROVED: { bg: 'bg-green-100', text: 'text-green-700', label: 'Onaylandı' },
+      REJECTED: { bg: 'bg-red-100', text: 'text-red-700', label: 'Reddedildi' }
     };
     const badge = badges[status];
     return (
@@ -82,11 +90,11 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
     );
   };
 
-  const getStatusIcon = (status: Lead['status']) => {
+  const getStatusIcon = (status: FranchiseApplication['status']) => {
     switch (status) {
       case 'NEW': return <Clock className="w-4 h-4" />;
       case 'CONTACTED': return <Phone className="w-4 h-4" />;
-      case 'CONVERTED': return <CheckCircle className="w-4 h-4" />;
+      case 'APPROVED': return <CheckCircle className="w-4 h-4" />;
       case 'REJECTED': return <X className="w-4 h-4" />;
     }
   };
@@ -96,7 +104,7 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
       <div className="bg-white rounded-3xl p-8 shadow-sm">
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-blue mx-auto mb-4"></div>
-          <p className="text-slate-600 font-bold">Ön kayıtlar yükleniyor...</p>
+          <p className="text-slate-600 font-bold">Franchise başvuruları yükleniyor...</p>
         </div>
       </div>
     );
@@ -105,15 +113,15 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
   return (
     <div className="bg-white rounded-3xl p-8 shadow-sm">
       {/* Detail Modal */}
-      {showDetailModal && selectedLead && (
+      {showDetailModal && selectedApplication && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full">
             <div className="sticky top-0 bg-white border-b border-slate-100 px-8 py-6 flex items-center justify-between rounded-t-3xl">
-              <h3 className="text-2xl font-black text-brand-dark">Ön Kayıt Detayı</h3>
+              <h3 className="text-2xl font-black text-brand-dark">Franchise Başvuru Detayı</h3>
               <button
                 onClick={() => {
                   setShowDetailModal(false);
-                  setSelectedLead(null);
+                  setSelectedApplication(null);
                 }}
                 className="p-2 hover:bg-slate-100 rounded-xl transition-all"
               >
@@ -125,45 +133,60 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <p className="text-xs font-black text-slate-400 uppercase mb-2">Ad Soyad</p>
-                  <p className="text-lg font-bold text-brand-dark">{selectedLead.name} {selectedLead.surname}</p>
+                  <p className="text-lg font-bold text-brand-dark">{selectedApplication.name} {selectedApplication.surname}</p>
                 </div>
                 <div>
                   <p className="text-xs font-black text-slate-400 uppercase mb-2">Durum</p>
-                  {getStatusBadge(selectedLead.status)}
+                  {getStatusBadge(selectedApplication.status)}
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-6">
                 <div>
                   <p className="text-xs font-black text-slate-400 uppercase mb-2">Telefon</p>
-                  <a href={`tel:${selectedLead.phone}`} className="text-brand-blue font-bold hover:underline flex items-center space-x-2">
+                  <a href={`tel:${selectedApplication.phone}`} className="text-brand-blue font-bold hover:underline flex items-center space-x-2">
                     <Phone className="w-4 h-4" />
-                    <span>{selectedLead.phone}</span>
+                    <span>{selectedApplication.phone}</span>
                   </a>
                 </div>
-                {selectedLead.email && (
-                  <div>
-                    <p className="text-xs font-black text-slate-400 uppercase mb-2">E-posta</p>
-                    <a href={`mailto:${selectedLead.email}`} className="text-brand-blue font-bold hover:underline flex items-center space-x-2">
-                      <Mail className="w-4 h-4" />
-                      <span>{selectedLead.email}</span>
-                    </a>
-                  </div>
-                )}
+                <div>
+                  <p className="text-xs font-black text-slate-400 uppercase mb-2">E-posta</p>
+                  <a href={`mailto:${selectedApplication.email}`} className="text-brand-blue font-bold hover:underline flex items-center space-x-2">
+                    <Mail className="w-4 h-4" />
+                    <span>{selectedApplication.email}</span>
+                  </a>
+                </div>
               </div>
 
+              {selectedApplication.city && (
+                <div>
+                  <p className="text-xs font-black text-slate-400 uppercase mb-2">Hedef Şehir</p>
+                  <p className="text-slate-700 font-bold flex items-center space-x-2">
+                    <MapPin className="w-4 h-4" />
+                    <span>{selectedApplication.city}</span>
+                  </p>
+                </div>
+              )}
+
               <div>
-                <p className="text-xs font-black text-slate-400 uppercase mb-2">Kayıt Tarihi</p>
+                <p className="text-xs font-black text-slate-400 uppercase mb-2">Başvuru Tarihi</p>
                 <p className="text-slate-700 font-medium flex items-center space-x-2">
                   <Calendar className="w-4 h-4" />
-                  <span>{new Date(selectedLead.createdAt).toLocaleString('tr-TR')}</span>
+                  <span>{new Date(selectedApplication.createdAt).toLocaleString('tr-TR')}</span>
                 </p>
               </div>
 
-              {selectedLead.notes && (
+              {selectedApplication.message && (
                 <div>
-                  <p className="text-xs font-black text-slate-400 uppercase mb-2">Notlar</p>
-                  <p className="text-slate-700 bg-slate-50 p-4 rounded-xl">{selectedLead.notes}</p>
+                  <p className="text-xs font-black text-slate-400 uppercase mb-2">Mesaj</p>
+                  <p className="text-slate-700 bg-slate-50 p-4 rounded-xl whitespace-pre-line">{selectedApplication.message}</p>
+                </div>
+              )}
+
+              {selectedApplication.notes && (
+                <div>
+                  <p className="text-xs font-black text-slate-400 uppercase mb-2">Admin Notları</p>
+                  <p className="text-slate-700 bg-slate-50 p-4 rounded-xl whitespace-pre-line">{selectedApplication.notes}</p>
                 </div>
               )}
 
@@ -171,32 +194,32 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
                 <p className="text-xs font-black text-slate-400 uppercase mb-3">Durum Güncelle</p>
                 <div className="grid grid-cols-2 gap-3">
                   <button
-                    onClick={() => handleUpdateStatus(selectedLead.id, 'CONTACTED')}
-                    disabled={updatingStatus || selectedLead.status === 'CONTACTED'}
+                    onClick={() => handleUpdateStatus(selectedApplication.id, 'CONTACTED')}
+                    disabled={updatingStatus || selectedApplication.status === 'CONTACTED'}
                     className="px-4 py-3 bg-yellow-500 text-white font-bold rounded-xl hover:bg-yellow-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                   >
                     <Phone className="w-4 h-4" />
                     <span>İletişime Geçildi</span>
                   </button>
                   <button
-                    onClick={() => handleUpdateStatus(selectedLead.id, 'CONVERTED')}
-                    disabled={updatingStatus || selectedLead.status === 'CONVERTED'}
+                    onClick={() => handleUpdateStatus(selectedApplication.id, 'APPROVED')}
+                    disabled={updatingStatus || selectedApplication.status === 'APPROVED'}
                     className="px-4 py-3 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    <span>Kayıt Oldu</span>
+                    <span>Onaylandı</span>
                   </button>
                   <button
-                    onClick={() => handleUpdateStatus(selectedLead.id, 'REJECTED')}
-                    disabled={updatingStatus || selectedLead.status === 'REJECTED'}
+                    onClick={() => handleUpdateStatus(selectedApplication.id, 'REJECTED')}
+                    disabled={updatingStatus || selectedApplication.status === 'REJECTED'}
                     className="px-4 py-3 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                   >
                     <X className="w-4 h-4" />
-                    <span>İptal</span>
+                    <span>Reddedildi</span>
                   </button>
                   <button
-                    onClick={() => handleUpdateStatus(selectedLead.id, 'NEW')}
-                    disabled={updatingStatus || selectedLead.status === 'NEW'}
+                    onClick={() => handleUpdateStatus(selectedApplication.id, 'NEW')}
+                    disabled={updatingStatus || selectedApplication.status === 'NEW'}
                     className="px-4 py-3 bg-blue-500 text-white font-bold rounded-xl hover:bg-blue-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
                   >
                     <Clock className="w-4 h-4" />
@@ -211,15 +234,13 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-2xl font-black text-brand-dark">Ön Kayıtlar</h2>
-          <p className="text-slate-500 text-sm mt-1">
-            {branchId ? 'Şubenize yapılan ön kayıt başvuruları' : 'Tüm şubelere yapılan ön kayıt başvuruları'}
-          </p>
+          <h2 className="text-2xl font-black text-brand-dark">Franchise Başvuruları</h2>
+          <p className="text-slate-500 text-sm mt-1">Franchise olmak isteyen başvurular</p>
         </div>
         <div className="flex items-center space-x-4">
           <div className="text-right">
             <p className="text-xs text-slate-400 font-bold uppercase">Toplam</p>
-            <p className="text-2xl font-black text-brand-blue">{leads.length}</p>
+            <p className="text-2xl font-black text-brand-blue">{applications.length}</p>
           </div>
         </div>
       </div>
@@ -230,7 +251,7 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-blue-600 uppercase">Yeni</p>
-              <p className="text-2xl font-black text-blue-700">{leads.filter(l => l.status === 'NEW').length}</p>
+              <p className="text-2xl font-black text-blue-700">{applications.filter(a => a.status === 'NEW').length}</p>
             </div>
             <Clock className="w-8 h-8 text-blue-400" />
           </div>
@@ -239,7 +260,7 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-bold text-yellow-600 uppercase">İletişimde</p>
-              <p className="text-2xl font-black text-yellow-700">{leads.filter(l => l.status === 'CONTACTED').length}</p>
+              <p className="text-2xl font-black text-yellow-700">{applications.filter(a => a.status === 'CONTACTED').length}</p>
             </div>
             <Phone className="w-8 h-8 text-yellow-400" />
           </div>
@@ -247,8 +268,8 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
         <div className="bg-green-50 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-green-600 uppercase">Kayıt Oldu</p>
-              <p className="text-2xl font-black text-green-700">{leads.filter(l => l.status === 'CONVERTED').length}</p>
+              <p className="text-xs font-bold text-green-600 uppercase">Onaylandı</p>
+              <p className="text-2xl font-black text-green-700">{applications.filter(a => a.status === 'APPROVED').length}</p>
             </div>
             <CheckCircle className="w-8 h-8 text-green-400" />
           </div>
@@ -256,70 +277,77 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
         <div className="bg-red-50 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-red-600 uppercase">İptal</p>
-              <p className="text-2xl font-black text-red-700">{leads.filter(l => l.status === 'REJECTED').length}</p>
+              <p className="text-xs font-bold text-red-600 uppercase">Reddedildi</p>
+              <p className="text-2xl font-black text-red-700">{applications.filter(a => a.status === 'REJECTED').length}</p>
             </div>
             <X className="w-8 h-8 text-red-400" />
           </div>
         </div>
       </div>
 
-      {/* Leads List */}
-      {leads.length === 0 ? (
+      {/* Applications List */}
+      {applications.length === 0 ? (
         <div className="text-center py-12 bg-slate-50 rounded-2xl">
-          <Users className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <p className="text-slate-500 font-medium">Henüz ön kayıt başvurusu yok</p>
+          <Building2 className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-500 font-medium">Henüz franchise başvurusu yok</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {leads.map(lead => (
+          {applications.map(application => (
             <div
-              key={lead.id}
+              key={application.id}
               className="bg-slate-50 rounded-xl p-4 hover:bg-slate-100 transition-all group"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4 flex-1">
                   <div className="w-12 h-12 bg-brand-blue/10 rounded-full flex items-center justify-center">
-                    {getStatusIcon(lead.status)}
+                    {getStatusIcon(application.status)}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-1">
-                      <h3 className="text-lg font-bold text-brand-dark">{lead.name} {lead.surname}</h3>
-                      {getStatusBadge(lead.status)}
-                      {!branchId && lead.branch && (
-                        <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-black">
-                          {lead.branch.name}
+                      <h3 className="text-lg font-bold text-brand-dark">{application.name} {application.surname}</h3>
+                      {getStatusBadge(application.status)}
+                      {application.city && (
+                        <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-black flex items-center space-x-1">
+                          <MapPin className="w-3 h-3" />
+                          <span>{application.city}</span>
                         </span>
                       )}
                     </div>
                     <div className="flex items-center space-x-4 text-sm text-slate-600">
                       <span className="flex items-center space-x-1">
                         <Phone className="w-3 h-3" />
-                        <span>{lead.phone}</span>
+                        <span>{application.phone}</span>
                       </span>
-                      {lead.email && (
-                        <span className="flex items-center space-x-1">
-                          <Mail className="w-3 h-3" />
-                          <span>{lead.email}</span>
-                        </span>
-                      )}
+                      <span className="flex items-center space-x-1">
+                        <Mail className="w-3 h-3" />
+                        <span>{application.email}</span>
+                      </span>
                       <span className="flex items-center space-x-1">
                         <Calendar className="w-3 h-3" />
-                        <span>{new Date(lead.createdAt).toLocaleDateString('tr-TR')}</span>
+                        <span>{new Date(application.createdAt).toLocaleDateString('tr-TR')}</span>
                       </span>
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => {
-                    setSelectedLead(lead);
-                    setShowDetailModal(true);
-                  }}
-                  className="px-4 py-2 bg-brand-blue text-white font-bold rounded-lg hover:bg-brand-dark transition-all flex items-center space-x-2"
-                >
-                  <Eye className="w-4 h-4" />
-                  <span>Detay</span>
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      setSelectedApplication(application);
+                      setShowDetailModal(true);
+                    }}
+                    className="px-4 py-2 bg-brand-blue text-white font-bold rounded-lg hover:bg-brand-dark transition-all flex items-center space-x-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>Detay</span>
+                  </button>
+                  <button
+                    onClick={() => handleDelete(application.id)}
+                    className="p-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -329,4 +357,4 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
   );
 };
 
-export default LeadManager;
+export default FranchiseManager;

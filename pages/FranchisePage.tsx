@@ -2,14 +2,83 @@
 import React, { useState, useEffect } from 'react';
 import { Target, CheckCircle2, ShieldCheck, Zap, ArrowRight, Phone, Mail } from 'lucide-react';
 import { homeSectionService } from '../services/homepage.service';
+import axios from 'axios';
+import Alert from '../components/Alert';
+import { useAlert } from '../hooks/useAlert';
+import { useSEO } from '../hooks/useSEO';
 
 const FranchisePage: React.FC = () => {
+  // SEO Hook
+  useSEO('franchise');
+  
   const [pageContent, setPageContent] = useState<any>({});
   const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    city: '',
+    message: ''
+  });
+  const [submitting, setSubmitting] = useState(false);
+  const [citySearch, setCitySearch] = useState('');
+  const [showCityDropdown, setShowCityDropdown] = useState(false);
+  const { alert, showAlert, hideAlert } = useAlert();
+
+  const cities = [
+    'Adana', 'Adıyaman', 'Afyonkarahisar', 'Ağrı', 'Aksaray', 'Amasya', 'Ankara', 'Antalya',
+    'Ardahan', 'Artvin', 'Aydın', 'Balıkesir', 'Bartın', 'Batman', 'Bayburt', 'Bilecik',
+    'Bingöl', 'Bitlis', 'Bolu', 'Burdur', 'Bursa', 'Çanakkale', 'Çankırı', 'Çorum',
+    'Denizli', 'Diyarbakır', 'Düzce', 'Edirne', 'Elazığ', 'Erzincan', 'Erzurum', 'Eskişehir',
+    'Gaziantep', 'Giresun', 'Gümüşhane', 'Hakkari', 'Hatay', 'Iğdır', 'Isparta', 'İstanbul',
+    'İzmir', 'Kahramanmaraş', 'Karabük', 'Karaman', 'Kars', 'Kastamonu', 'Kayseri', 'Kırıkkale',
+    'Kırklareli', 'Kırşehir', 'Kilis', 'Kocaeli', 'Konya', 'Kütahya', 'Malatya', 'Manisa',
+    'Mardin', 'Mersin', 'Muğla', 'Muş', 'Nevşehir', 'Niğde', 'Ordu', 'Osmaniye',
+    'Rize', 'Sakarya', 'Samsun', 'Siirt', 'Sinop', 'Sivas', 'Şanlıurfa', 'Şırnak',
+    'Tekirdağ', 'Tokat', 'Trabzon', 'Tunceli', 'Uşak', 'Van', 'Yalova', 'Yozgat', 'Zonguldak'
+  ];
+
+  const filteredCities = cities.filter(city => 
+    city.toLowerCase().includes(citySearch.toLowerCase())
+  );
 
   const getContent = (section: string, field: 'title' | 'subtitle' | 'buttonText' | 'buttonLink' = 'title', defaultValue: string = '') => {
     const content = pageContent[section];
     return content?.[field] || defaultValue;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name || !formData.phone || !formData.email) {
+      showAlert('error', 'Lütfen zorunlu alanları doldurun');
+      return;
+    }
+
+    setSubmitting(true);
+    
+    try {
+      const nameParts = formData.name.trim().split(' ');
+      const response = await axios.post('/api/franchise', {
+        name: nameParts[0],
+        surname: nameParts.slice(1).join(' ') || nameParts[0],
+        phone: formData.phone,
+        email: formData.email,
+        city: formData.city || null,
+        message: formData.message || null
+      });
+      
+      if (response.data.success) {
+        showAlert('success', 'Başvurunuz başarıyla alındı! En kısa sürede sizinle iletişime geçeceğiz.');
+        setFormData({ name: '', phone: '', email: '', city: '', message: '' });
+        setCitySearch('');
+      }
+    } catch (error: any) {
+      console.error('Franchise application error:', error);
+      showAlert('error', error.response?.data?.error || 'Bir hata oluştu. Lütfen tekrar deneyin.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -35,6 +104,19 @@ const FranchisePage: React.FC = () => {
     fetchContent();
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.city-dropdown-container')) {
+        setShowCityDropdown(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -45,6 +127,14 @@ const FranchisePage: React.FC = () => {
 
   return (
     <div className="min-h-screen mesh-bg pb-24">
+      {alert.show && (
+        <Alert
+          type={alert.type}
+          message={alert.message}
+          onClose={hideAlert}
+        />
+      )}
+      
       {/* Hero */}
       <section className="bg-brand-dark py-24 relative overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -169,36 +259,102 @@ const FranchisePage: React.FC = () => {
               <h3 className="text-3xl font-black text-brand-dark capitalize tracking-tight">
                 {getContent('franchise-form-title', 'title', 'Ön Başvuru Formu')}
               </h3>
-              <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Ad Soyad</label>
-                  <input type="text" className="w-full p-4 bg-brand-gray border border-slate-100 rounded-custom focus:border-brand-blue outline-none transition-all font-bold" placeholder="Giriş yapın..." />
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Ad Soyad *</label>
+                  <input 
+                    type="text" 
+                    value={formData.name}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full p-4 bg-brand-gray border border-slate-100 rounded-custom focus:border-brand-blue outline-none transition-all font-bold" 
+                    placeholder="Adınız Soyadınız..." 
+                    required
+                  />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Telefon</label>
-                  <input type="tel" className="w-full p-4 bg-brand-gray border border-slate-100 rounded-custom focus:border-brand-blue outline-none transition-all font-bold" placeholder="05xx..." />
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Telefon *</label>
+                  <input 
+                    type="tel" 
+                    value={formData.phone}
+                    onChange={e => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full p-4 bg-brand-gray border border-slate-100 rounded-custom focus:border-brand-blue outline-none transition-all font-bold" 
+                    placeholder="05xx..." 
+                    required
+                  />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">E-Posta</label>
-                  <input type="email" className="w-full p-4 bg-brand-gray border border-slate-100 rounded-custom focus:border-brand-blue outline-none transition-all font-bold" placeholder="eposta@adres.com" />
+                  <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">E-Posta *</label>
+                  <input 
+                    type="email" 
+                    value={formData.email}
+                    onChange={e => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full p-4 bg-brand-gray border border-slate-100 rounded-custom focus:border-brand-blue outline-none transition-all font-bold" 
+                    placeholder="eposta@adres.com" 
+                    required
+                  />
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-1 relative city-dropdown-container">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Hedeflenen Şehir</label>
-                  <select className="w-full p-4 bg-brand-gray border border-slate-100 rounded-custom focus:border-brand-blue outline-none transition-all font-bold cursor-pointer">
-                    <option>Şehir Seçiniz</option>
-                    <option>İstanbul</option>
-                    <option>Ankara</option>
-                    <option>İzmir</option>
-                    <option>Bursa</option>
-                  </select>
+                  <input
+                    type="text"
+                    value={citySearch || formData.city}
+                    onChange={e => {
+                      setCitySearch(e.target.value);
+                      setFormData({ ...formData, city: '' });
+                      setShowCityDropdown(true);
+                    }}
+                    onFocus={() => setShowCityDropdown(true)}
+                    className="w-full p-4 bg-brand-gray border border-slate-100 rounded-custom focus:border-brand-blue outline-none transition-all font-bold"
+                    placeholder="Şehir ara..."
+                  />
+                  {showCityDropdown && filteredCities.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-custom shadow-xl max-h-60 overflow-y-auto">
+                      {filteredCities.map((city, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          onClick={() => {
+                            setFormData({ ...formData, city });
+                            setCitySearch('');
+                            setShowCityDropdown(false);
+                          }}
+                          className="w-full text-left px-4 py-3 hover:bg-brand-blue hover:text-white transition-all font-bold text-sm"
+                        >
+                          {city}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {formData.city && (
+                    <div className="mt-2 inline-flex items-center space-x-2 px-3 py-1 bg-brand-blue/10 text-brand-blue rounded-full text-sm font-bold">
+                      <span>{formData.city}</span>
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, city: '' })}
+                        className="hover:text-brand-dark"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="md:col-span-2 space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Kısa Mesajınız</label>
-                  <textarea className="w-full p-4 bg-brand-gray border border-slate-100 rounded-custom focus:border-brand-blue outline-none transition-all font-bold" rows={4} placeholder="Eklemek istedikleriniz..."></textarea>
+                  <textarea 
+                    value={formData.message}
+                    onChange={e => setFormData({ ...formData, message: e.target.value })}
+                    className="w-full p-4 bg-brand-gray border border-slate-100 rounded-custom focus:border-brand-blue outline-none transition-all font-bold" 
+                    rows={4} 
+                    placeholder="Eklemek istedikleriniz..."
+                  ></textarea>
                 </div>
                 <div className="md:col-span-2">
-                  <button type="submit" className="w-full py-5 bg-brand-blue text-white font-black rounded-custom hover:bg-brand-dark transition-all shadow-xl shadow-brand-blue/20 capitalize tracking-widest text-sm">
-                    {getContent('franchise-form-button', 'buttonText', 'Başvuruyu Tamamla')}
+                  <button 
+                    type="submit" 
+                    disabled={submitting}
+                    className="w-full py-5 bg-brand-blue text-white font-black rounded-custom hover:bg-brand-dark transition-all shadow-xl shadow-brand-blue/20 capitalize tracking-widest text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? 'Gönderiliyor...' : getContent('franchise-form-button', 'buttonText', 'Başvuruyu Tamamla')}
                   </button>
                   <p className="mt-4 text-[10px] text-slate-400 text-center font-medium">
                     {getContent('franchise-form-privacy', 'subtitle', 'Verdiğiniz bilgiler KVKK kapsamında güvence altındadır.')}

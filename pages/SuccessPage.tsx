@@ -4,8 +4,12 @@ import { Link } from 'react-router-dom';
 import { Trophy, Star, Users, Award, ChevronRight, TrendingUp, Calendar, GraduationCap, Target, Zap, MapPin } from 'lucide-react';
 import { yearlySuccessService, homeSectionService } from '../services/homepage.service';
 import { YearlySuccess } from '../types';
+import { useSEO } from '../hooks/useSEO';
 
 const SuccessPage: React.FC = () => {
+  // SEO Hook
+  useSEO('success');
+  
   const [activeYear, setActiveYear] = useState<string>('2024');
   const [activeExam, setActiveExam] = useState<'YKS' | 'LGS' | 'ALL'>('ALL');
   const [isAnimating, setIsAnimating] = useState(false);

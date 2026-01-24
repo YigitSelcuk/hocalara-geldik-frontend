@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { Calculator, TrendingUp, Target, Award, ChevronRight } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 type CalculatorType = 'TYT' | 'AYT' | 'LGS';
 
@@ -38,6 +39,9 @@ interface LGSResults {
 }
 
 const CalculatorPage: React.FC = () => {
+  // SEO Hook
+  useSEO('calculator');
+  
   const [activeCalculator, setActiveCalculator] = useState<CalculatorType>('TYT');
   const [tytNets, setTytNets] = useState({ turkce: 0, matematik: 0, sosyal: 0, fen: 0 });
   const [aytNets, setAytNets] = useState({

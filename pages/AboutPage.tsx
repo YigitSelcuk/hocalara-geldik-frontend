@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Target, Users, Award, Sparkles, CheckCircle2, TrendingUp, Heart, Zap } from 'lucide-react';
 import { homeSectionService } from '../services/homepage.service';
+import { useSEO } from '../hooks/useSEO';
 
 const AboutPage: React.FC = () => {
+    // SEO Hook
+    useSEO('about');
+    
     const [sections, setSections] = useState<any[]>([]);
 
     useEffect(() => {

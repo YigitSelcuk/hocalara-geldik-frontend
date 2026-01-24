@@ -4,8 +4,12 @@ import { Play, Clock, Eye, Search, X, BookOpen } from 'lucide-react';
 import { VideoCategory } from '../types';
 import { homeSectionService } from '../services/homepage.service';
 import { videoService } from '../services/cms.service';
+import { useSEO } from '../hooks/useSEO';
 
 const VideoGallery: React.FC = () => {
+  // SEO Hook
+  useSEO('video-gallery');
+  
   const [activeCategory, setActiveCategory] = useState<VideoCategory | 'ALL'>('ALL');
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');

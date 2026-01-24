@@ -1,8 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { GraduationCap, Award, Star, BookOpen, Users } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 const TeachersPage: React.FC = () => {
+    // SEO Hook
+    useSEO('teachers');
+    
     const teachers = [
         {
             id: 1,

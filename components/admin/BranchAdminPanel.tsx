@@ -8,6 +8,8 @@ import { Branch, AdminUser, Teacher } from '../../types';
 import { branchService, mediaService } from '../../services/cms.service';
 import { teacherService } from '../../services/homepage.service';
 import BranchPackageManager from './BranchPackageManager';
+import BranchSuccessManager from './BranchSuccessManager';
+import LeadManager from './LeadManager';
 
 // Simple Alert Component
 const Alert: React.FC<{ type: 'success' | 'error' | 'warning' | 'info'; message: string; onClose: () => void }> = ({ type, message, onClose }) => {
@@ -60,7 +62,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'info' | 'content' | 'teachers' | 'media'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'content' | 'teachers' | 'media' | 'successes' | 'leads'>('info');
   const [hasChanges, setHasChanges] = useState(false);
   const [hasPendingBranchUpdate, setHasPendingBranchUpdate] = useState(false);
   
@@ -484,6 +486,28 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
             <span>Öğretmenler</span>
           </button>
           <button
+            onClick={() => setActiveTab('successes')}
+            className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all ${
+              activeTab === 'successes'
+                ? 'bg-brand-blue text-white shadow-lg'
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <Award className="w-5 h-5" />
+            <span>Başarılar</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('leads')}
+            className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all ${
+              activeTab === 'leads'
+                ? 'bg-brand-blue text-white shadow-lg'
+                : 'text-slate-600 hover:bg-slate-50'
+            }`}
+          >
+            <Users className="w-5 h-5" />
+            <span>Ön Kayıtlar</span>
+          </button>
+          <button
             onClick={() => setActiveTab('media')}
             className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all ${
               activeTab === 'media'
@@ -877,6 +901,14 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
             </div>
           </div>
         </div>
+      )}
+
+      {activeTab === 'successes' && (
+        <BranchSuccessManager branchId={user.branchId!} />
+      )}
+
+      {activeTab === 'leads' && (
+        <LeadManager branchId={user.branchId!} />
       )}
     </div>
   );

@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, Phone, ArrowRight, Search, Map as MapIcon, List as ListIcon, Navigation, ExternalLink } from 'lucide-react';
 import { branchService } from '../services/cms.service';
 import { homeSectionService } from '../services/homepage.service';
+import { useSEO } from '../hooks/useSEO';
 import { Branch } from '../types';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -38,6 +39,9 @@ const createCustomIcon = (color: string = '#2563eb') => {
 const customIcon = createCustomIcon('#2563eb');
 
 const BranchList: React.FC = () => {
+  // SEO Hook
+  useSEO('branches');
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);

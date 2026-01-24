@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Video, Play, Users, TrendingUp, CheckCircle2, BookOpen, Award, Target, Clock, Star } from 'lucide-react';
 import { homeSectionService } from '../services/homepage.service';
+import { useSEO } from '../hooks/useSEO';
 
 const VideoLibraryPage: React.FC = () => {
+    // SEO Hook
+    useSEO('video-library');
+    
     const [pageContent, setPageContent] = useState<any>({});
     const [loading, setLoading] = useState(true);
 

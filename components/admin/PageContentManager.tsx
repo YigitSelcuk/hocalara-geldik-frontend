@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Save, RefreshCw, FileText, Sparkles } from 'lucide-react';
 import { homeSectionService } from '../../services/homepage.service';
+import { useAlert } from '../../hooks/useAlert';
+import Alert from '../Alert';
 
 interface PageContent {
   id?: string;
@@ -12,6 +14,9 @@ interface PageContent {
   buttonText?: string;
   buttonLink?: string;
   content?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
 }
 
 interface PageContentManagerProps {
@@ -29,6 +34,7 @@ export const PageContentManager: React.FC<PageContentManagerProps> = ({ pageName
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [contents, setContents] = useState<PageContent[]>([]);
+  const { alert, showAlert } = useAlert();
 
   useEffect(() => {
     fetchContents();
@@ -78,10 +84,10 @@ export const PageContentManager: React.FC<PageContentManagerProps> = ({ pageName
           await homeSectionService.create(dataToSave);
         }
       }
-      alert('İçerikler başarıyla kaydedildi!');
+      showAlert('success', 'İçerikler başarıyla kaydedildi!');
       await fetchContents();
     } catch (error) {
-      alert('Kaydetme sırasında hata oluştu.');
+      showAlert('error', 'Kaydetme sırasında hata oluştu.');
       console.error(error);
     } finally {
       setSaving(false);
@@ -98,6 +104,15 @@ export const PageContentManager: React.FC<PageContentManagerProps> = ({ pageName
 
   return (
     <div className="space-y-6">
+      {/* Alert */}
+      {alert.show && (
+        <Alert
+          type={alert.type}
+          message={alert.message}
+          onClose={() => {}}
+        />
+      )}
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-3">
@@ -115,6 +130,74 @@ export const PageContentManager: React.FC<PageContentManagerProps> = ({ pageName
           {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           <span>{saving ? 'Kaydediliyor...' : 'Kaydet'}</span>
         </button>
+      </div>
+
+      {/* SEO Section */}
+      <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl border-2 border-purple-200 p-6 shadow-md">
+        <div className="flex items-center space-x-3 mb-5">
+          <div className="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center">
+            <Sparkles className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-xl font-black text-brand-dark">SEO Ayarları</h3>
+            <p className="text-xs text-slate-600 font-medium">Arama motorları için sayfa optimizasyonu</p>
+          </div>
+        </div>
+
+        <div className="grid gap-4">
+          <div className="space-y-2">
+            <label className="text-sm font-black text-slate-700 flex items-center space-x-2">
+              <span>SEO Başlık</span>
+              <span className="text-xs font-normal text-slate-500">(Arama sonuçlarında görünecek başlık)</span>
+            </label>
+            <input
+              type="text"
+              value={getValue('seo', 'seoTitle')}
+              onChange={(e) => handleChange('seo', 'seoTitle', e.target.value)}
+              className="w-full bg-white border-2 border-purple-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-purple-500 font-medium transition-all"
+              placeholder="Örn: Hocalara Geldik - En İyi Eğitim Merkezi"
+              maxLength={60}
+            />
+            <p className="text-xs text-slate-500 font-medium">
+              {getValue('seo', 'seoTitle').length}/60 karakter (Önerilen: 50-60)
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-black text-slate-700 flex items-center space-x-2">
+              <span>SEO Açıklama</span>
+              <span className="text-xs font-normal text-slate-500">(Arama sonuçlarında görünecek açıklama)</span>
+            </label>
+            <textarea
+              value={getValue('seo', 'seoDescription')}
+              onChange={(e) => handleChange('seo', 'seoDescription', e.target.value)}
+              rows={3}
+              className="w-full bg-white border-2 border-purple-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-purple-500 font-medium resize-none transition-all"
+              placeholder="Örn: Türkiye'nin en başarılı eğitim merkezi. YKS, LGS ve tüm sınavlarda başarı garantisi..."
+              maxLength={160}
+            />
+            <p className="text-xs text-slate-500 font-medium">
+              {getValue('seo', 'seoDescription').length}/160 karakter (Önerilen: 150-160)
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-black text-slate-700 flex items-center space-x-2">
+              <span>SEO Anahtar Kelimeler</span>
+              <span className="text-xs font-normal text-slate-500">(Virgülle ayırın)</span>
+            </label>
+            <input
+              type="text"
+              value={getValue('seo', 'seoKeywords')}
+              onChange={(e) => handleChange('seo', 'seoKeywords', e.target.value)}
+              className="w-full bg-white border-2 border-purple-200 rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-purple-500 font-medium transition-all"
+              placeholder="Örn: eğitim merkezi, dershane, YKS, LGS, özel ders"
+            />
+            <p className="text-xs text-slate-500 font-medium">
+              Anahtar kelimeleri virgülle ayırarak yazın
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Content Sections - Grouped */}

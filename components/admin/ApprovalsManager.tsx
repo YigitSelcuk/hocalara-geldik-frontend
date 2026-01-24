@@ -126,6 +126,11 @@ export const ApprovalsManager: React.FC = () => {
       BLOG_CREATE: '📰 Yeni Haber Ekleme',
       BLOG_UPDATE: '✏️ Haber Güncelleme',
       BLOG_DELETE: '🗑️ Haber Silme',
+      SUCCESS_CREATE: '🏆 Yeni Başarı Ekleme',
+      SUCCESS_UPDATE: '✏️ Başarı Güncelleme',
+      SUCCESS_DELETE: '🗑️ Başarı Silme',
+      STUDENT_CREATE: '👨‍🎓 Yeni Öğrenci Ekleme',
+      STUDENT_DELETE: '🗑️ Öğrenci Silme',
     };
     return labels[type] || type;
   };
@@ -1005,6 +1010,336 @@ export const ApprovalsManager: React.FC = () => {
                           rows={2}
                           className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-medium text-red-700 resize-none"
                         />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* YEARLY SUCCESS DISPLAYS */}
+                {selectedRequest.changeType === 'SUCCESS_CREATE' && (
+                  <div className="space-y-4">
+                    {selectedRequest.newData.banner?.image && (
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Banner Görseli</label>
+                        <img 
+                          src={selectedRequest.newData.banner.image} 
+                          alt="Success Banner" 
+                          className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-green-200" 
+                        />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Yıl</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.year || ''}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Toplam Derece</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.totalDegrees || '0'}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                    </div>
+                    {selectedRequest.newData.banner && (
+                      <>
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Banner Başlık</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.banner.title || ''}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Banner Alt Başlık</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.banner.subtitle || ''}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      </>
+                    )}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Yerleşen Sayısı</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.placementCount || '0'}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Başarı Oranı</label>
+                        <input
+                          type="text"
+                          value={`%${selectedRequest.newData.successRate || '0'}`}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">İl Sayısı</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.cityCount || '0'}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {selectedRequest.changeType === 'SUCCESS_UPDATE' && (
+                  <div className="space-y-4">
+                    {Object.keys(selectedRequest.newData).map((key) => {
+                      if (key === 'branchId' || key === 'id' || key === 'createdAt' || key === 'updatedAt' || key === 'students') return null;
+                      const oldValue = selectedRequest.oldData?.[key];
+                      const newValue = selectedRequest.newData[key];
+                      
+                      // Handle banner object
+                      if (key === 'banner') {
+                        const oldBanner = oldValue;
+                        const newBanner = newValue;
+                        if (!oldBanner && !newBanner) return null;
+                        
+                        return (
+                          <div key={key} className="space-y-4 border-t pt-4">
+                            <h5 className="font-black text-brand-dark">Banner Değişiklikleri</h5>
+                            {newBanner?.image && (
+                              <div className="grid grid-cols-2 gap-4">
+                                {oldBanner?.image && (
+                                  <div>
+                                    <p className="text-xs text-slate-500 mb-2">Eski Banner</p>
+                                    <img src={oldBanner.image} alt="Old" className="w-full h-32 object-cover rounded-xl border-2 border-red-200" />
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="text-xs text-slate-500 mb-2">Yeni Banner</p>
+                                  <img src={newBanner.image} alt="New" className="w-full h-32 object-cover rounded-xl border-2 border-green-200" />
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      }
+                      
+                      const hasChanged = JSON.stringify(oldValue) !== JSON.stringify(newValue);
+                      if (!hasChanged) return null;
+
+                      const fieldLabels: Record<string, string> = {
+                        year: 'Yıl',
+                        totalDegrees: 'Toplam Derece',
+                        placementCount: 'Yerleşen Sayısı',
+                        successRate: 'Başarı Oranı',
+                        cityCount: 'İl Sayısı',
+                        top100Count: 'İlk 100',
+                        top1000Count: 'İlk 1000',
+                        yksAverage: 'YKS Ortalaması',
+                        lgsAverage: 'LGS Ortalaması',
+                      };
+
+                      return (
+                        <div key={key} className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                              {fieldLabels[key] || key} (Eski)
+                            </label>
+                            <input
+                              type="text"
+                              value={oldValue || '-'}
+                              readOnly
+                              className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-bold text-slate-600 line-through"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                              {fieldLabels[key] || key} (Yeni)
+                            </label>
+                            <input
+                              type="text"
+                              value={newValue || '-'}
+                              readOnly
+                              className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {selectedRequest.changeType === 'SUCCESS_DELETE' && selectedRequest.oldData && (
+                  <div className="space-y-4">
+                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                      <p className="text-sm font-bold text-red-700 mb-3">⚠️ Bu başarı silinecek:</p>
+                      {selectedRequest.oldData.banner?.image && (
+                        <div className="mb-4">
+                          <img src={selectedRequest.oldData.banner.image} alt="Success" className="w-full h-48 object-cover rounded-xl border-2 border-red-300" />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Yıl</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.oldData.year || ''}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Toplam Derece</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.oldData.totalDegrees || '0'}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* STUDENT DISPLAYS */}
+                {selectedRequest.changeType === 'STUDENT_CREATE' && (
+                  <div className="space-y-4">
+                    {selectedRequest.newData.image && (
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Öğrenci Fotoğrafı</label>
+                        <img 
+                          src={selectedRequest.newData.image} 
+                          alt="Student" 
+                          className="w-32 h-32 rounded-full object-cover border-2 border-green-200" 
+                        />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Öğrenci Adı</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.name || ''}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Sınav</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.exam || ''}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Sıralama</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.rank || ''}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      {selectedRequest.newData.score && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Puan</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.score}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                      {selectedRequest.newData.university && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Üniversite</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.university}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                      {selectedRequest.newData.branch && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Bölüm</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.branch}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {selectedRequest.changeType === 'STUDENT_DELETE' && selectedRequest.oldData && (
+                  <div className="space-y-4">
+                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                      <p className="text-sm font-bold text-red-700 mb-3">⚠️ Bu öğrenci silinecek:</p>
+                      {selectedRequest.oldData.image && (
+                        <div className="mb-4">
+                          <img src={selectedRequest.oldData.image} alt="Student" className="w-32 h-32 rounded-full object-cover border-2 border-red-300 mx-auto" />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Öğrenci Adı</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.oldData.name || ''}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Sınav</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.oldData.exam || ''}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Sıralama</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.oldData.rank || ''}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                          />
+                        </div>
+                        {selectedRequest.oldData.university && (
+                          <div>
+                            <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Üniversite</label>
+                            <input
+                              type="text"
+                              value={selectedRequest.oldData.university}
+                              readOnly
+                              className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                            />
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

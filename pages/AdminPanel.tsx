@@ -7,7 +7,7 @@ import {
   sliderService, newsService, branchService,
   videoService, packageService, userService,
   menuService, pageService, categoryService,
-  mediaService, leadService
+  mediaService
 } from '../services/cms.service';
 import {
   bannerCardService, statisticService, featureService,
@@ -33,7 +33,8 @@ import { MenuManager } from '../components/admin/MenuManager';
 import { PageManager } from '../components/admin/PageManager';
 import { CategoryManager } from '../components/admin/CategoryManager';
 import { MediaManager } from '../components/admin/MediaManager';
-import { LeadManager } from '../components/admin/LeadManager';
+import LeadManager from '../components/admin/LeadManager';
+import FranchiseManager from '../components/admin/FranchiseManager';
 import { BlogManager } from '../components/admin/BlogManager';
 import { BannerCardManager } from '../components/admin/BannerCardManager';
 import { StatisticsManager } from '../components/admin/StatisticsManager';
@@ -49,6 +50,8 @@ import { BranchAdminPanel } from '../components/admin/BranchAdminPanel';
 import { ApprovalsManager } from '../components/admin/ApprovalsManager';
 import BranchPackages from './BranchPackages';
 import BranchNews from './BranchNews';
+import BranchSuccesses from './BranchSuccesses';
+import BranchLeads from './BranchLeads';
 import Alert from '../components/Alert';
 import { useAlert } from '../hooks/useAlert';
 
@@ -66,6 +69,8 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         <Route path="/branch/:id" element={<BranchAdminPanel user={user} />} />
         <Route path="/branch-packages" element={<BranchPackages user={user} />} />
         <Route path="/branch-news" element={<BranchNews />} />
+        <Route path="/branch-successes" element={<BranchSuccesses user={user} />} />
+        <Route path="/branch-leads" element={<BranchLeads user={user} />} />
         <Route path="*" element={<Navigate to={`/admin/branch/${user.branchId}`} replace />} />
       </Routes>
     );
@@ -90,7 +95,6 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
   const [pages, setPages] = useState<Page[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [mediaItems, setMediaItems] = useState<Media[]>([]);
-  const [leads, setLeads] = useState<Lead[]>([]);
   const [bannerCards, setBannerCards] = useState<BannerCard[]>([]);
   const [statistics, setStatistics] = useState<Statistic[]>([]);
   const [features, setFeatures] = useState<Feature[]>([]);
@@ -110,7 +114,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
           slidersRes, newsRes, branchesRes,
           videosRes, packagesRes, usersRes,
           menusRes, pagesRes, categoriesRes,
-          mediaRes, leadsRes,
+          mediaRes,
           bannerCardsRes, statisticsRes, featuresRes,
           blogPostsRes, examDatesRes, socialMediaRes,
           youtubeChannelsRes, yearlySuccessRes, homeSectionsRes,
@@ -126,7 +130,6 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
           pageService.getAll(),
           categoryService.getAll(),
           mediaService.getAll(),
-          leadService.getAll(),
           bannerCardService.getAll(),
           statisticService.getAll(),
           featureService.getAll(),
@@ -160,7 +163,6 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         setPages(pagesRes.status === 'fulfilled' ? (pagesRes.value.data.pages || []) : []);
         setCategories(categoriesRes.status === 'fulfilled' ? (categoriesRes.value.data.categories || []) : []);
         setMediaItems(mediaRes.status === 'fulfilled' ? (mediaRes.value.data.media || []) : []);
-        setLeads(leadsRes.status === 'fulfilled' ? (leadsRes.value.data.submissions || leadsRes.value.data.leads || []) : []);
         setBannerCards(bannerCardsRes.status === 'fulfilled' ? ((bannerCardsRes.value.data as any).bannerCards || (bannerCardsRes.value.data as any).data || []) : []);
         setStatistics(statisticsRes.status === 'fulfilled' ? ((statisticsRes.value.data as any).statistics || (statisticsRes.value.data as any).data || []) : []);
         setFeatures(featuresRes.status === 'fulfilled' ? ((featuresRes.value.data as any).features || (featuresRes.value.data as any).data || []) : []);
@@ -255,10 +257,6 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         case 'media':
           await mediaService.delete(id);
           setMediaItems((prev: Media[]) => prev.filter((item: Media) => item.id !== id));
-          break;
-        case 'lead':
-          await leadService.delete(id);
-          setLeads((prev: Lead[]) => prev.filter((item: Lead) => item.id !== id));
           break;
         case 'bannerCard':
           await bannerCardService.delete(id);
@@ -1922,7 +1920,8 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         <Route path="/packages" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <PackageManager packages={packages} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/successes" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <YearlySuccessManager successes={yearlySuccesses} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} handleAddStudent={handleAddStudent} handleDeleteStudent={handleDeleteStudent} /> : <Navigate to="/admin" />} />
         <Route path="/media" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <MediaManager mediaItems={mediaItems} handleAdd={handleAdd} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
-        <Route path="/leads" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN, UserRole.BRANCH_ADMIN]) ? <LeadManager leads={leads} handleEdit={handleEdit} /> : <Navigate to="/admin" />} />
+        <Route path="/leads" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <LeadManager /> : <Navigate to="/admin" />} />
+        <Route path="/franchise" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <FranchiseManager /> : <Navigate to="/admin" />} />
         <Route path="/users" element={hasAccess([UserRole.SUPER_ADMIN]) ? <UserManager adminUsers={adminUsers} branches={branches} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/settings" element={hasAccess([UserRole.SUPER_ADMIN]) ? <SettingsManager /> : <Navigate to="/admin" />} />
         <Route path="/banner-cards" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <BannerCardManager bannerCards={bannerCards} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />

@@ -321,4 +321,7 @@ export interface HomeSection {
   linkText?: string;
   order: number;
   isActive: boolean;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
 }

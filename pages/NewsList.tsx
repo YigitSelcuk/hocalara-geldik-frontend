@@ -5,8 +5,12 @@ import { pageService, branchService } from '../services/cms.service';
 import { homeSectionService } from '../services/homepage.service';
 import { Branch, NewsItem } from '../types';
 import { API_BASE_URL } from '../services/api';
+import { useSEO } from '../hooks/useSEO';
 
 const NewsList: React.FC = () => {
+  // SEO Hook
+  useSEO('news');
+  
   const [news, setNews] = useState<NewsItem[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [pageContent, setPageContent] = useState<any>({});

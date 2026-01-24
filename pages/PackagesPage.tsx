@@ -6,8 +6,12 @@ import { PackageType, EducationPackage } from '../types';
 import { packageService } from '../services/cms.service';
 import { homeSectionService } from '../services/homepage.service';
 import { API_BASE_URL } from '../services/api';
+import { useSEO } from '../hooks/useSEO';
 
 const PackagesPage: React.FC = () => {
+  // SEO Hook
+  useSEO('packages');
+  
   const [activeFilter, setActiveFilter] = useState<PackageType | 'ALL'>('ALL');
   const [packages, setPackages] = useState<EducationPackage[]>([]);
   const [sections, setSections] = useState<any[]>([]);

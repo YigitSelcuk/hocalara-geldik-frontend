@@ -48,8 +48,12 @@ import {
 import CountdownTimer from '../components/CountdownTimer';
 import PomodoroTimer from '../components/PomodoroTimer';
 import { API_BASE_URL } from '../services/api';
+import { useSEO } from '../hooks/useSEO';
 
 const MainHome: React.FC = () => {
+  // SEO Hook
+  useSEO('home');
+  
   const [currentSlide, setCurrentSlide] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState<string>('Tümü');
 

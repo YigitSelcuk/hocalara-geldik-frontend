@@ -16,28 +16,27 @@ const BranchSuccessPage: React.FC = () => {
         const fetchData = async () => {
             if (!slug) return;
             try {
-                const [branchRes, successRes] = await Promise.allSettled([
-                    branchService.getBySlug(slug),
-                    yearlySuccessService.getAll()
-                ]);
-
-                // Handle branch data
-                if (branchRes.status === 'fulfilled' && branchRes.value.data?.branch) {
-                    setBranch(branchRes.value.data.branch);
-                }
-
-                // Handle success data with array safety
-                if (successRes.status === 'fulfilled') {
-                    const successes = successRes.value.data.data || successRes.value.data;
-
-                    // Ensure successes is an array before setting state
-                    if (Array.isArray(successes)) {
-                        setYearlySuccesses(successes);
-
-                        // Set initial selected year if available
-                        if (successes.length > 0) {
-                            setSelectedYear(successes[0].year);
-                        }
+                // First fetch branch to get branchId
+                const branchRes = await branchService.getBySlug(slug);
+                
+                if (branchRes.data?.branch) {
+                    const branchData = branchRes.data.branch;
+                    setBranch(branchData);
+                    
+                    // Then fetch successes filtered by branchId
+                    const successRes = await yearlySuccessService.getAll();
+                    const allSuccesses = successRes.data?.data || successRes.data || [];
+                    
+                    // Filter by branchId
+                    const branchSuccesses = Array.isArray(allSuccesses) 
+                        ? allSuccesses.filter((s: any) => s.branchId === branchData.id)
+                        : [];
+                    
+                    setYearlySuccesses(branchSuccesses);
+                    
+                    // Set initial selected year if available
+                    if (branchSuccesses.length > 0) {
+                        setSelectedYear(branchSuccesses[0].year);
                     }
                 }
             } catch (error) {
@@ -61,53 +60,32 @@ const BranchSuccessPage: React.FC = () => {
         return <Navigate to="/subeler" replace />;
     }
 
-    // Filter students by branch
-    const getBranchStudentsByYear = (year: string) => {
-        const yearData = yearlySuccesses.find(y => y.year === year);
-        if (!yearData) return [];
-
-        // Filter students by branch name (case insensitive matching)
-        return (yearData.students || []).filter(student =>
-            student.branch?.toLowerCase().includes(branch.name.split(' ')[0].toLowerCase())
-        );
-    };
-
+    // Get students for selected year
     const selectedYearData = yearlySuccesses.find(y => y.year === selectedYear);
-    const branchStudents = getBranchStudentsByYear(selectedYear);
+    const branchStudents = selectedYearData?.students || [];
 
     return (
         <div className="mesh-bg min-h-screen">
             {/* Hero Section */}
-            <section className="relative h-[500px] bg-brand-dark overflow-hidden">
-                <img
-                    src={branch.successBanner || branch.image}
-                    alt={`${branch.name} Başarıları`}
-                    className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-brand-dark via-brand-dark/60 to-transparent"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-transparent to-transparent"></div>
+            <section className="relative h-[400px] md:h-[500px] bg-brand-dark overflow-hidden">
+                <div className="absolute inset-0">
+                    <img
+                        src={branch.successBanner || branch.image}
+                        alt={`${branch.name} Başarıları`}
+                        className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-r from-brand-dark/95 via-brand-dark/70 to-brand-dark/40"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/90 via-transparent to-transparent"></div>
+                </div>
 
-                <div className="absolute inset-0 flex items-center">
+                <div className="relative h-full flex items-center">
                     <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full">
-                        <div className="max-w-3xl space-y-8">
-                            <Link
-                                to={`/subeler/${slug}`}
-                                className="relative z-10 inline-flex items-center space-x-2 text-white/80 hover:text-white transition-colors group"
-                            >
-                                <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                                <span className="font-bold">Şube Sayfasına Dön</span>
-                            </Link>
-
-                            <div className="inline-flex items-center space-x-4 px-6 py-3 bg-amber-500/20 backdrop-blur-xl text-amber-400 border border-amber-500/30 rounded-2xl text-[13px] font-black tracking-widest shadow-2xl">
-                                <Trophy className="w-5 h-5" />
-                                <span>Başarı Hikayeleri</span>
-                            </div>
-
-                            <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-[0.9]">
+                        <div className="max-w-3xl space-y-6 md:space-y-8">
+                            <h1 className="text-4xl md:text-6xl lg:text-8xl font-black text-white tracking-tighter leading-[0.9]">
                                 <span className="text-amber-400 italic">Gurur</span> Tablomuz
                             </h1>
 
-                            <p className="text-2xl text-slate-300 font-medium max-w-2xl leading-relaxed">
+                            <p className="text-lg md:text-xl lg:text-2xl text-slate-300 font-medium max-w-2xl leading-relaxed">
                                 {branch.name} öğrencilerinin yıllar içinde elde ettiği başarılar ve dereceler
                             </p>
                         </div>

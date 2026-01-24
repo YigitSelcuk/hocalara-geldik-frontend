@@ -1,8 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Globe, Target, BookOpen, GraduationCap, CheckCircle2, Award, Plane, FileText, Users, TrendingUp } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 const InternationalPage: React.FC = () => {
+    // SEO Hook
+    useSEO('international');
+    
     return (
         <div className="min-h-screen bg-white">
             {/* Hero Section */}

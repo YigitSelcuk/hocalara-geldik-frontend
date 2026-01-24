@@ -1,8 +1,12 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Laptop, Brain, Users, Phone, Cpu, TrendingUp, CheckCircle2, Sparkles, BarChart3, Bell, Shield, Zap, Target } from 'lucide-react';
+import { useSEO } from '../hooks/useSEO';
 
 const DigitalPlatformPage: React.FC = () => {
+    // SEO Hook
+    useSEO('digital');
+    
     return (
         <div className="min-h-screen bg-white">
             {/* Hero Section */}

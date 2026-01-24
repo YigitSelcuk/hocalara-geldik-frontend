@@ -2,8 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, Send, MessageCircle, Instagram, Facebook, Twitter, Linkedin } from 'lucide-react';
 import { homeSectionService } from '../services/homepage.service';
+import { useSEO } from '../hooks/useSEO';
 
 const ContactPage: React.FC = () => {
+    // SEO Hook
+    useSEO('contact');
+    
     const [pageContent, setPageContent] = useState<any>({});
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
