@@ -47,6 +47,7 @@ import {
 } from '../types';
 import CountdownTimer from '../components/CountdownTimer';
 import PomodoroTimer from '../components/PomodoroTimer';
+import { API_BASE_URL } from '../services/api';
 
 const MainHome: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -77,6 +78,12 @@ const MainHome: React.FC = () => {
     FileText, GraduationCap, School, Laptop, Video, Users, MapPin, Target, BookOpen, Brain, Phone, Youtube, Instagram, Twitter, Facebook, Linkedin, Zap, TrendingUp, Sparkles, Award, Clock, Star, MessageCircle, Database
   };
 
+  // Helper function to get section content
+  const getSection = (section: string, field: 'title' | 'subtitle' | 'description' | 'buttonText' | 'buttonLink', defaultValue: string = '') => {
+    const content = homeSections.find(s => s.section === section);
+    return content?.[field] || defaultValue;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -96,24 +103,25 @@ const MainHome: React.FC = () => {
           packageService.getAll()
         ]);
 
-        setSliders(slidersRes.status === 'fulfilled' ? (Array.isArray(slidersRes.value.data) ? slidersRes.value.data : []) : []);
-        setBannerCards(bannerCardsRes.status === 'fulfilled' ? (Array.isArray(bannerCardsRes.value.data) ? bannerCardsRes.value.data : []) : []);
-        setHomeSections(homeSectionsRes.status === 'fulfilled' ? (Array.isArray(homeSectionsRes.value.data) ? homeSectionsRes.value.data : []) : []);
-        setStatistics(statisticsRes.status === 'fulfilled' ? (Array.isArray(statisticsRes.value.data) ? statisticsRes.value.data : []) : []);
-        setFeatures(featuresRes.status === 'fulfilled' ? (Array.isArray(featuresRes.value.data) ? featuresRes.value.data : []) : []);
-        setBlogPosts(blogPostsRes.status === 'fulfilled' ? (Array.isArray(blogPostsRes.value.data) ? blogPostsRes.value.data : []) : []);
-        setYoutubeChannels(youtubeRes.status === 'fulfilled' ? (Array.isArray(youtubeRes.value.data) ? youtubeRes.value.data : []) : []);
+        setSliders(slidersRes.status === 'fulfilled' ? (slidersRes.value.data.sliders || []) : []);
+        setBannerCards(bannerCardsRes.status === 'fulfilled' ? (bannerCardsRes.value.data.data || []) : []);
+        setHomeSections(homeSectionsRes.status === 'fulfilled' ? (homeSectionsRes.value.data.data || []) : []);
+        setStatistics(statisticsRes.status === 'fulfilled' ? (statisticsRes.value.data.data || []) : []);
+        setFeatures(featuresRes.status === 'fulfilled' ? (featuresRes.value.data.data || []) : []);
+        setBlogPosts(blogPostsRes.status === 'fulfilled' ? (blogPostsRes.value.data.data || []) : []);
+        setYoutubeChannels(youtubeRes.status === 'fulfilled' ? (youtubeRes.value.data.data || []) : []);
 
         // Convert social media array to object for easier access
-        if (socialRes.status === 'fulfilled' && Array.isArray(socialRes.value.data)) {
-          const socialObj = socialRes.value.data.reduce((acc: Record<string, string>, curr: SocialMedia) => {
+        if (socialRes.status === 'fulfilled' && socialRes.value.data.data) {
+          const socialArray = socialRes.value.data.data;
+          const socialObj = socialArray.reduce((acc: Record<string, string>, curr: SocialMedia) => {
             acc[curr.platform.toLowerCase()] = curr.url;
             return acc;
           }, {});
           setSocialMedia(socialObj);
         }
 
-        setPackages(packagesRes.status === 'fulfilled' ? (Array.isArray(packagesRes.value.data) ? packagesRes.value.data : []) : []);
+        setPackages(packagesRes.status === 'fulfilled' ? (packagesRes.value.data.packages || []) : []);
       } catch (error) {
         console.error('Error fetching homepage data:', error);
       }
@@ -147,13 +155,14 @@ const MainHome: React.FC = () => {
       <section className="relative h-[600px] w-full overflow-hidden bg-brand-dark mx-auto" style={{ maxWidth: '1920px' }}>
         {mainSliders.map((slide, index) => {
           const Icon = (slide as any).key === 'hero' ? IconMap['Zap'] : null;
+          const imageUrl = slide.image?.startsWith('http') ? slide.image : `${API_BASE_URL}${slide.image}`;
           return (
             <div
               key={slide.id}
               className={`absolute inset-0 transition-all duration-[2000ms] ease-out ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
             >
               <div className="absolute inset-0 z-0">
-                <img src={slide.image} alt={slide.title} className="w-full h-full object-cover" />
+                <img src={imageUrl} alt={slide.title} className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-gradient-to-r from-brand-dark via-brand-dark/40 to-transparent"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-transparent to-transparent"></div>
               </div>
@@ -162,7 +171,7 @@ const MainHome: React.FC = () => {
                 <div className="max-w-4xl space-y-6">
                   <div className={`inline-flex items-center space-x-4 px-6 py-2.5 ${isStyle2 ? 'bg-brand-warm-orange/20 border-brand-warm-orange/30 text-brand-warm-orange' : 'bg-brand-blue/20 border-brand-blue/30 text-brand-blue'} backdrop-blur-xl rounded-2xl border text-[12px] font-black tracking-widest transition-all duration-1000 delay-300 ${index === currentSlide ? 'translate-x-0 opacity-100' : '-translate-x-12 opacity-0'}`}>
                     {Icon && <Icon className="w-4 h-4" />}
-                    <span>{slide.subtitle || 'Geleceğin Eğitim Vizyonu Burada'}</span>
+                    <span>{slide.subtitle || getSection('hero-subtitle', 'subtitle', 'Geleceğin Eğitim Vizyonu Burada')}</span>
                   </div>
 
                   <h1 className={`text-6xl md:text-[90px] font-black text-white leading-[0.9] tracking-tighter transition-all duration-1000 delay-500 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
@@ -172,20 +181,28 @@ const MainHome: React.FC = () => {
                   </h1>
 
                   <div className={`flex flex-wrap gap-5 pt-6 transition-all duration-1000 delay-900 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-                    {slide.link && (
-                      <Link to={slide.link} className={`px-12 py-5 ${isStyle2 ? 'bg-brand-warm-orange shadow-brand-warm-orange/40 hover:shadow-brand-warm-orange/60' : 'bg-brand-blue shadow-brand-blue/40 hover:shadow-brand-blue/60'} text-white font-black rounded-2xl transition-all duration-300 shadow-2xl hover:scale-105 hover:-translate-y-1 text-[13px] tracking-wide group`}>
+                    {(slide.primaryButtonText || slide.primaryButtonLink) && (
+                      <Link 
+                        to={slide.primaryButtonLink || slide.link || '#'} 
+                        className={`px-12 py-5 ${isStyle2 ? 'bg-brand-warm-orange shadow-brand-warm-orange/40 hover:shadow-brand-warm-orange/60' : 'bg-brand-blue shadow-brand-blue/40 hover:shadow-brand-blue/60'} text-white font-black rounded-2xl transition-all duration-300 shadow-2xl hover:scale-105 hover:-translate-y-1 text-[13px] tracking-wide group`}
+                      >
                         <span className="flex items-center space-x-2">
-                          <span>Hemen Eğitime Başla</span>
+                          <span>{slide.primaryButtonText || 'Hemen Eğitime Başla'}</span>
                           <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                         </span>
                       </Link>
                     )}
-                    <Link to="/franchise" className="px-12 py-5 bg-white/10 backdrop-blur-md text-white border border-white/20 font-black rounded-2xl hover:bg-white hover:text-brand-dark hover:border-white transition-all duration-300 hover:scale-105 hover:-translate-y-1 text-[13px] tracking-wide group">
-                      <span className="flex items-center space-x-2">
-                        <span>Yeni Şubemiz Olun</span>
-                        <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                      </span>
-                    </Link>
+                    {(slide.secondaryButtonText || slide.secondaryButtonLink) && (
+                      <Link 
+                        to={slide.secondaryButtonLink || '/franchise'} 
+                        className="px-12 py-5 bg-white/10 backdrop-blur-md text-white border border-white/20 font-black rounded-2xl hover:bg-white hover:text-brand-dark hover:border-white transition-all duration-300 hover:scale-105 hover:-translate-y-1 text-[13px] tracking-wide group"
+                      >
+                        <span className="flex items-center space-x-2">
+                          <span>{slide.secondaryButtonText || 'Yeni Şubemiz Olun'}</span>
+                          <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                        </span>
+                      </Link>
+                    )}
                   </div>
                 </div>
               </div>
@@ -209,49 +226,19 @@ const MainHome: React.FC = () => {
       <section className="relative z-30 -mt-20 pb-16">
         <div className="max-w-[1600px] mx-auto px-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
-            {(bannerCards.length > 0 ? bannerCards : [
-              { id: 'b1', title: 'Franchise Başvuru', description: 'Hocalara Geldik Ailesine Katılın', icon: 'FileText', link: '/franchise', color: 'bg-[#3b82f6]' },
-              { id: 'b2', title: 'Kayıt Başvurusu', description: 'Eğitiminize Hemen Başlayın', icon: 'GraduationCap', link: '/iletisim', color: 'bg-[#a855f7]' },
-              { id: 'b3', title: 'Başarı Merkezleri', description: '81 İlde Güçlü Şube Ağı', icon: 'School', link: '/subeler', color: 'bg-[#ec4899]' },
-              { id: 'b4', title: 'Dijital Platform', description: 'Yapay Zeka Destekli Eğitim', icon: 'Laptop', link: '/videolar', color: 'bg-[#f97316]' },
-              { id: 'b5', title: 'YouTube Kanalı', description: 'Binlerce Ücretsiz İçerik', icon: 'Youtube', link: '/videolar', color: 'bg-red-600' }
-            ]).map((item, index) => {
-              const Icon = IconMap[item.icon] || FileText;
-
-              if (index === 4) {
-                return (
-                  <Link
-                    key={item.id}
-                    to={item.link}
-                    className="group bg-red-600 rounded-[20px] p-6 shadow-2xl hover:-translate-y-3 transition-all duration-500 flex flex-col text-white relative h-full min-h-[160px] overflow-hidden"
-                  >
-
-                    <div className="flex items-start space-x-4 mb-4 relative z-0">
-                      <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                        <Youtube className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex-1 text-left">
-                        <h3 className="text-[17px] font-black mb-1 leading-tight tracking-tight">YouTube</h3>
-                        <p className="text-[11px] font-bold text-white/90 leading-tight">Geleceğin Eğitim Platformu</p>
-                      </div>
-                    </div>
-                    <div className="mt-auto flex items-center space-x-1.5 text-[10px] font-black uppercase tracking-wider text-white/80 group-hover:text-white transition-colors">
-                      <span>KANALA GİT</span>
-                      <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-                    </div>
-                  </Link>
-                );
-              }
+            {bannerCards.sort((a, b) => a.order - b.order).map((item) => {
+              const bgColorClass = item.bgColor || 'bg-brand-blue';
+              const buttonText = item.buttonText || 'DETAYLI BİLGİ';
 
               return (
                 <Link
                   key={item.id}
                   to={item.link}
-                  className={`group ${(item as any).color || 'bg-brand-blue'} rounded-[20px] p-6 shadow-2xl hover:-translate-y-3 transition-all duration-500 flex flex-col text-white relative overflow-hidden h-full min-h-[160px]`}
+                  className={`group ${bgColorClass} rounded-[20px] p-6 shadow-2xl hover:-translate-y-3 transition-all duration-500 flex flex-col text-white relative overflow-hidden h-full min-h-[160px]`}
                 >
                   <div className="flex items-start space-x-4 mb-4">
-                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                      <Icon className="w-6 h-6 text-white" />
+                    <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 text-2xl">
+                      {item.icon}
                     </div>
                     <div className="flex-1 text-left">
                       <h3 className="text-[17px] font-black mb-1 leading-tight tracking-tight">{item.title}</h3>
@@ -259,7 +246,7 @@ const MainHome: React.FC = () => {
                     </div>
                   </div>
                   <div className="mt-auto flex items-center space-x-1.5 text-[10px] font-black uppercase tracking-wider text-white/80 group-hover:text-white transition-colors">
-                    <span>DETAYLI BİLGİ</span>
+                    <span>{buttonText}</span>
                     <ChevronRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </div>
                 </Link>
@@ -268,24 +255,17 @@ const MainHome: React.FC = () => {
           </div>
         </div>
       </section>
-
       {/* 3. Başarı Merkezleri Sistemi Tanıtımı */}
       {(() => {
-        const section = homeSections.find(s => s.key === 'centers') || {
-          topTitle: 'BAŞARI MERKEZLERİMİZ',
-          title: "Türkiye'nin En Büyük Eğitim Ağı",
-          subtitle: "81 ilde güçlü şube ağımız, modern eğitim altyapımız ve uzman kadromuzla öğrencilerimize en kaliteli eğitimi sunuyoruz.",
-          link: '/subeler',
-          linkText: 'Şubelerimizi Keşfedin'
-        };
+        const section = homeSections.find(s => s.section === 'centers-title') || {};
         const sectionFeatures = features.filter(f => f.section === 'centers').length > 0
           ? features.filter(f => f.section === 'centers')
           : [
-            { id: '1', title: 'Merkezi Eğitim Sistemi ile Standart Kalite' },
-            { id: '2', title: 'Her Şubede Uzman Öğretmen Kadrosu' },
-            { id: '3', title: 'Modern Derslik ve Laboratuvar İmkanları' },
-            { id: '4', title: 'Dijital Platform Entegrasyonu' },
-            { id: '5', title: 'Veli Bilgilendirme ve Takip Sistemi' }
+            { id: '1', title: getSection('centers-feature-1', 'title', 'Merkezi Eğitim Sistemi ile Standart Kalite') },
+            { id: '2', title: getSection('centers-feature-2', 'title', 'Her Şubede Uzman Öğretmen Kadrosu') },
+            { id: '3', title: getSection('centers-feature-3', 'title', 'Modern Derslik ve Laboratuvar İmkanları') },
+            { id: '4', title: getSection('centers-feature-4', 'title', 'Dijital Platform Entegrasyonu') },
+            { id: '5', title: getSection('centers-feature-5', 'title', 'Veli Bilgilendirme ve Takip Sistemi') }
           ];
 
         return (
@@ -295,10 +275,10 @@ const MainHome: React.FC = () => {
                 <div className="space-y-8">
                   <div className={`inline-flex items-center space-x-4 ${isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'} font-black tracking-[0.4em] text-[12px]`}>
                     <School className="w-6 h-6" />
-                    <span>{section.topTitle}</span>
+                    <span>{getSection('centers-top-title', 'title', 'BAŞARI MERKEZLERİMİZ')}</span>
                   </div>
                   <h2 className="text-6xl md:text-7xl font-black text-brand-dark tracking-tighter leading-none">
-                    {section.title.split('En Büyük').map((part, index) => (
+                    {getSection('centers-title', 'title', "Türkiye'nin En Büyük Eğitim Ağı").split('En Büyük').map((part, index) => (
                       <React.Fragment key={index}>
                         {part}
                         {index === 0 && <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>En Büyük</span>}
@@ -306,7 +286,7 @@ const MainHome: React.FC = () => {
                     ))}
                   </h2>
                   <p className="text-xl text-slate-600 font-medium leading-relaxed">
-                    {section.subtitle}
+                    {getSection('centers-subtitle', 'subtitle', '81 ilde güçlü şube ağımız, modern eğitim altyapımız ve uzman kadromuzla öğrencilerimize en kaliteli eğitimi sunuyoruz.')}
                   </p>
 
                   <div className="space-y-4">
@@ -320,24 +300,18 @@ const MainHome: React.FC = () => {
                     ))}
                   </div>
 
-                  <Link to={section.link || '/subeler'} className={`inline-flex items-center space-x-3 px-10 py-5 ${primaryColor} text-white font-black rounded-2xl hover:shadow-2xl hover:scale-105 transition-all duration-300`}>
-                    <span>{section.linkText || 'Şubelerimizi Keşfedin'}</span>
+                  <Link to={getSection('centers-button', 'buttonLink', '/subeler')} className={`inline-flex items-center space-x-3 px-10 py-5 ${primaryColor} text-white font-black rounded-2xl hover:shadow-2xl hover:scale-105 transition-all duration-300`}>
+                    <span>{getSection('centers-button', 'buttonText', 'Şubelerimizi Keşfedin')}</span>
                     <ChevronRight className="w-5 h-5" />
                   </Link>
                 </div>
 
                 <div className="grid grid-cols-2 gap-6">
-                  {(statistics.length > 0 ? statistics : [
-                    { id: '1', label: 'İl', icon: 'MapPin', value: '81' },
-                    { id: '2', label: 'Şube', icon: 'School', value: '250+' },
-                    { id: '3', label: 'Öğretmen', icon: 'Users', value: '1500+' },
-                    { id: '4', label: 'Öğrenci', icon: 'GraduationCap', value: '50K+' }
-                  ] as any[]).map((stat: any) => {
-                    const Icon = IconMap[stat.icon] || MapPin;
+                  {statistics.sort((a, b) => a.order - b.order).map((stat) => {
                     return (
                       <div key={stat.id} className={`bg-gradient-to-br ${isStyle2 ? 'from-orange-50 to-amber-50' : 'from-blue-50 to-purple-50'} rounded-[20px] p-8 text-center shadow-xl border border-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group`}>
-                        <div className={`w-16 h-16 ${primaryColor} rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all`}>
-                          <Icon className="w-8 h-8 text-white" />
+                        <div className={`w-16 h-16 ${primaryColor} rounded-xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 group-hover:rotate-6 transition-all text-3xl`}>
+                          {stat.icon}
                         </div>
                         <div className={`text-5xl font-black ${primaryColorText} mb-2`}>{stat.value}</div>
                         <div className="text-sm font-bold text-slate-600 uppercase tracking-wider">{stat.label}</div>
@@ -353,11 +327,6 @@ const MainHome: React.FC = () => {
 
       {/* 4. Dijital Sistem Tanıtımı */}
       {(() => {
-        const section = homeSections.find(s => s.key === 'digital') || {
-          topTitle: 'DİJİTAL EĞİTİM SİSTEMİ',
-          title: 'Yapay Zeka Destekli Eğitim Platformu',
-          subtitle: 'Öğrenciler ve veliler için geliştirdiğimiz dijital altyapı ile eğitim sürecini her adımda takip edin ve kişiselleştirilmiş öğrenme deneyimi yaşayın.'
-        };
         const sectionFeatures = features.filter(f => f.section === 'digital').length > 0
           ? features.filter(f => f.section === 'digital')
           : [
@@ -371,9 +340,9 @@ const MainHome: React.FC = () => {
           <section className={`py-32 ${isStyle2 ? 'bg-gradient-to-b from-orange-50/50 to-white' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
             <div className="max-w-[1600px] mx-auto px-12">
               <div className="text-center mb-16 space-y-6">
-                <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px] uppercase`}>{section.topTitle}</span>
+                <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px] uppercase`}>{getSection('digital-top-title', 'title', 'DİJİTAL EĞİTİM SİSTEMİ')}</span>
                 <h2 className="text-5xl md:text-6xl font-black text-brand-dark tracking-tighter leading-none">
-                  {section.title.split('Eğitim Platformu').map((part, index) => (
+                  {getSection('digital-title', 'title', 'Yapay Zeka Destekli Eğitim Platformu').split('Eğitim Platformu').map((part, index) => (
                     <React.Fragment key={index}>
                       {part}
                       {index === 0 && <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>Eğitim Platformu</span>}
@@ -381,7 +350,7 @@ const MainHome: React.FC = () => {
                   ))}
                 </h2>
                 <p className="text-xl text-slate-600 font-medium max-w-3xl mx-auto">
-                  {section.subtitle}
+                  {getSection('digital-subtitle', 'subtitle', 'Öğrenciler ve veliler için geliştirdiğimiz dijital altyapı ile eğitim sürecini her adımda takip edin ve kişiselleştirilmiş öğrenme deneyimi yaşayın.')}
                 </p>
               </div>
 
@@ -414,11 +383,6 @@ const MainHome: React.FC = () => {
 
       {/* 5. Hocalara Geldik Yurt Dışı */}
       {(() => {
-        const section = homeSections.find(s => s.key === 'global') || {
-          title: 'Hocalara Geldik Yurt Dışı',
-          subtitle: "Dünya'nın en prestijli üniversitelerine yerleşme hayalinizi gerçeğe dönüştürüyoruz",
-          image: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=1920'
-        };
         const sectionFeatures = features.filter(f => f.section === 'global').length > 0
           ? features.filter(f => f.section === 'global')
           : [
@@ -431,13 +395,13 @@ const MainHome: React.FC = () => {
           <section className="py-32 bg-white relative overflow-hidden">
             <div className="max-w-[1600px] mx-auto px-12">
               <div className="relative rounded-[20px] overflow-hidden mb-16 h-[400px]">
-                <img src={section.image} alt={section.title} className="w-full h-full object-cover" />
+                <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=1920" alt={getSection('global-title', 'title', 'Hocalara Geldik Yurt Dışı')} className="w-full h-full object-cover" />
                 <div className={`absolute inset-0 bg-gradient-to-r ${isStyle2 ? 'from-brand-warm-orange/90 to-brand-warm-amber/90' : 'from-brand-blue/90 to-purple-600/90'}`}></div>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center space-y-6 px-12">
                   <Globe className="w-20 h-20" />
-                  <h2 className="text-6xl font-black tracking-tighter">{section.title}</h2>
+                  <h2 className="text-6xl font-black tracking-tighter">{getSection('global-title', 'title', 'Hocalara Geldik Yurt Dışı')}</h2>
                   <p className="text-2xl font-medium max-w-3xl">
-                    {section.subtitle}
+                    {getSection('global-subtitle', 'subtitle', "Dünya'nın en prestijli üniversitelerine yerleşme hayalinizi gerçeğe dönüştürüyoruz")}
                   </p>
                 </div>
               </div>
@@ -473,12 +437,17 @@ const MainHome: React.FC = () => {
       <section className={`py-32 ${isStyle2 ? 'bg-gradient-to-b from-orange-50/50 to-white' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
         <div className="max-w-[1600px] mx-auto px-12">
           <div className="text-center mb-16 space-y-6">
-            <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px] uppercase`}>DİJİTAL İÇERİKLERİMİZ</span>
+            <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px] uppercase`}>{getSection('youtube-top-title', 'title', 'DİJİTAL İÇERİKLERİMİZ')}</span>
             <h2 className="text-5xl md:text-6xl font-black text-brand-dark tracking-tighter leading-none">
-              YouTube Kanallarımız ve <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>Sosyal Medya</span>
+              {getSection('youtube-title', 'title', 'YouTube Kanallarımız ve Sosyal Medya').split('Sosyal Medya').map((part, index) => (
+                <React.Fragment key={index}>
+                  {part}
+                  {index === 0 && <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>Sosyal Medya</span>}
+                </React.Fragment>
+              ))}
             </h2>
             <p className="text-xl text-slate-600 font-medium max-w-3xl mx-auto">
-              Binlerce ücretsiz ders videosu ve güncel içeriklerimiz için kanallarımıza abone olun, sosyal medyada bizi takip edin!
+              {getSection('youtube-subtitle', 'subtitle', 'Binlerce ücretsiz ders videosu ve güncel içeriklerimiz için kanallarımıza abone olun, sosyal medyada bizi takip edin!')}
             </p>
           </div>
 
@@ -524,8 +493,8 @@ const MainHome: React.FC = () => {
           {/* Sosyal Medya */}
           <div className="mt-16 bg-white rounded-[20px] p-12 shadow-xl border border-slate-100">
             <div className="text-center mb-10">
-              <h3 className="text-3xl font-black text-brand-dark mb-3">Sosyal Medyada Bizi Takip Edin</h3>
-              <p className="text-slate-600 font-medium">Güncel duyurular, motivasyon içerikleri ve daha fazlası için sosyal medya hesaplarımızı takip edin!</p>
+              <h3 className="text-3xl font-black text-brand-dark mb-3">{getSection('youtube-social-title', 'title', 'Sosyal Medyada Bizi Takip Edin')}</h3>
+              <p className="text-slate-600 font-medium">{getSection('youtube-social-subtitle', 'subtitle', 'Güncel duyurular, motivasyon içerikleri ve daha fazlası için sosyal medya hesaplarımızı takip edin!')}</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
               {[
@@ -558,12 +527,17 @@ const MainHome: React.FC = () => {
       <section className="py-32 bg-white">
         <div className="max-w-[1600px] mx-auto px-12">
           <div className="text-center mb-16 space-y-6">
-            <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px] uppercase`}>REHBERLİK VE İÇERİKLER</span>
+            <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px] uppercase`}>{getSection('blog-top-title', 'title', 'REHBERLİK VE İÇERİKLER')}</span>
             <h2 className="text-5xl md:text-6xl font-black text-brand-dark tracking-tighter leading-none">
-              Rehberlik ve <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>Blog Notları</span>
+              {getSection('blog-title', 'title', 'Rehberlik ve Blog Notları').split('Blog Notları').map((part, index) => (
+                <React.Fragment key={index}>
+                  {part}
+                  {index === 0 && <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>Blog Notları</span>}
+                </React.Fragment>
+              ))}
             </h2>
             <p className="text-xl text-slate-600 font-medium max-w-3xl mx-auto">
-              Akademik ve psikolojik destek yazıları, sınav stratejileri ve motivasyon içerikleri ile başarıya giden yolda yanınızdayız.
+              {getSection('blog-subtitle', 'subtitle', 'Akademik ve psikolojik destek yazıları, sınav stratejileri ve motivasyon içerikleri ile başarıya giden yolda yanınızdayız.')}
             </p>
           </div>
 
@@ -651,35 +625,44 @@ const MainHome: React.FC = () => {
             <div className="space-y-8 text-white">
               <div className="inline-flex items-center space-x-3 bg-white/20 border-white/30 font-black capitalize text-xs tracking-widest backdrop-blur-xl px-6 py-3 rounded-xl border">
                 <TrendingUp className="w-5 h-5" />
-                <span>Puan Hesaplama Araçları</span>
+                <span>{getSection('calculator-badge', 'title', 'Puan Hesaplama Araçları')}</span>
               </div>
               <h2 className="text-5xl md:text-6xl font-black tracking-tighter leading-none">
-                Sınav Puanınızı <span className="text-white/80 italic">Hesaplayın</span>
+                {getSection('calculator-title', 'title', 'Sınav Puanınızı Hesaplayın').split('Hesaplayın').map((part, index) => (
+                  <React.Fragment key={index}>
+                    {part}
+                    {index === 0 && <span className="text-white/80 italic">Hesaplayın</span>}
+                  </React.Fragment>
+                ))}
               </h2>
               <p className="text-xl font-medium leading-relaxed text-white/90">
-                Net sayılarınızı girerek yaklaşık sınav puanınızı hesaplayabilir ve hedeflerinize ne kadar yakın olduğunuzu görebilirsiniz.
+                {getSection('calculator-subtitle', 'subtitle', 'Net sayılarınızı girerek yaklaşık sınav puanınızı hesaplayabilir ve hedeflerinize ne kadar yakın olduğunuzu görebilirsiniz.')}
               </p>
               <Link
-                to="/hesaplama"
+                to={getSection('calculator-button', 'buttonLink', '/hesaplama')}
                 className="inline-flex items-center space-x-3 px-10 py-6 bg-white text-brand-dark hover:bg-white/90 font-black rounded-2xl transition-all duration-300 shadow-2xl hover:scale-105 group"
               >
-                <span>Hesaplama Araçlarına Git</span>
+                <span>{getSection('calculator-button', 'buttonText', 'Hesaplama Araçlarına Git')}</span>
                 <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
               </Link>
             </div>
 
             <div className="grid grid-cols-3 gap-6">
-              {['TYT', 'AYT', 'LGS'].map((type) => (
+              {[
+                { type: 'TYT', section: 'calculator-tyt' },
+                { type: 'AYT', section: 'calculator-ayt' },
+                { type: 'LGS', section: 'calculator-lgs' }
+              ].map((item) => (
                 <Link
-                  key={type}
+                  key={item.type}
                   to="/hesaplama"
                   className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 text-center hover:bg-white/20 hover:scale-105 transition-all duration-300 group cursor-pointer"
                 >
                   <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-xl">
                     <TrendingUp className={`w-8 h-8 ${primaryColorText}`} />
                   </div>
-                  <p className="text-2xl font-black text-white mb-2">{type}</p>
-                  <p className="text-xs font-bold text-white/70 mt-2">Puan Hesapla</p>
+                  <p className="text-2xl font-black text-white mb-2">{item.type}</p>
+                  <p className="text-xs font-bold text-white/70 mt-2">{getSection(item.section, 'title', 'Puan Hesapla')}</p>
                 </Link>
               ))}
             </div>
@@ -691,12 +674,17 @@ const MainHome: React.FC = () => {
       <section className={`py-32 ${isStyle2 ? 'bg-gradient-to-b from-orange-50/50 to-white' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
         <div className="max-w-[1600px] mx-auto px-12">
           <div className="text-center mb-16 space-y-6">
-            <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px] uppercase`}>ÇALIŞMA ARAÇLARI</span>
+            <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px] uppercase`}>{getSection('tools-top-title', 'title', 'ÇALIŞMA ARAÇLARI')}</span>
             <h2 className="text-5xl md:text-6xl font-black text-brand-dark tracking-tighter leading-none">
-              Sınav Geri Sayımı ve <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>Pomodoro</span>
+              {getSection('tools-title', 'title', 'Sınav Geri Sayımı ve Pomodoro').split('Pomodoro').map((part, index) => (
+                <React.Fragment key={index}>
+                  {part}
+                  {index === 0 && <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>Pomodoro</span>}
+                </React.Fragment>
+              ))}
             </h2>
             <p className="text-xl text-slate-600 font-medium max-w-3xl mx-auto">
-              Sınavınıza kalan süreyi takip edin ve Pomodoro tekniği ile verimli çalışma seansları oluşturun.
+              {getSection('tools-subtitle', 'subtitle', 'Sınavınıza kalan süreyi takip edin ve Pomodoro tekniği ile verimli çalışma seansları oluşturun.')}
             </p>
           </div>
 
@@ -705,7 +693,7 @@ const MainHome: React.FC = () => {
             <div className="bg-white rounded-[20px] p-12 shadow-2xl border border-slate-100">
               <div className="flex items-center space-x-3 mb-8">
                 <Timer className={`w-8 h-8 ${primaryColorText}`} />
-                <h3 className="text-2xl font-black text-brand-dark">Sınava Kalan Süre</h3>
+                <h3 className="text-2xl font-black text-brand-dark">{getSection('tools-countdown-title', 'title', 'Sınava Kalan Süre')}</h3>
               </div>
               <CountdownTimer isStyle2={isStyle2} />
             </div>
@@ -714,7 +702,7 @@ const MainHome: React.FC = () => {
             <div className="bg-white rounded-[20px] p-12 shadow-2xl border border-slate-100">
               <div className="flex items-center space-x-3 mb-8">
                 <Clock className={`w-8 h-8 ${primaryColorText}`} />
-                <h3 className="text-2xl font-black text-brand-dark">Pomodoro Zamanlayıcı</h3>
+                <h3 className="text-2xl font-black text-brand-dark">{getSection('tools-pomodoro-title', 'title', 'Pomodoro Zamanlayıcı')}</h3>
               </div>
               <PomodoroTimer isStyle2={isStyle2} />
             </div>
@@ -727,16 +715,21 @@ const MainHome: React.FC = () => {
         <div className="max-w-[1600px] mx-auto px-12">
           <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-12">
             <div className="space-y-6">
-              <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px]`}>EĞİTİM PAKETLERİMİZ</span>
+              <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px]`}>{getSection('packages-top-title', 'title', 'EĞİTİM PAKETLERİMİZ')}</span>
               <h2 className="text-5xl md:text-6xl font-black text-brand-dark tracking-tighter leading-none">
-                Size Uygun <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>Paketi Seçin</span>
+                {getSection('packages-title', 'title', 'Size Uygun Paketi Seçin').split('Paketi Seçin').map((part, index) => (
+                  <React.Fragment key={index}>
+                    {part}
+                    {index === 0 && <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>Paketi Seçin</span>}
+                  </React.Fragment>
+                ))}
               </h2>
               <p className="text-xl text-slate-600 font-medium max-w-2xl">
-                İhtiyacınıza uygun eğitim paketi ile akademik hedeflerinize ulaşın.
+                {getSection('packages-subtitle', 'subtitle', 'İhtiyacınıza uygun eğitim paketi ile akademik hedeflerinize ulaşın.')}
               </p>
             </div>
-            <Link to="/paketler" className={`group flex items-center space-x-3 text-brand-dark font-black tracking-widest text-[13px] bg-slate-100 px-10 py-5 rounded-2xl ${primaryColorHover} hover:text-white hover:shadow-2xl hover:scale-105 hover:-translate-y-1 transition-all duration-300`}>
-              <span>Tüm Paketleri İncele</span>
+            <Link to={getSection('packages-button', 'buttonLink', '/paketler')} className={`group flex items-center space-x-3 text-brand-dark font-black tracking-widest text-[13px] bg-slate-100 px-10 py-5 rounded-2xl ${primaryColorHover} hover:text-white hover:shadow-2xl hover:scale-105 hover:-translate-y-1 transition-all duration-300`}>
+              <span>{getSection('packages-button', 'buttonText', 'Tüm Paketleri İncele')}</span>
               <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
             </Link>
           </div>
@@ -791,30 +784,46 @@ const MainHome: React.FC = () => {
         <div className="max-w-[1600px] mx-auto grid lg:grid-cols-2 gap-32 items-center">
           <div className="relative">
             <div className={`absolute -left-32 -top-32 w-[600px] h-[600px] ${isStyle2 ? 'bg-brand-warm-orange/10' : 'bg-brand-blue/5'} rounded-full blur-[120px]`}></div>
-            <img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop" className="rounded-[20px] shadow-2xl relative z-10" alt="CTA" />
+            {(() => {
+              const imageUrl = getSection('cta-image', 'buttonLink', '');
+              const finalUrl = imageUrl 
+                ? (imageUrl.startsWith('http') ? imageUrl : `${API_BASE_URL}${imageUrl}`)
+                : "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop";
+              return <img src={finalUrl} className="rounded-[20px] shadow-2xl relative z-10" alt="CTA" />;
+            })()}
             <div className={`absolute -bottom-16 -right-16 glass-panel p-12 rounded-[20px] shadow-2xl z-20 border ${isStyle2 ? 'border-orange-200' : 'border-brand-blue/20'}`}>
-              <p className="text-slate-400 text-[11px] font-black tracking-widest mb-6 capitalize">Sıradaki Başarı Öyküsü...</p>
-              <h4 className="text-4xl font-black text-brand-dark tracking-tighter leading-tight italic">Neden Sizin <br /> <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>Başarı Hikayeniz</span> Olmasın?</h4>
+              <p className="text-slate-400 text-[11px] font-black tracking-widest mb-6 capitalize">{getSection('cta-badge', 'title', 'Sıradaki Başarı Öyküsü...')}</p>
+              <h4 className="text-4xl font-black text-brand-dark tracking-tighter leading-tight italic">{getSection('cta-question', 'title', 'Neden Sizin Başarı Hikayeniz Olmasın?').split('Başarı Hikayeniz').map((part, index) => (
+                <React.Fragment key={index}>
+                  {part}
+                  {index === 0 && <><br /> <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>Başarı Hikayeniz</span></>}
+                </React.Fragment>
+              ))}</h4>
             </div>
           </div>
 
           <div className="space-y-16">
             <div className="space-y-10">
-              <h2 className="text-7xl font-black text-brand-dark tracking-tighter leading-none italic">Geleceği <br /> El Birliğiyle <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>İnşa Edelim.</span></h2>
+              <h2 className="text-7xl font-black text-brand-dark tracking-tighter leading-none italic">{getSection('cta-main-title', 'title', 'Geleceği El Birliğiyle İnşa Edelim.').split('İnşa Edelim.').map((part, index) => (
+                <React.Fragment key={index}>
+                  {part}
+                  {index === 0 && <><br /> El Birliğiyle <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>İnşa Edelim.</span></>}
+                </React.Fragment>
+              ))}</h2>
               <p className="text-2xl text-slate-500 font-medium leading-relaxed max-w-2xl">
-                Akademik Hedeflerinize Ulaşmanız İçin Uzman Kadromuz, Modern Eğitim Materyallerimiz Ve Dijital Çözümlerimizle Yanınızdayız.
+                {getSection('cta-description', 'description', 'Akademik Hedeflerinize Ulaşmanız İçin Uzman Kadromuz, Modern Eğitim Materyallerimiz Ve Dijital Çözümlerimizle Yanınızdayız.')}
               </p>
             </div>
             <div className="flex flex-wrap gap-8 pt-6">
-              <Link to="/subeler" className={`px-16 py-7 bg-brand-dark text-white font-black rounded-2xl ${isStyle2 ? 'hover:bg-brand-warm-orange hover:shadow-brand-warm-orange/40' : 'hover:bg-brand-blue hover:shadow-brand-blue/40'} transition-all duration-300 shadow-2xl hover:scale-105 hover:-translate-y-1 text-[14px] group`}>
+              <Link to={getSection('cta-button-primary', 'buttonLink', '/subeler')} className={`px-16 py-7 bg-brand-dark text-white font-black rounded-2xl ${isStyle2 ? 'hover:bg-brand-warm-orange hover:shadow-brand-warm-orange/40' : 'hover:bg-brand-blue hover:shadow-brand-blue/40'} transition-all duration-300 shadow-2xl hover:scale-105 hover:-translate-y-1 text-[14px] group`}>
                 <span className="flex items-center space-x-3">
-                  <span>Hemen Kayıt Başvurusu</span>
+                  <span>{getSection('cta-button-primary', 'buttonText', 'Hemen Kayıt Başvurusu')}</span>
                   <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </span>
               </Link>
-              <Link to="/franchise" className="px-16 py-7 border-2 border-brand-dark text-brand-dark font-black rounded-2xl hover:bg-brand-dark hover:text-white hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 text-[14px] group">
+              <Link to={getSection('cta-button-secondary', 'buttonLink', '/franchise')} className="px-16 py-7 border-2 border-brand-dark text-brand-dark font-black rounded-2xl hover:bg-brand-dark hover:text-white hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 text-[14px] group">
                 <span className="flex items-center space-x-3">
-                  <span>Akademik Şubemiz Olun</span>
+                  <span>{getSection('cta-button-secondary', 'buttonText', 'Akademik Şubemiz Olun')}</span>
                   <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </span>
               </Link>
@@ -823,7 +832,7 @@ const MainHome: React.FC = () => {
               <div className="flex -space-x-4">
                 {[1, 2, 3, 4, 5].map(i => <img key={i} src={`https://i.pravatar.cc/100?u=${i + 30}`} className="w-14 h-14 rounded-full border-4 border-white shadow-lg" alt="Student" />)}
               </div>
-              <p className="text-sm font-bold text-slate-400 italic">81 Şehirde Binlerce Öğrenci Geleceğine Güvenle Hazırlanıyor.</p>
+              <p className="text-sm font-bold text-slate-400 italic">{getSection('cta-testimonial', 'description', '81 Şehirde Binlerce Öğrenci Geleceğine Güvenle Hazırlanıyor.')}</p>
             </div>
           </div>
         </div>

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, ArrowRight, Search, Map as MapIcon, List as ListIcon, Navigation, ExternalLink } from 'lucide-react';
 import { branchService } from '../services/cms.service';
+import { homeSectionService } from '../services/homepage.service';
 import { Branch } from '../types';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
@@ -42,20 +43,34 @@ const BranchList: React.FC = () => {
   const [selectedBranch, setSelectedBranch] = useState<string | null>(null);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sections, setSections] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchBranches = async () => {
+    const fetchData = async () => {
       try {
-        const res = await branchService.getAll();
-        setBranches(res.data.branches);
+        const [branchesRes, sectionsRes] = await Promise.all([
+          branchService.getAll(),
+          homeSectionService.getAll()
+        ]);
+        
+        setBranches(branchesRes.data.branches);
+        
+        const data = (sectionsRes.data as any)?.data || sectionsRes.data || [];
+        const branchSections = Array.isArray(data) ? data.filter((s: any) => s.page === 'branches') : [];
+        setSections(branchSections);
       } catch (error) {
-        console.error('Error fetching branches:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
-    fetchBranches();
+    fetchData();
   }, []);
+
+  const getSection = (section: string, field: 'title' | 'subtitle' | 'description', defaultValue: string = '') => {
+    const content = sections.find(s => s.section === section);
+    return content?.[field] || defaultValue;
+  };
 
   const filteredBranches = branches.filter(b =>
     b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -76,16 +91,22 @@ const BranchList: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 lg:px-8 relative z-10">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-12">
             <div className="max-w-2xl space-y-6">
-              <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter italic capitalize">Türkiye <br /> <span className="text-brand-blue">şubelerimiz</span></h1>
-              <p className="text-slate-200 text-lg font-medium leading-relaxed">81 şubemiz ve binlerce öğrencimizle kocaman bir aileyiz. Size en yakın şubeyi bulup hemen başlayın.</p>
+              <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter italic capitalize">
+                {getSection('branches-hero-title', 'title', 'Türkiye Şubelerimiz')}
+              </h1>
+              <p className="text-slate-200 text-lg font-medium leading-relaxed">
+                {getSection('branches-hero-subtitle', 'subtitle', '81 şubemiz ve binlerce öğrencimizle kocaman bir aileyiz. Size en yakın şubeyi bulup hemen başlayın.')}
+              </p>
             </div>
             <div className="bg-white/5 backdrop-blur-xl p-6 rounded-[20px] border border-white/10 w-full lg:w-96 shadow-2xl">
-              <p className="text-white/60 font-black capitalize text-[10px] tracking-widest mb-4">Şube bul</p>
+              <p className="text-white/60 font-black capitalize text-[10px] tracking-widest mb-4">
+                {getSection('branches-hero-search-label', 'title', 'Şube bul')}
+              </p>
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                 <input
                   type="text"
-                  placeholder="İl veya ilçe ara..."
+                  placeholder={getSection('branches-hero-search-placeholder', 'subtitle', 'İl veya ilçe ara...')}
                   className="w-full pl-12 pr-4 py-4 bg-white rounded-[16px] text-brand-dark text-sm font-bold shadow-lg focus:ring-4 focus:ring-brand-blue/20 outline-none"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
@@ -104,14 +125,14 @@ const BranchList: React.FC = () => {
             className={`flex items-center space-x-3 px-8 py-3.5 rounded-[16px] text-[11px] font-black capitalize tracking-widest transition-all ${viewMode === 'list' ? 'bg-brand-blue text-white shadow-xl' : 'text-slate-500 hover:text-brand-blue'}`}
           >
             <ListIcon className="w-4 h-4" />
-            <span>Liste görünümü</span>
+            <span>{getSection('branches-view-list', 'title', 'Liste görünümü')}</span>
           </button>
           <button
             onClick={() => setViewMode('map')}
             className={`flex items-center space-x-3 px-8 py-3.5 rounded-[16px] text-[11px] font-black capitalize tracking-widest transition-all ${viewMode === 'map' ? 'bg-brand-blue text-white shadow-xl' : 'text-slate-500 hover:text-brand-blue'}`}
           >
             <MapIcon className="w-4 h-4" />
-            <span>Harita görünümü</span>
+            <span>{getSection('branches-view-map', 'title', 'Harita görünümü')}</span>
           </button>
         </div>
 
@@ -127,7 +148,7 @@ const BranchList: React.FC = () => {
                 <div className="h-56 relative overflow-hidden">
                   <img src={branch.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000" alt={branch.name} />
                   <div className="absolute top-4 left-4 bg-brand-blue text-white px-3 py-1 rounded-[12px] text-[9px] font-black capitalize tracking-widest shadow-lg">
-                    Yeni dönem kayıtları
+                    {getSection('branches-card-badge', 'title', 'Yeni dönem kayıtları')}
                   </div>
                 </div>
                 <div className="p-8 flex-grow flex flex-col">
@@ -147,25 +168,25 @@ const BranchList: React.FC = () => {
                       to={`/subeler/${branch.slug}`}
                       className="flex items-center space-x-2 text-[10px] font-black capitalize tracking-widest text-slate-400 group-hover:text-brand-blue transition-all"
                     >
-                      <span>Şubeyi incele</span>
+                      <span>{getSection('branches-card-button', 'title', 'Şubeyi incele')}</span>
                       <ArrowRight className="w-4 h-4" />
                     </Link>
-                    <button
-                      onClick={() => {
-                        setViewMode('map');
-                        setSelectedBranch(branch.id);
-                      }}
+                    <a
+                      href={`https://www.google.com/maps?q=${branch.lat},${branch.lng}`}
+                      target="_blank"
+                      rel="noreferrer"
                       className="p-2.5 bg-brand-gray text-slate-400 rounded-[12px] group-hover:bg-brand-blue group-hover:text-white transition-all"
+                      title="Google Maps'te Aç"
                     >
                       <MapIcon className="w-4 h-4" />
-                    </button>
+                    </a>
                   </div>
                 </div>
               </div>
             )) : (
               <div className="col-span-full py-20 text-center bg-white rounded-[20px] border-2 border-dashed border-slate-200">
-                <h3 className="text-xl font-black text-brand-dark">Aradığınız kriterde şube bulunamadı.</h3>
-                <button onClick={() => setSearchQuery('')} className="mt-4 text-brand-blue font-black underline capitalize tracking-widest text-xs">Tüm listeyi gör</button>
+                <h3 className="text-xl font-black text-brand-dark">{getSection('branches-card-empty', 'title', 'Aradığınız kriterde şube bulunamadı.')}</h3>
+                <button onClick={() => setSearchQuery('')} className="mt-4 text-brand-blue font-black underline capitalize tracking-widest text-xs">{getSection('branches-card-empty-button', 'title', 'Tüm listeyi gör')}</button>
               </div>
             )}
           </div>
@@ -217,7 +238,7 @@ const BranchList: React.FC = () => {
                               to={`/subeler/${branch.slug}`}
                               className="flex-1 py-2.5 bg-brand-blue text-white text-center text-[10px] font-black capitalize tracking-widest rounded-lg hover:bg-brand-dark transition-all"
                             >
-                              Şube Detayları
+                              {getSection('branches-map-detail-button', 'title', 'Şube Detayları')}
                             </Link>
                             <a
                               href={`https://www.google.com/maps?q=${branch.lat},${branch.lng}`}
@@ -244,8 +265,8 @@ const BranchList: React.FC = () => {
                     <Navigation className="w-6 h-6" />
                   </div>
                   <div>
-                    <h4 className="font-black text-brand-dark text-base mb-1">Harita Navigasyonu</h4>
-                    <p className="text-sm text-slate-600 leading-relaxed">Şube pinlerine tıklayarak detaylı bilgilere ulaşabilir ve Google Maps'te açabilirsiniz.</p>
+                    <h4 className="font-black text-brand-dark text-base mb-1">{getSection('branches-map-info-title', 'title', 'Harita Navigasyonu')}</h4>
+                    <p className="text-sm text-slate-600 leading-relaxed">{getSection('branches-map-info-desc', 'description', 'Şube pinlerine tıklayarak detaylı bilgilere ulaşabilir ve Google Maps\'te açabilirsiniz.')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-6">
@@ -254,7 +275,7 @@ const BranchList: React.FC = () => {
                       <MapPin className="w-4 h-4 text-brand-blue" />
                     </div>
                     <div>
-                      <p className="text-xs text-slate-500 font-medium">Toplam Şube</p>
+                      <p className="text-xs text-slate-500 font-medium">{getSection('branches-map-total-label', 'title', 'Toplam Şube')}</p>
                       <p className="text-xl font-black text-brand-blue">{filteredBranches.length}</p>
                     </div>
                   </div>

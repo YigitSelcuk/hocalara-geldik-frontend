@@ -53,10 +53,10 @@ export const UserManager: React.FC<UserManagerProps> = ({
                             </span>
                         </div>
 
-                        {admin.assignedBranchId && (
+                        {admin.branchId && (
                             <div className="text-center min-w-[120px]">
                                 <p className="text-[10px] font-black text-slate-400 capitalize tracking-widest mb-1">Atanan Şube</p>
-                                <p className="text-xs font-black text-brand-dark capitalize">{branches.find(b => b.id === admin.assignedBranchId)?.name.split(' ')[1] || 'Bilinmiyor'}</p>
+                                <p className="text-xs font-black text-brand-dark capitalize">{branches.find(b => b.id === admin.branchId)?.name.split(' ')[1] || 'Bilinmiyor'}</p>
                             </div>
                         )}
 

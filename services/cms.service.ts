@@ -50,6 +50,7 @@ export const categoryService = {
 export const userService = {
     getAll: () => api.get('/users'),
     getMe: () => api.get('/auth/me'),
+    create: (data: any) => api.post('/users', data),
     update: (id: string, data: any) => api.put(`/users/${id}`, data),
     delete: (id: string) => api.delete(`/users/${id}`),
 };
@@ -83,7 +84,7 @@ export const mediaService = {
     upload: (file: File) => {
         const formData = new FormData();
         formData.append('file', file);
-        return api.post('/media', formData, {
+        return api.post('/media/upload', formData, {
             headers: { 'Content-Type': 'multipart/form-data' }
         });
     },

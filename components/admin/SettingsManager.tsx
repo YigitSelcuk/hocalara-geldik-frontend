@@ -5,7 +5,7 @@ import { systemService } from '../../services/system.service';
 
 
 export const SettingsManager: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<'general' | 'seo' | 'social'>('general');
+    const [activeTab, setActiveTab] = useState<'general' | 'seo' | 'social' | 'footer'>('general');
     const [siteSettings, setSiteSettings] = useState<any>({
         name: 'Hocalara Geldik',
         email: 'akademi@hocalarageldik.com',
@@ -20,7 +20,9 @@ export const SettingsManager: React.FC = () => {
         facebook: '',
         instagram: '',
         youtube: '',
-        twitter: ''
+        twitter: '',
+        footerDescription: 'Türkiye\'nin Öncü Eğitim Markası Olarak, Akademik Başarınızı En Modern Teknolojiler Ve Uzman Kadromuzla Destekliyoruz.',
+        footerCopyright: 'Hocalara Geldik Akademi Grubu. Tüm hakları saklıdır.'
     });
     const [loading, setLoading] = useState(true);
 
@@ -63,7 +65,8 @@ export const SettingsManager: React.FC = () => {
     const tabs = [
         { id: 'general', label: 'Genel Bilgiler', icon: Settings },
         { id: 'seo', label: 'SEO Ayarları', icon: Globe },
-        { id: 'social', label: 'Sosyal Medya', icon: Share2 }
+        { id: 'social', label: 'Sosyal Medya', icon: Share2 },
+        { id: 'footer', label: 'Footer Ayarları', icon: Settings }
     ];
 
     return (
@@ -165,6 +168,26 @@ export const SettingsManager: React.FC = () => {
                                         <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Twitter (X) URL</label>
                                         <input type="text" value={siteSettings.twitter} onChange={e => setSiteSettings({ ...siteSettings, twitter: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                                     </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {activeTab === 'footer' && (
+                            <div className="space-y-8">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Footer Açıklaması</label>
+                                    <textarea rows={3} value={siteSettings.footerDescription} onChange={e => setSiteSettings({ ...siteSettings, footerDescription: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" placeholder="Türkiye'nin Öncü Eğitim Markası..." />
+                                </div>
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Copyright Metni</label>
+                                    <input type="text" value={siteSettings.footerCopyright} onChange={e => setSiteSettings({ ...siteSettings, footerCopyright: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-6 py-4 text-sm focus:outline-none focus:border-brand-blue font-bold" placeholder="Hocalara Geldik Akademi Grubu" />
+                                </div>
+                                <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                                    <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-2">Bilgi</p>
+                                    <p className="text-[11px] text-slate-600 font-bold leading-relaxed">
+                                        Footer menü linkleri ve iletişim bilgileri yukarıdaki "Genel Bilgiler" ve "Sosyal Medya" sekmelerinden düzenlenir.
+                                        Menü yönetimi için "Menüler" bölümünü kullanabilirsiniz.
+                                    </p>
                                 </div>
                             </div>
                         )}

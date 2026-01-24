@@ -60,7 +60,7 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
         {slidersToDisplay.map((slide, index) => (
           <div
             key={slide.id}
-            className={`absolute inset - 0 transition - all duration - [2000ms] ease - out ${index === activeSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'} `}
+            className={`absolute inset-0 transition-all duration-[2000ms] ease-out ${index === activeSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
           >
             <img
               src={slide.image}
@@ -73,24 +73,24 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
             <div className="absolute inset-0 flex items-center">
               <div className="max-w-7xl mx-auto px-6 lg:px-8 w-full">
                 <div className="max-w-3xl space-y-10">
-                  <div className={`inline - flex items - center space - x - 4 px - 6 py - 3 bg - brand - blue / 20 backdrop - blur - xl text - brand - blue border border - brand - blue / 30 rounded - 2xl text - [13px] font - black tracking - widest shadow - 2xl transition - all duration - 1000 delay - 300 ${index === activeSlide ? 'translate-x-0 opacity-100' : '-translate-x-12 opacity-0'} `}>
+                  <div className={`inline-flex items-center space-x-4 px-6 py-3 bg-brand-blue/20 backdrop-blur-xl text-brand-blue border border-brand-blue/30 rounded-2xl text-[13px] font-black tracking-widest shadow-2xl transition-all duration-1000 delay-300 ${index === activeSlide ? 'translate-x-0 opacity-100' : '-translate-x-12 opacity-0'}`}>
                     <Zap className="w-5 h-5" />
                     <span>Hocalara Geldik {branch.name}</span>
                   </div>
 
-                  <h1 className={`text - 6xl md: text - 8xl font - black text - white tracking - tighter leading - [0.9] transition - all duration - 1000 delay - 500 ${index === activeSlide ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'} `}>
+                  <h1 className={`text-6xl md:text-8xl font-black text-white tracking-tighter leading-[0.9] transition-all duration-1000 delay-500 ${index === activeSlide ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
                     {slide.title.split(' ').map((word, i) => (
                       <span key={i} className={i >= 1 ? 'text-brand-blue italic' : ''}>{word} </span>
                     ))}
                   </h1>
 
-                  <p className={`text - 2xl text - slate - 300 font - medium max - w - 2xl leading - relaxed transition - all duration - 1000 delay - 700 ${index === activeSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'} `}>
+                  <p className={`text-2xl text-slate-300 font-medium max-w-2xl leading-relaxed transition-all duration-1000 delay-700 ${index === activeSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
                     {slide.subtitle}
                   </p>
 
-                  <div className={`flex flex - wrap gap - 6 pt - 6 transition - all duration - 1000 delay - 900 ${index === activeSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'} `}>
+                  <div className={`flex flex-wrap gap-6 pt-6 transition-all duration-1000 delay-900 ${index === activeSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
                     <a
-                      href={`tel:${branch.phone} `}
+                      href={`tel:${branch.phone}`}
                       className="px-12 py-5 bg-brand-blue text-white font-black rounded-2xl flex items-center space-x-3 hover:bg-white hover:text-brand-dark transition-all shadow-2xl hover:scale-105 hover:-translate-y-1 text-[14px] tracking-wide group"
                     >
                       <Phone className="w-5 h-5 group-hover:animate-bounce" />
@@ -103,12 +103,12 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
                     >
                       <MessageCircle className="w-5 h-5" />
                       <span>WhatsApp</span>
-                    </a >
-                  </div >
-                </div >
-              </div >
-            </div >
-          </div >
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         ))}
 
         {/* Slider Navigation */}
@@ -216,7 +216,7 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
                   {news.length > 0 ? news.slice(0, 3).map(n => (
                     <Link key={n.id} to={`/haberler/${n.id}`} className="group flex gap-4 p-4 rounded-xl hover:bg-slate-50 transition-colors">
                       <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden">
-                        <img src={n.featuredImage || n.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={n.title} />
+                        <img src={n.image || '/uploads/placeholder.jpg'} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" alt={n.title} />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs text-slate-400 font-medium mb-1">{n.publishedAt ? new Date(n.publishedAt).toLocaleDateString('tr-TR') : ''}</p>

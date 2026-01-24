@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import {
-  Building2, FileText, Video, Package, Settings, Sparkles, X
+  Building2, FileText, Video, Package, Settings, Sparkles, X, Play
 } from 'lucide-react';
 import {
   sliderService, newsService, branchService,
@@ -44,8 +44,41 @@ import { YouTubeManager } from '../components/admin/YouTubeManager';
 import { YearlySuccessManager } from '../components/admin/YearlySuccessManager';
 import { HomeSectionManager } from '../components/admin/HomeSectionManager';
 import { TeacherManager } from '../components/admin/TeacherManager';
+import { ContentSectionsManager } from '../components/admin/ContentSectionsManager';
+import { BranchAdminPanel } from '../components/admin/BranchAdminPanel';
+import { ApprovalsManager } from '../components/admin/ApprovalsManager';
+import BranchPackages from './BranchPackages';
+import BranchNews from './BranchNews';
+import Alert from '../components/Alert';
+import { useAlert } from '../hooks/useAlert';
 
 export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
+  // Debug: Log user info
+  console.log('👤 AdminPanel User:', user);
+  console.log('👤 User Role:', user?.role);
+  console.log('👤 Is BRANCH_ADMIN?', user?.role === UserRole.BRANCH_ADMIN);
+  
+  // If user is BRANCH_ADMIN, show branch-specific routes
+  if (user?.role === UserRole.BRANCH_ADMIN) {
+    console.log('🏢 Showing BranchAdmin Routes');
+    return (
+      <Routes>
+        <Route path="/branch/:id" element={<BranchAdminPanel user={user} />} />
+        <Route path="/branch-packages" element={<BranchPackages user={user} />} />
+        <Route path="/branch-news" element={<BranchNews />} />
+        <Route path="*" element={<Navigate to={`/admin/branch/${user.branchId}`} replace />} />
+      </Routes>
+    );
+  }
+  
+  console.log('⚙️ Showing full AdminPanel');
+  
+  // Alert hook
+  const { alert, showAlert, hideAlert } = useAlert();
+  
+  // Confirmation modal state
+  const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; id: string } | null>(null);
+  
   // --- PERSISTENT STATE ---
   const [sliders, setSliders] = useState<SliderItem[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -84,7 +117,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
           teachersRes
         ] = await Promise.allSettled([
           sliderService.getAll(),
-          newsService.getAll(),
+          pageService.getAll({ type: 'NEWS' }),
           branchService.getAll(),
           videoService.getAll(),
           packageService.getAll(),
@@ -107,20 +140,42 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         ]);
 
         setSliders(slidersRes.status === 'fulfilled' ? (slidersRes.value.data.sliders || []) : []);
-        setNews(newsRes.status === 'fulfilled' ? (newsRes.value.data.news || []) : []);
+        setNews(newsRes.status === 'fulfilled' ? (newsRes.value.data.pages || []) : []);
         setBranches(branchesRes.status === 'fulfilled' ? (branchesRes.value.data.branches || []) : []);
-        setVideos(videosRes.status === 'fulfilled' ? (videosRes.value.data.videos || []) : []);
-        setPackages(packagesRes.status === 'fulfilled' ? (packagesRes.value.data.packages || []) : []);
+        
+        // Debug video response
+        if (videosRes.status === 'fulfilled') {
+          console.log('🎬 Videos Response:', videosRes.value);
+          console.log('🎬 Videos Data:', videosRes.value.data);
+          const videoData = videosRes.value.data.data || videosRes.value.data.videos || videosRes.value.data || [];
+          console.log('🎬 Extracted Videos:', videoData);
+          setVideos(Array.isArray(videoData) ? videoData : []);
+        } else {
+          console.error('❌ Videos fetch failed:', videosRes);
+          setVideos([]);
+        }
+        setPackages(packagesRes.status === 'fulfilled' ? (packagesRes.value.data.data || packagesRes.value.data.packages || []) : []);
         setAdminUsers(usersRes.status === 'fulfilled' ? (usersRes.value.data.users || []) : []);
         setMenus(menusRes.status === 'fulfilled' ? (menusRes.value.data.menus || []) : []);
         setPages(pagesRes.status === 'fulfilled' ? (pagesRes.value.data.pages || []) : []);
         setCategories(categoriesRes.status === 'fulfilled' ? (categoriesRes.value.data.categories || []) : []);
         setMediaItems(mediaRes.status === 'fulfilled' ? (mediaRes.value.data.media || []) : []);
-        setLeads(leadsRes.status === 'fulfilled' ? (leadsRes.value.data.leads || []) : []);
+        setLeads(leadsRes.status === 'fulfilled' ? (leadsRes.value.data.submissions || leadsRes.value.data.leads || []) : []);
         setBannerCards(bannerCardsRes.status === 'fulfilled' ? ((bannerCardsRes.value.data as any).bannerCards || (bannerCardsRes.value.data as any).data || []) : []);
         setStatistics(statisticsRes.status === 'fulfilled' ? ((statisticsRes.value.data as any).statistics || (statisticsRes.value.data as any).data || []) : []);
         setFeatures(featuresRes.status === 'fulfilled' ? ((featuresRes.value.data as any).features || (featuresRes.value.data as any).data || []) : []);
-        setBlogPosts(blogPostsRes.status === 'fulfilled' ? ((blogPostsRes.value.data as any).blogPosts || (blogPostsRes.value.data as any).data || []) : []);
+        
+        // Blog posts response format: { success: true, data: [...] }
+        if (blogPostsRes.status === 'fulfilled') {
+          console.log('📰 Blog Posts Response:', blogPostsRes.value);
+          const blogData = (blogPostsRes.value.data as any).data || (blogPostsRes.value.data as any).blogPosts || [];
+          console.log('📰 Extracted Blog Posts:', blogData);
+          setBlogPosts(Array.isArray(blogData) ? blogData : []);
+        } else {
+          console.error('❌ Blog posts fetch failed:', blogPostsRes);
+          setBlogPosts([]);
+        }
+        
         setExamDates(examDatesRes.status === 'fulfilled' ? ((examDatesRes.value.data as any).examDates || (examDatesRes.value.data as any).data || []) : []);
         setSocialMedia(socialMediaRes.status === 'fulfilled' ? ((socialMediaRes.value.data as any).socialMedia || (socialMediaRes.value.data as any).data || []) : []);
         setYoutubeChannels(youtubeChannelsRes.status === 'fulfilled' ? ((youtubeChannelsRes.value.data as any).youtubeChannels || (youtubeChannelsRes.value.data as any).data || []) : []);
@@ -145,7 +200,15 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
 
   // --- CRUD ACTIONS ---
   const handleDelete = async (type: string, id: string) => {
-    if (!window.confirm('Bu içeriği silmek istediğinize emin misiniz?')) return;
+    console.log('🗑️ handleDelete called:', { type, id });
+    setDeleteConfirm({ type, id });
+  };
+  
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+    
+    const { type, id } = deleteConfirm;
+    console.log('🗑️ Confirming delete:', { type, id });
 
     try {
       switch (type) {
@@ -154,8 +217,12 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
           setSliders((prev: SliderItem[]) => prev.filter((item: SliderItem) => item.id !== id));
           break;
         case 'news':
-          await newsService.delete(id);
+          await pageService.delete(id);
           setNews((prev: NewsItem[]) => prev.filter((item: NewsItem) => item.id !== id));
+          break;
+        case 'blog':
+          await blogPostService.delete(id);
+          setBlogPosts((prev: BlogPost[]) => prev.filter((item: BlogPost) => item.id !== id));
           break;
         case 'branch':
           await branchService.delete(id);
@@ -234,19 +301,29 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
           setTeachers((prev: Teacher[]) => prev.filter((item: Teacher) => item.id !== id));
           break;
       }
+      showAlert('success', 'İçerik başarıyla silindi.');
+      setDeleteConfirm(null);
     } catch (error) {
-      alert('Silme işlemi başarısız oldu.');
+      showAlert('error', 'Silme işlemi başarısız oldu.');
+      setDeleteConfirm(null);
     }
   };
 
   const handleAddStudent = (successId: string) => {
     setModalType('student');
-    setEditingItem({ yearlySuccessId: successId });
+    setEditingItem({ yearlySuccessId: successId, isNewStudent: true });
     setIsModalOpen(true);
   };
 
   const handleDeleteStudent = async (successId: string, studentId: string) => {
-    if (!window.confirm('Bu öğrenciyi silmek istediğinize emin misiniz?')) return;
+    setDeleteConfirm({ type: 'student', id: `${successId}:${studentId}` });
+  };
+  
+  const confirmDeleteStudent = async () => {
+    if (!deleteConfirm || deleteConfirm.type !== 'student') return;
+    
+    const [successId, studentId] = deleteConfirm.id.split(':');
+    
     try {
       await yearlySuccessService.deleteStudent(successId, studentId);
       setYearlySuccesses((prev: YearlySuccess[]) => prev.map((s: YearlySuccess) => {
@@ -255,8 +332,11 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         }
         return s;
       }));
+      showAlert('success', 'Öğrenci başarıyla silindi.');
+      setDeleteConfirm(null);
     } catch (error) {
-      alert('Öğrenci silinemedi.');
+      showAlert('error', 'Öğrenci silinemedi.');
+      setDeleteConfirm(null);
     }
   };
 
@@ -272,10 +352,60 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
     setIsModalOpen(true);
   };
 
+  const handleImageUpload = async (file: File): Promise<string> => {
+    try {
+      const response = await mediaService.upload(file);
+      // Response yapısını kontrol et
+      const url = response.data?.data?.url || response.data?.url || response.data?.media?.url;
+      if (!url) {
+        console.error('No URL in response:', response);
+        throw new Error('Görsel URL alınamadı');
+      }
+      return url;
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      throw error;
+    }
+  };
+
   const handleSave = async (data: any) => {
     const type = modalType;
+    console.log('💾 Saving:', type, 'with data:', data);
+    console.log('📝 Editing item:', editingItem);
     try {
+      // Special case for student - always CREATE
+      if (type === 'student' && editingItem?.isNewStudent) {
+        console.log('➕ CREATE student mode');
+        const { yearlySuccessId, features, isNewStudent, ...studentData } = data;
+        console.log('🔵 Cleaned student data:', studentData);
+        console.log('🔵 YearlySuccessId:', editingItem.yearlySuccessId);
+        console.log('🔵 Student image:', studentData.image);
+        
+        const newItem = await yearlySuccessService.addStudent(editingItem.yearlySuccessId, studentData);
+        console.log('✅ Student added:', newItem);
+        console.log('✅ Student data from backend:', newItem.data);
+        
+        setYearlySuccesses((prev: YearlySuccess[]) => prev.map((s: YearlySuccess) => {
+          if (s.id === editingItem.yearlySuccessId) {
+            return { ...s, students: [newItem.data, ...(s.students || [])] };
+          }
+          return s;
+        }));
+        
+        setIsModalOpen(false);
+        return;
+      }
+
+      // Clean data for video type
+      let cleanedData = data;
+      if (type === 'video') {
+        const { features, ...videoData } = data;
+        cleanedData = videoData;
+        console.log('🎥 Cleaned video data:', cleanedData);
+      }
+      
       if (editingItem) {
+        console.log('🔄 UPDATE mode');
         // Update
         let updatedItem: any;
         switch (type) {
@@ -284,20 +414,21 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             setSliders((prev: SliderItem[]) => prev.map((item: SliderItem) => item.id === editingItem.id ? updatedItem.data : item));
             break;
           case 'news':
-            updatedItem = await newsService.update(editingItem.id, data);
-            setNews((prev: NewsItem[]) => prev.map((item: NewsItem) => item.id === editingItem.id ? updatedItem.data : item));
+            updatedItem = await pageService.update(editingItem.id, data);
+            setNews((prev: NewsItem[]) => prev.map((item: NewsItem) => item.id === editingItem.id ? updatedItem.data.page : item));
             break;
           case 'branch':
             updatedItem = await branchService.update(editingItem.id, data);
             setBranches((prev: Branch[]) => prev.map((item: Branch) => item.id === editingItem.id ? updatedItem.data : item));
             break;
           case 'video':
-            updatedItem = await videoService.update(editingItem.id, data);
-            setVideos((prev: VideoLesson[]) => prev.map((item: VideoLesson) => item.id === editingItem.id ? updatedItem.data : item));
+            updatedItem = await videoService.update(editingItem.id, cleanedData);
+            const updatedVideo = updatedItem.data.data || updatedItem.data;
+            setVideos((prev: VideoLesson[]) => prev.map((item: VideoLesson) => item.id === editingItem.id ? updatedVideo : item));
             break;
           case 'package':
             updatedItem = await packageService.update(editingItem.id, data);
-            setPackages((prev: EducationPackage[]) => prev.map((item: EducationPackage) => item.id === editingItem.id ? updatedItem.data : item));
+            setPackages((prev: EducationPackage[]) => prev.map((item: EducationPackage) => item.id === editingItem.id ? (updatedItem.data.data || updatedItem.data) : item));
             break;
           case 'user':
             updatedItem = await userService.update(editingItem.id, data);
@@ -337,6 +468,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             break;
         }
       } else {
+        console.log('➕ CREATE mode');
         // Create
         let newItem: any;
         switch (type) {
@@ -345,20 +477,53 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             setSliders((prev: SliderItem[]) => [newItem.data, ...prev]);
             break;
           case 'news':
-            newItem = await newsService.create(data);
-            setNews((prev: NewsItem[]) => [newItem.data, ...prev]);
+            newItem = await pageService.create({ ...data, type: 'NEWS' });
+            setNews((prev: NewsItem[]) => [newItem.data.page, ...prev]);
             break;
           case 'branch':
+            // Şube oluştur
             newItem = await branchService.create(data);
-            setBranches((prev: Branch[]) => [newItem.data, ...prev]);
+            const createdBranch = newItem.data.branch || newItem.data;
+            
+            console.log('✅ Branch created:', createdBranch);
+            console.log('✅ Branch ID:', createdBranch.id);
+            
+            // Eğer admin bilgileri varsa, şube yöneticisi hesabı oluştur
+            if (data.adminName && data.adminEmail && data.adminPassword) {
+              try {
+                const userPayload = {
+                  name: data.adminName,
+                  email: data.adminEmail,
+                  password: data.adminPassword,
+                  role: 'BRANCH_ADMIN',
+                  branchId: createdBranch.id
+                };
+                
+                console.log('📤 Creating user with payload:', userPayload);
+                
+                const userResponse = await userService.create(userPayload);
+                console.log('✅ Şube yöneticisi hesabı oluşturuldu:', userResponse.data);
+                showAlert('success', `Şube ve yönetici hesabı başarıyla oluşturuldu!\n\nGiriş Bilgileri:\nE-posta: ${data.adminEmail}\nŞifre: ${data.adminPassword}\n\nBu bilgileri şube yöneticisine iletin.`);
+              } catch (userError: any) {
+                console.error('❌ Kullanıcı oluşturma hatası:', userError);
+                console.error('❌ Error response:', userError.response?.data);
+                showAlert('warning', 'Şube oluşturuldu ancak yönetici hesabı oluşturulamadı. Lütfen manuel olarak kullanıcı ekleyin.');
+              }
+            }
+            
+            setBranches((prev: Branch[]) => [createdBranch, ...prev]);
             break;
           case 'video':
-            newItem = await videoService.create(data);
-            setVideos((prev: VideoLesson[]) => [newItem.data, ...prev]);
+            newItem = await videoService.create(cleanedData);
+            console.log('✅ Video created response:', newItem);
+            console.log('✅ Video data:', newItem.data);
+            const createdVideo = newItem.data.data || newItem.data;
+            console.log('✅ Extracted video:', createdVideo);
+            setVideos((prev: VideoLesson[]) => [createdVideo, ...prev]);
             break;
           case 'package':
             newItem = await packageService.create(data);
-            setPackages((prev: EducationPackage[]) => [newItem.data, ...prev]);
+            setPackages((prev: EducationPackage[]) => [(newItem.data.data || newItem.data), ...prev]);
             break;
           case 'user':
             // Users usually handled via specialized auth/admin endpoints
@@ -416,15 +581,6 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             newItem = await yearlySuccessService.create(data);
             setYearlySuccesses((prev: YearlySuccess[]) => [newItem.data, ...prev]);
             break;
-          case 'student':
-            newItem = await yearlySuccessService.addStudent(editingItem.yearlySuccessId, data);
-            setYearlySuccesses((prev: YearlySuccess[]) => prev.map((s: YearlySuccess) => {
-              if (s.id === editingItem.yearlySuccessId) {
-                return { ...s, students: [newItem.data, ...(s.students || [])] };
-              }
-              return s;
-            }));
-            break;
           case 'homeSection':
             newItem = await homeSectionService.create(data);
             setHomeSections((prev: HomeSection[]) => [newItem.data, ...prev]);
@@ -437,7 +593,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
       }
       setIsModalOpen(false);
     } catch (error) {
-      alert('Kaydetme işlemi başarısız oldu.');
+      showAlert('error', 'Kaydetme işlemi başarısız oldu.');
     }
   };
 
@@ -449,7 +605,29 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
   const EditModal = () => {
     if (!isModalOpen) return null;
 
-    const [formData, setFormData] = useState<any>(editingItem || {});
+    const [formData, setFormData] = useState<any>(() => {
+      const data = editingItem || {};
+      // Initialize features array if it doesn't exist or is not an array
+      if (!Array.isArray(data.features)) {
+        data.features = [];
+      }
+      // For student modal, preserve yearlySuccessId but clear other fields
+      if (modalType === 'student' && data.isNewStudent) {
+        return {
+          yearlySuccessId: data.yearlySuccessId,
+          isNewStudent: true,
+          features: [],
+          name: '',
+          exam: '',
+          rank: '',
+          image: '',
+          branch: '',
+          university: '',
+          score: ''
+        };
+      }
+      return data;
+    });
 
     const renderForm = () => {
       switch (modalType) {
@@ -489,29 +667,159 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
           return (
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Haber Başlığı</label>
-                <input type="text" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Haber Başlığı *</label>
+                <input 
+                  type="text" 
+                  value={formData.title || ''} 
+                  onChange={e => setFormData({ ...formData, title: e.target.value })} 
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                  placeholder="Örn: 2024 YKS Sonuçları Açıklandı"
+                />
               </div>
+
               <div className="space-y-2">
-                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Haber İçeriği</label>
-                <textarea rows={4} value={formData.content || ''} onChange={e => setFormData({ ...formData, content: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" />
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">URL Slug</label>
+                <input 
+                  type="text" 
+                  value={formData.slug || ''} 
+                  onChange={e => setFormData({ ...formData, slug: e.target.value })} 
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                  placeholder="Otomatik oluşturulacak"
+                />
               </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Özet (Excerpt)</label>
+                <textarea 
+                  rows={2} 
+                  value={formData.excerpt || ''} 
+                  onChange={e => setFormData({ ...formData, excerpt: e.target.value })} 
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" 
+                  placeholder="Kısa özet (liste görünümünde gösterilir)"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Haber İçeriği *</label>
+                <textarea 
+                  rows={8} 
+                  value={formData.content || ''} 
+                  onChange={e => setFormData({ ...formData, content: e.target.value })} 
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" 
+                  placeholder="HTML içerik desteklenir"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapak Görseli *</label>
+                <div className="flex gap-4 items-end">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          const url = await handleImageUpload(file);
+                          setFormData({ ...formData, featuredImage: url });
+                        } catch (error) {
+                          showAlert('error', 'Görsel yüklenemedi');
+                        }
+                      }
+                    }}
+                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                  />
+                  {formData.featuredImage && (
+                    <img src={formData.featuredImage} alt="Preview" className="w-24 h-16 object-cover border border-slate-200 rounded-lg" />
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Tarih</label>
-                  <input type="text" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kategori</label>
+                  <select 
+                    value={formData.categoryId || ''} 
+                    onChange={e => setFormData({ ...formData, categoryId: e.target.value || null })} 
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                  >
+                    <option value="">Kategori Seçin</option>
+                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapsam</label>
-                  <select value={formData.isMain ? 'main' : (formData.branchId || '')} onChange={e => setFormData({ ...formData, isMain: e.target.value === 'main', branchId: e.target.value === 'main' ? undefined : e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold">
-                    <option value="main">Genel / Kurumsal</option>
+                  <select 
+                    value={formData.branchId || ''} 
+                    onChange={e => setFormData({ ...formData, branchId: e.target.value || null })} 
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                  >
+                    <option value="">Genel / Kurumsal</option>
                     {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 </div>
               </div>
+
               <div className="space-y-2">
-                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Görsel URL</label>
-                <input type="text" value={formData.image || ''} onChange={e => setFormData({ ...formData, image: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Durum</label>
+                <select 
+                  value={formData.status || 'DRAFT'} 
+                  onChange={e => setFormData({ ...formData, status: e.target.value })} 
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                >
+                  <option value="DRAFT">Taslak</option>
+                  <option value="PUBLISHED">Yayında</option>
+                  <option value="ARCHIVED">Arşivlendi</option>
+                </select>
+              </div>
+
+              <div className="flex items-center space-x-4 pt-2">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={formData.isFeatured || false} 
+                    onChange={e => setFormData({ ...formData, isFeatured: e.target.checked })} 
+                    className="w-4 h-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue"
+                  />
+                  <span className="text-xs font-bold text-slate-600">Öne Çıkan Haber</span>
+                </label>
+              </div>
+
+              {/* SEO Section */}
+              <div className="border-t border-slate-200 pt-4 mt-4">
+                <h3 className="text-sm font-black text-slate-700 mb-3">SEO Ayarları</h3>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">SEO Başlık</label>
+                    <input 
+                      type="text" 
+                      value={formData.seoTitle || ''} 
+                      onChange={e => setFormData({ ...formData, seoTitle: e.target.value })} 
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                      placeholder="Boş bırakılırsa haber başlığı kullanılır"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">SEO Açıklama</label>
+                    <textarea 
+                      rows={2} 
+                      value={formData.seoDescription || ''} 
+                      onChange={e => setFormData({ ...formData, seoDescription: e.target.value })} 
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" 
+                      placeholder="Arama motorları için açıklama"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">SEO Anahtar Kelimeler</label>
+                    <input 
+                      type="text" 
+                      value={formData.seoKeywords || ''} 
+                      onChange={e => setFormData({ ...formData, seoKeywords: e.target.value })} 
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                      placeholder="Virgülle ayırın: yks, üniversite, başarı"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           );
@@ -529,10 +837,14 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                 </div>
               </div>
               <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Açıklama</label>
+                <textarea value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} rows={2} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" />
+              </div>
+              <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Adres</label>
                 <input type="text" value={formData.address || ''} onChange={e => setFormData({ ...formData, address: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Telefon</label>
                   <input type="text" value={formData.phone || ''} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
@@ -541,56 +853,245 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">WhatsApp</label>
                   <input type="text" value={formData.whatsapp || ''} onChange={e => setFormData({ ...formData, whatsapp: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">E-posta</label>
+                  <input type="email" value={formData.email || ''} onChange={e => setFormData({ ...formData, email: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Enlem (Lat)</label>
-                  <input type="number" step="0.000001" value={formData.latitude || ''} onChange={e => setFormData({ ...formData, latitude: parseFloat(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                  <input type="number" step="0.000001" value={formData.lat || ''} onChange={e => setFormData({ ...formData, lat: parseFloat(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Boylam (Lng)</label>
-                  <input type="number" step="0.000001" value={formData.longitude || ''} onChange={e => setFormData({ ...formData, longitude: parseFloat(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                  <input type="number" step="0.000001" value={formData.lng || ''} onChange={e => setFormData({ ...formData, lng: parseFloat(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Logo URL</label>
-                  <input type="text" value={formData.logo || ''} onChange={e => setFormData({ ...formData, logo: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kurumsal Renk</label>
-                  <input type="color" value={formData.primaryColor || '#0052FF'} onChange={e => setFormData({ ...formData, primaryColor: e.target.value })} className="w-full h-[46px] bg-slate-50 border border-slate-100 rounded-xl px-2 py-1 focus:outline-none focus:border-brand-blue cursor-pointer" />
+              
+              {/* Logo Upload */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Logo</label>
+                <div className="flex gap-4 items-end">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          const url = await handleImageUpload(file);
+                          setFormData({ ...formData, logo: url });
+                        } catch (error) {
+                          showAlert('error', 'Görsel yüklenemedi');
+                        }
+                      }
+                    }}
+                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                  />
+                  {formData.logo && (
+                    <img src={formData.logo} alt="Logo" className="w-16 h-16 object-contain border border-slate-200 rounded-lg" />
+                  )}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapak Görseli URL</label>
-                  <input type="text" value={formData.image || ''} onChange={e => setFormData({ ...formData, image: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Başarı Banner URL</label>
-                  <input type="text" value={formData.successBanner || ''} onChange={e => setFormData({ ...formData, successBanner: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+
+              {/* Kapak Görseli Upload */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapak Görseli</label>
+                <div className="flex gap-4 items-end">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          const url = await handleImageUpload(file);
+                          setFormData({ ...formData, image: url });
+                        } catch (error) {
+                          showAlert('error', 'Görsel yüklenemedi');
+                        }
+                      }
+                    }}
+                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                  />
+                  {formData.image && (
+                    <img src={formData.image} alt="Kapak" className="w-24 h-16 object-cover border border-slate-200 rounded-lg" />
+                  )}
                 </div>
               </div>
+
+              {/* Başarı Banner Upload */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Başarı Banner</label>
+                <div className="flex gap-4 items-end">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          const url = await handleImageUpload(file);
+                          setFormData({ ...formData, successBanner: url });
+                        } catch (error) {
+                          showAlert('error', 'Görsel yüklenemedi');
+                        }
+                      }
+                    }}
+                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                  />
+                  {formData.successBanner && (
+                    <img src={formData.successBanner} alt="Banner" className="w-24 h-16 object-cover border border-slate-200 rounded-lg" />
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kurumsal Renk</label>
+                <input type="color" value={formData.primaryColor || '#0052FF'} onChange={e => setFormData({ ...formData, primaryColor: e.target.value })} className="w-full h-[46px] bg-slate-50 border border-slate-100 rounded-xl px-2 py-1 focus:outline-none focus:border-brand-blue cursor-pointer" />
+              </div>
+
+              {/* Şube Yöneticisi Hesap Bilgileri - Sadece yeni şube eklerken */}
+              {!editingItem && (
+                <div className="border-t border-slate-200 pt-6 mt-6">
+                  <h3 className="text-sm font-black text-brand-dark mb-4 flex items-center">
+                    <div className="w-8 h-8 bg-brand-blue/10 rounded-lg flex items-center justify-center mr-3">
+                      <Settings className="w-4 h-4 text-brand-blue" />
+                    </div>
+                    Şube Yöneticisi Hesap Bilgileri
+                  </h3>
+                  <p className="text-xs text-slate-500 mb-4">Bu bilgilerle şube yöneticisi admin panele giriş yapabilecek.</p>
+                  
+                  <div className="space-y-4 bg-slate-50 p-4 rounded-xl">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Yönetici Adı *</label>
+                        <input 
+                          type="text" 
+                          value={formData.adminName || ''} 
+                          onChange={e => setFormData({ ...formData, adminName: e.target.value })} 
+                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                          placeholder="Örn: Ahmet Yılmaz"
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">E-posta (Giriş) *</label>
+                        <input 
+                          type="email" 
+                          value={formData.adminEmail || ''} 
+                          onChange={e => setFormData({ ...formData, adminEmail: e.target.value })} 
+                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                          placeholder="sube@hocalarageldik.com"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Şifre *</label>
+                      <input 
+                        type="password" 
+                        value={formData.adminPassword || ''} 
+                        onChange={e => setFormData({ ...formData, adminPassword: e.target.value })} 
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                        placeholder="Minimum 6 karakter"
+                        minLength={6}
+                        required
+                      />
+                      <p className="text-xs text-slate-400 mt-1">⚠️ Bu şifreyi not edin, şube yöneticisine iletmeniz gerekecek.</p>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           );
         case 'video':
+          // YouTube video ID'sini çıkar
+          const getYouTubeVideoId = (url: string) => {
+            if (!url) return null;
+            const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+            const match = url.match(regExp);
+            return (match && match[2].length === 11) ? match[2] : null;
+          };
+
+          const getYouTubeThumbnail = (url: string) => {
+            const videoId = getYouTubeVideoId(url);
+            return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+          };
+
+          const videoId = getYouTubeVideoId(formData.videoUrl || '');
+          const thumbnailUrl = getYouTubeThumbnail(formData.videoUrl || '');
+
           return (
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Video Başlığı</label>
-                <input type="text" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Video Başlığı *</label>
+                <input 
+                  type="text" 
+                  value={formData.title || ''} 
+                  onChange={e => setFormData({ ...formData, title: e.target.value })} 
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                  placeholder="Örn: Matematik - Türev Konusu"
+                  required
+                />
               </div>
+              
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">YouTube Video URL *</label>
+                <input 
+                  type="text" 
+                  value={formData.videoUrl || ''} 
+                  onChange={e => {
+                    const url = e.target.value;
+                    setFormData({ 
+                      ...formData, 
+                      videoUrl: url,
+                      thumbnail: getYouTubeThumbnail(url) || formData.thumbnail
+                    });
+                  }} 
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                />
+                {thumbnailUrl && (
+                  <div className="mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                    <p className="text-xs font-bold text-slate-500 mb-2">Video Önizleme:</p>
+                    <div className="relative aspect-video rounded-lg overflow-hidden shadow-lg">
+                      <img src={thumbnailUrl} alt="Video thumbnail" className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                        <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+                          <Play className="w-8 h-8 text-white ml-1" fill="white" />
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-xs font-medium text-slate-500 mt-2">Video ID: {videoId}</p>
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kategori</label>
-                  <select value={formData.category || ''} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold">
-                    {Object.values(VideoCategory).map(c => <option key={c} value={c}>{c}</option>)}
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kategori *</label>
+                  <select 
+                    value={formData.category || ''} 
+                    onChange={e => setFormData({ ...formData, category: e.target.value })} 
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    required
+                  >
+                    <option value="">Kategori Seçin</option>
+                    {Object.values(VideoCategory).map(c => <option key={c} value={c}>{c.replace(/_/g, ' ')}</option>)}
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Ders / Branş</label>
-                  <input type="text" value={formData.subject || ''} onChange={e => setFormData({ ...formData, subject: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Ders / Branş *</label>
+                  <input 
+                    type="text" 
+                    value={formData.subject || ''} 
+                    onChange={e => setFormData({ ...formData, subject: e.target.value })} 
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                    placeholder="Örn: Matematik"
+                    required
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -604,12 +1105,14 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Thumbnail URL</label>
-                <input type="text" value={formData.thumbnail || ''} onChange={e => setFormData({ ...formData, thumbnail: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Video URL (Embed)</label>
-                <input type="text" value={formData.videoUrl || ''} onChange={e => setFormData({ ...formData, videoUrl: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Açıklama</label>
+                <textarea 
+                  rows={3} 
+                  value={formData.description || ''} 
+                  onChange={e => setFormData({ ...formData, description: e.target.value })} 
+                  placeholder="Video hakkında kısa açıklama..."
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" 
+                />
               </div>
             </div>
           );
@@ -623,28 +1126,154 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Tür</label>
-                  <select value={formData.type || ''} onChange={e => setFormData({ ...formData, type: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold">
-                    {Object.values(PackageType).map(t => <option key={t} value={t}>{t}</option>)}
-                  </select>
+                  <input 
+                    type="text" 
+                    value={formData.type || ''} 
+                    onChange={e => setFormData({ ...formData, type: e.target.value })} 
+                    placeholder="Örn: YKS 2026, LGS 2026, KPSS"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                  />
                 </div>
               </div>
+              
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kısa Açıklama</label>
-                <input type="text" value={formData.shortDescription || ''} onChange={e => setFormData({ ...formData, shortDescription: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                <textarea rows={2} value={formData.shortDescription || ''} onChange={e => setFormData({ ...formData, shortDescription: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Detaylı Açıklama</label>
+                <textarea rows={4} value={formData.description || ''} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" />
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Fiyat</label>
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Fiyat (₺)</label>
                   <input type="number" value={formData.price || 0} onChange={e => setFormData({ ...formData, price: Number(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Orijinal Fiyat (₺)</label>
+                  <input type="number" value={formData.originalPrice || 0} onChange={e => setFormData({ ...formData, originalPrice: Number(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">İndirim Oranı (%)</label>
                   <input type="number" value={formData.discount || 0} onChange={e => setFormData({ ...formData, discount: Number(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
               </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Video Sayısı</label>
+                  <input type="number" value={formData.videoCount || 0} onChange={e => setFormData({ ...formData, videoCount: Number(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Ders Sayısı</label>
+                  <input type="number" value={formData.subjectCount || 0} onChange={e => setFormData({ ...formData, subjectCount: Number(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Süre</label>
+                  <input type="text" placeholder="Örn: 12 Ay" value={formData.duration || ''} onChange={e => setFormData({ ...formData, duration: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                </div>
+              </div>
+
               <div className="space-y-2">
-                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Görsel URL</label>
-                <input type="text" value={formData.image || ''} onChange={e => setFormData({ ...formData, image: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Özellikler</label>
+                <div className="space-y-2">
+                  {(Array.isArray(formData.features) ? formData.features : []).map((feature: string, index: number) => (
+                    <div key={index} className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={feature} 
+                        onChange={e => {
+                          const newFeatures = [...(Array.isArray(formData.features) ? formData.features : [])];
+                          newFeatures[index] = e.target.value;
+                          setFormData({ ...formData, features: newFeatures });
+                        }}
+                        placeholder={`Özellik ${index + 1}`}
+                        className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newFeatures = (Array.isArray(formData.features) ? formData.features : []).filter((_: any, i: number) => i !== index);
+                          setFormData({ ...formData, features: newFeatures });
+                        }}
+                        className="px-4 py-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all font-black text-xs"
+                      >
+                        Sil
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const newFeatures = [...(Array.isArray(formData.features) ? formData.features : []), ''];
+                      setFormData({ ...formData, features: newFeatures });
+                    }}
+                    className="w-full px-4 py-3 bg-brand-blue/10 text-brand-blue rounded-xl hover:bg-brand-blue hover:text-white transition-all font-black text-xs"
+                  >
+                    + Özellik Ekle
+                  </button>
+                </div>
+              </div>
+
+              {/* Paket Görseli Upload */}
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Paket Görseli</label>
+                <div className="flex gap-4 items-end">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          const url = await handleImageUpload(file);
+                          setFormData({ ...formData, image: url });
+                        } catch (error) {
+                          showAlert('error', 'Görsel yüklenemedi');
+                        }
+                      }
+                    }}
+                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                  />
+                  {formData.image && (
+                    <img src={formData.image} alt="Paket" className="w-32 h-20 object-cover border border-slate-200 rounded-lg" />
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="isPopular"
+                    checked={formData.isPopular || false} 
+                    onChange={e => setFormData({ ...formData, isPopular: e.target.checked })} 
+                    className="w-4 h-4 text-brand-blue rounded focus:ring-brand-blue"
+                  />
+                  <label htmlFor="isPopular" className="text-xs font-black text-slate-600">Popüler</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="isNew"
+                    checked={formData.isNew || false} 
+                    onChange={e => setFormData({ ...formData, isNew: e.target.checked })} 
+                    className="w-4 h-4 text-brand-blue rounded focus:ring-brand-blue"
+                  />
+                  <label htmlFor="isNew" className="text-xs font-black text-slate-600">Yeni</label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input 
+                    type="checkbox" 
+                    id="isActive"
+                    checked={formData.isActive !== false} 
+                    onChange={e => setFormData({ ...formData, isActive: e.target.checked })} 
+                    className="w-4 h-4 text-brand-blue rounded focus:ring-brand-blue"
+                  />
+                  <label htmlFor="isActive" className="text-xs font-black text-slate-600">Aktif</label>
+                </div>
               </div>
             </div>
           );
@@ -670,7 +1299,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Atanan Şube (Opsiyonel)</label>
-                  <select value={formData.assignedBranchId || ''} onChange={e => setFormData({ ...formData, assignedBranchId: e.target.value || undefined })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold">
+                  <select value={formData.branchId || ''} onChange={e => setFormData({ ...formData, branchId: e.target.value || undefined })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold">
                     <option value="">Yok (Genel)</option>
                     {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
@@ -784,15 +1413,19 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
           return (
             <div className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Başlık</label>
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Başlık *</label>
                 <input type="text" value={formData.title || ''} onChange={e => setFormData({ ...formData, title: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Özet</label>
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">URL Slug</label>
+                <input type="text" value={formData.slug || ''} onChange={e => setFormData({ ...formData, slug: e.target.value })} placeholder="otomatik-olusturulacak" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Özet *</label>
                 <textarea value={formData.excerpt || ''} onChange={e => setFormData({ ...formData, excerpt: e.target.value })} rows={2} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">İçerik</label>
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">İçerik *</label>
                 <textarea value={formData.content || ''} onChange={e => setFormData({ ...formData, content: e.target.value })} rows={4} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -818,6 +1451,37 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Görsel URL</label>
                   <input type="text" value={formData.image || ''} onChange={e => setFormData({ ...formData, image: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
+              </div>
+              
+              {/* SEO Fields */}
+              <div className="pt-4 border-t border-slate-200">
+                <h4 className="text-xs font-black text-slate-600 mb-3">SEO Ayarları</h4>
+                <div className="space-y-3">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">SEO Başlık</label>
+                    <input type="text" value={formData.seoTitle || ''} onChange={e => setFormData({ ...formData, seoTitle: e.target.value })} placeholder="Arama motorları için başlık" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">SEO Açıklama</label>
+                    <textarea value={formData.seoDescription || ''} onChange={e => setFormData({ ...formData, seoDescription: e.target.value })} rows={2} placeholder="Arama motorları için açıklama" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">SEO Anahtar Kelimeler</label>
+                    <input type="text" value={formData.seoKeywords || ''} onChange={e => setFormData({ ...formData, seoKeywords: e.target.value })} placeholder="kelime1, kelime2, kelime3" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                  </div>
+                </div>
+              </div>
+              
+              {/* Checkboxes */}
+              <div className="flex items-center space-x-6 pt-2">
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.isFeatured || false} onChange={e => setFormData({ ...formData, isFeatured: e.target.checked })} className="w-4 h-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue" />
+                  <span className="text-xs font-bold text-slate-600">Öne Çıkan</span>
+                </label>
+                <label className="flex items-center space-x-2 cursor-pointer">
+                  <input type="checkbox" checked={formData.isActive !== false} onChange={e => setFormData({ ...formData, isActive: e.target.checked })} className="w-4 h-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue" />
+                  <span className="text-xs font-bold text-slate-600">Aktif</span>
+                </label>
               </div>
             </div>
           );
@@ -902,8 +1566,23 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                   <input type="text" value={formData.year || ''} onChange={e => setFormData({ ...formData, year: e.target.value })} placeholder="2024" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" disabled={!!editingItem} />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Derece Sayısı</label>
-                  <input type="number" value={formData.stats?.totalDegrees || 0} onChange={e => setFormData({ ...formData, stats: { ...formData.stats, totalDegrees: parseInt(e.target.value) } })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Toplam Derece</label>
+                  <input type="number" value={formData.totalDegrees || 0} onChange={e => setFormData({ ...formData, totalDegrees: parseInt(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Yerleşme Sayısı</label>
+                  <input type="number" value={formData.placementCount || 0} onChange={e => setFormData({ ...formData, placementCount: parseInt(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Başarı Oranı (%)</label>
+                  <input type="number" value={formData.successRate || 0} onChange={e => setFormData({ ...formData, successRate: parseInt(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">İl Sayısı</label>
+                  <input type="number" value={formData.cityCount || 0} onChange={e => setFormData({ ...formData, cityCount: parseInt(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
               </div>
 
@@ -914,14 +1593,110 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                   <input type="text" value={formData.banner?.title || ''} onChange={e => setFormData({ ...formData, banner: { ...formData.banner, title: e.target.value } })} className="w-full bg-white border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Banner Açıklama</label>
-                  <textarea value={formData.banner?.description || ''} onChange={e => setFormData({ ...formData, banner: { ...formData.banner, description: e.target.value } })} rows={3} className="w-full bg-white border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Banner Alt Başlık</label>
+                  <input type="text" value={formData.banner?.subtitle || ''} onChange={e => setFormData({ ...formData, banner: { ...formData.banner, subtitle: e.target.value } })} className="w-full bg-white border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Görsel URL</label>
-                  <input type="text" value={formData.banner?.image || ''} onChange={e => setFormData({ ...formData, banner: { ...formData.banner, image: e.target.value } })} className="w-full bg-white border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Fotoğraf URL</label>
-                  <input type="text" value={formData.image || ''} onChange={e => setFormData({ ...formData, image: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Banner Açıklama</label>
+                  <textarea value={formData.banner?.description || ''} onChange={e => setFormData({ ...formData, banner: { ...formData.banner, description: e.target.value } })} rows={3} className="w-full bg-white border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Banner Görseli</label>
+                  <div className="flex gap-4 items-end">
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            const url = await handleImageUpload(file);
+                            setFormData({ ...formData, banner: { ...formData.banner, image: url } });
+                          } catch (error) {
+                            showAlert('error', 'Görsel yüklenemedi');
+                          }
+                        }
+                      }}
+                      className="flex-1 bg-white border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                    {formData.banner?.image && (
+                      <img src={formData.banner.image} alt="Banner" className="w-32 h-20 object-cover border border-slate-200 rounded-lg" />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+
+        case 'student':
+          return (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Öğrenci Adı</label>
+                  <input type="text" value={formData.name || ''} onChange={e => setFormData({ ...formData, name: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Sınav Türü</label>
+                  <input type="text" value={formData.exam || ''} onChange={e => setFormData({ ...formData, exam: e.target.value })} placeholder="YKS, LGS" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Derece/Sıralama</label>
+                  <input type="text" value={formData.rank || ''} onChange={e => setFormData({ ...formData, rank: e.target.value })} placeholder="1" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Puan (Opsiyonel)</label>
+                  <input type="number" step="0.01" value={formData.score || ''} onChange={e => setFormData({ ...formData, score: e.target.value })} placeholder="548.5" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Üniversite/Bölüm</label>
+                <input type="text" value={formData.university || ''} onChange={e => setFormData({ ...formData, university: e.target.value })} placeholder="İTÜ Bilgisayar Mühendisliği" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Şube</label>
+                <select 
+                  value={formData.branch || ''} 
+                  onChange={e => {
+                    const selectedBranch = branches.find(b => b.name === e.target.value);
+                    setFormData({ ...formData, branch: selectedBranch?.name || '' });
+                  }} 
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                >
+                  <option value="">Şube Seçiniz</option>
+                  {branches.map(b => (
+                    <option key={b.id} value={b.name}>{b.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Öğrenci Fotoğrafı</label>
+                <div className="flex gap-4 items-end">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          const url = await handleImageUpload(file);
+                          setFormData({ ...formData, image: url });
+                        } catch (error) {
+                          showAlert('error', 'Görsel yüklenemedi');
+                        }
+                      }
+                    }}
+                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                  />
+                  {formData.image && (
+                    <img src={formData.image} alt="Öğrenci" className="w-20 h-20 object-cover border border-slate-200 rounded-lg" />
+                  )}
                 </div>
               </div>
             </div>
@@ -1097,16 +1872,55 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
 
   return (
     <div className="p-8">
+      {alert.show && (
+        <Alert
+          type={alert.type}
+          message={alert.message}
+          onClose={hideAlert}
+        />
+      )}
+      
+      {/* Delete Confirmation Modal */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8">
+            <h3 className="text-2xl font-black text-brand-dark mb-4">Silme Onayı</h3>
+            <p className="text-slate-600 mb-8">
+              {deleteConfirm.type === 'student' 
+                ? 'Bu öğrenciyi silmek istediğinize emin misiniz?' 
+                : 'Bu içeriği silmek istediğinize emin misiniz?'}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirm(null)}
+                className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-all"
+              >
+                İptal
+              </button>
+              <button
+                onClick={deleteConfirm.type === 'student' ? confirmDeleteStudent : confirmDelete}
+                className="flex-1 px-6 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all"
+              >
+                Sil
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <Routes>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/approvals" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <ApprovalsManager /> : <Navigate to="/admin" />} />
+        <Route path="/content-sections" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <ContentSectionsManager /> : <Navigate to="/admin" />} />
         <Route path="/menus" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <MenuManager menus={menus} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/pages" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <PageManager pages={pages} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/categories" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <CategoryManager categories={categories} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/sliders" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <SliderManager sliders={sliders} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
-        <Route path="/news" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN, UserRole.BRANCH_ADMIN]) ? <NewsManager user={user} news={news} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
+        <Route path="/news" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN, UserRole.BRANCH_ADMIN]) ? <BlogManager blogPosts={blogPosts} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/branches" element={hasAccess([UserRole.SUPER_ADMIN]) ? <BranchManager branches={branches} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/videos" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <VideoManager videos={videos} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/packages" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <PackageManager packages={packages} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
+        <Route path="/successes" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <YearlySuccessManager successes={yearlySuccesses} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} handleAddStudent={handleAddStudent} handleDeleteStudent={handleDeleteStudent} /> : <Navigate to="/admin" />} />
         <Route path="/media" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <MediaManager mediaItems={mediaItems} handleAdd={handleAdd} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/leads" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN, UserRole.BRANCH_ADMIN]) ? <LeadManager leads={leads} handleEdit={handleEdit} /> : <Navigate to="/admin" />} />
         <Route path="/users" element={hasAccess([UserRole.SUPER_ADMIN]) ? <UserManager adminUsers={adminUsers} branches={branches} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />

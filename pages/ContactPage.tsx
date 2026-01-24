@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Clock, Send, MessageCircle, Instagram, Facebook, Twitter, Linkedin } from 'lucide-react';
+import { homeSectionService } from '../services/homepage.service';
 
 const ContactPage: React.FC = () => {
+    const [pageContent, setPageContent] = useState<any>({});
+    const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -11,12 +14,55 @@ const ContactPage: React.FC = () => {
         message: ''
     });
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const getContent = (section: string, field: 'title' | 'subtitle' | 'buttonText' = 'title', defaultValue: string = '') => {
+        const content = pageContent[section];
+        return content?.[field] || defaultValue;
+    };
+
+    useEffect(() => {
+        const fetchContent = async () => {
+            try {
+                const contentRes = await homeSectionService.getAll();
+                const contentData = contentRes.data?.data || contentRes.data;
+                
+                if (Array.isArray(contentData)) {
+                    const sections = contentData.filter((s: any) => s.page === 'contact');
+                    const contentMap: any = {};
+                    sections.forEach((s: any) => {
+                        contentMap[s.section] = s;
+                    });
+                    setPageContent(contentMap);
+                }
+            } catch (error) {
+                console.error('Error fetching contact content:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchContent();
+    }, []);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Form gönderme işlemi burada yapılacak
-        console.log('Form data:', formData);
-        alert('Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.');
-        setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+        try {
+            const response = await fetch('http://localhost:3003/api/contact/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+
+            if (response.ok) {
+                alert('Mesajınız başarıyla gönderildi! En kısa sürede size dönüş yapacağız.');
+                setFormData({ name: '', email: '', phone: '', subject: '', message: '' });
+            } else {
+                alert('Mesaj gönderilemedi. Lütfen tekrar deneyin.');
+            }
+        } catch (error) {
+            console.error('Form submission error:', error);
+            alert('Bir hata oluştu. Lütfen tekrar deneyin.');
+        }
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -39,13 +85,13 @@ const ContactPage: React.FC = () => {
                     <div className="max-w-3xl">
                         <div className="inline-flex items-center space-x-3 bg-white/20 border-white/30 font-black capitalize text-xs tracking-widest backdrop-blur-xl px-6 py-3 rounded-xl border text-white mb-6">
                             <MessageCircle className="w-5 h-5" />
-                            <span>Bize Ulaşın</span>
+                            <span>{getContent('contact-hero-badge', 'title', 'Bize Ulaşın')}</span>
                         </div>
                         <h1 className="text-6xl md:text-7xl font-black text-white tracking-tighter leading-none mb-6">
-                            İletişim
+                            {getContent('contact-hero-title', 'title', 'İletişim')}
                         </h1>
                         <p className="text-2xl text-white/90 font-medium leading-relaxed">
-                            Sorularınız için bize ulaşın. Size yardımcı olmaktan mutluluk duyarız.
+                            {getContent('contact-hero-subtitle', 'subtitle', 'Sorularınız için bize ulaşın. Size yardımcı olmaktan mutluluk duyarız.')}
                         </p>
                     </div>
                 </div>
@@ -69,9 +115,9 @@ const ContactPage: React.FC = () => {
                         {/* Sol - İletişim Bilgileri */}
                         <div className="space-y-8">
                             <div>
-                                <h2 className="text-3xl font-black text-brand-dark mb-6">İletişim Bilgileri</h2>
+                                <h2 className="text-3xl font-black text-brand-dark mb-6">{getContent('contact-info-title', 'title', 'İletişim Bilgileri')}</h2>
                                 <p className="text-slate-600 font-medium leading-relaxed">
-                                    Sorularınız, önerileriniz veya kayıt başvurunuz için bizimle iletişime geçebilirsiniz.
+                                    {getContent('contact-info-desc', 'subtitle', 'Sorularınız, önerileriniz veya kayıt başvurunuz için bizimle iletişime geçebilirsiniz.')}
                                 </p>
                             </div>
 
@@ -82,11 +128,11 @@ const ContactPage: React.FC = () => {
                                         <MapPin className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="font-black text-brand-dark mb-1">Adres</h3>
+                                        <h3 className="font-black text-brand-dark mb-1">{getContent('contact-address-title', 'title', 'Adres')}</h3>
                                         <p className="text-slate-600 font-medium">
-                                            İstanbul Genel Merkez Ofisi<br />
-                                            Beşiktaş Plaza, Kat: 5<br />
-                                            Beşiktaş / İstanbul
+                                            {getContent('contact-address-line1', 'subtitle', 'İstanbul Genel Merkez Ofisi')}<br />
+                                            {getContent('contact-address-line2', 'subtitle', 'Beşiktaş Plaza, Kat: 5')}<br />
+                                            {getContent('contact-address-line3', 'subtitle', 'Beşiktaş / İstanbul')}
                                         </p>
                                     </div>
                                 </div>
@@ -97,10 +143,10 @@ const ContactPage: React.FC = () => {
                                         <Phone className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="font-black text-brand-dark mb-1">Telefon</h3>
+                                        <h3 className="font-black text-brand-dark mb-1">{getContent('contact-phone-title', 'title', 'Telefon')}</h3>
                                         <p className="text-slate-600 font-medium">
-                                            0212 000 00 00<br />
-                                            0850 000 00 00 (Ücretsiz)
+                                            {getContent('contact-phone-line1', 'subtitle', '0212 000 00 00')}<br />
+                                            {getContent('contact-phone-line2', 'subtitle', '0850 000 00 00 (Ücretsiz)')}
                                         </p>
                                     </div>
                                 </div>
@@ -111,10 +157,10 @@ const ContactPage: React.FC = () => {
                                         <Mail className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="font-black text-brand-dark mb-1">E-posta</h3>
+                                        <h3 className="font-black text-brand-dark mb-1">{getContent('contact-email-title', 'title', 'E-posta')}</h3>
                                         <p className="text-slate-600 font-medium">
-                                            bilgi@hocalarageldik.com<br />
-                                            destek@hocalarageldik.com
+                                            {getContent('contact-email-line1', 'subtitle', 'bilgi@hocalarageldik.com')}<br />
+                                            {getContent('contact-email-line2', 'subtitle', 'destek@hocalarageldik.com')}
                                         </p>
                                     </div>
                                 </div>
@@ -125,11 +171,11 @@ const ContactPage: React.FC = () => {
                                         <Clock className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
-                                        <h3 className="font-black text-brand-dark mb-1">Çalışma Saatleri</h3>
+                                        <h3 className="font-black text-brand-dark mb-1">{getContent('contact-hours-title', 'title', 'Çalışma Saatleri')}</h3>
                                         <p className="text-slate-600 font-medium">
-                                            Pazartesi - Cuma: 09:00 - 18:00<br />
-                                            Cumartesi: 10:00 - 16:00<br />
-                                            Pazar: Kapalı
+                                            {getContent('contact-hours-line1', 'subtitle', 'Pazartesi - Cuma: 09:00 - 18:00')}<br />
+                                            {getContent('contact-hours-line2', 'subtitle', 'Cumartesi: 10:00 - 16:00')}<br />
+                                            {getContent('contact-hours-line3', 'subtitle', 'Pazar: Kapalı')}
                                         </p>
                                     </div>
                                 </div>
@@ -137,7 +183,7 @@ const ContactPage: React.FC = () => {
 
                             {/* Sosyal Medya */}
                             <div>
-                                <h3 className="font-black text-brand-dark mb-4">Sosyal Medya</h3>
+                                <h3 className="font-black text-brand-dark mb-4">{getContent('contact-social-title', 'title', 'Sosyal Medya')}</h3>
                                 <div className="flex space-x-3">
                                     {[
                                         { icon: Instagram, color: 'hover:bg-gradient-to-br hover:from-purple-600 hover:to-pink-600' },
@@ -160,7 +206,7 @@ const ContactPage: React.FC = () => {
                         {/* Sağ - İletişim Formu */}
                         <div className="lg:col-span-2">
                             <div className="bg-white rounded-[20px] p-10 shadow-2xl border border-slate-100">
-                                <h2 className="text-3xl font-black text-brand-dark mb-8">Bize Mesaj Gönderin</h2>
+                                <h2 className="text-3xl font-black text-brand-dark mb-8">{getContent('contact-form-title', 'title', 'Bize Mesaj Gönderin')}</h2>
 
                                 <form onSubmit={handleSubmit} className="space-y-6">
                                     <div className="grid md:grid-cols-2 gap-6">
@@ -251,7 +297,7 @@ const ContactPage: React.FC = () => {
                                         type="submit"
                                         className="w-full md:w-auto px-12 py-4 bg-gradient-to-r from-brand-blue to-purple-600 text-white font-black rounded-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center space-x-3"
                                     >
-                                        <span>Mesajı Gönder</span>
+                                        <span>{getContent('contact-form-button', 'buttonText', 'Mesajı Gönder')}</span>
                                         <Send className="w-5 h-5" />
                                     </button>
                                 </form>

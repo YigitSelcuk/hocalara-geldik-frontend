@@ -1,0 +1,1121 @@
+import React, { useState, useEffect } from 'react';
+import { Check, X, Clock, Eye, User, Building2, Users as UsersIcon } from 'lucide-react';
+import axios from 'axios';
+import Alert from '../Alert';
+import { useAlert } from '../../hooks/useAlert';
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003/api';
+
+interface ChangeRequest {
+  id: string;
+  changeType: string;
+  status: string;
+  branchId: string;
+  entityId?: string;
+  entityType?: string;
+  oldData?: any;
+  newData: any;
+  reviewNote?: string;
+  createdAt: string;
+  reviewedAt?: string;
+  requester: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  reviewer?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  branch: {
+    id: string;
+    name: string;
+  };
+}
+
+export const ApprovalsManager: React.FC = () => {
+  const [requests, setRequests] = useState<ChangeRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'PENDING' | 'APPROVED' | 'REJECTED' | 'ALL'>('PENDING');
+  const [selectedRequest, setSelectedRequest] = useState<ChangeRequest | null>(null);
+  const [reviewNote, setReviewNote] = useState('');
+  const [processing, setProcessing] = useState(false);
+  const [confirmAction, setConfirmAction] = useState<{ type: 'approve' | 'reject'; id: string } | null>(null);
+  const { alert, showAlert, hideAlert } = useAlert();
+
+  useEffect(() => {
+    fetchRequests();
+  }, [filter]);
+
+  const fetchRequests = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('accessToken');
+      const url = filter === 'ALL' 
+        ? `${API_URL}/change-requests`
+        : `${API_URL}/change-requests?status=${filter}`;
+      
+      const response = await axios.get(url, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      setRequests(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching requests:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApprove = async (requestId: string) => {
+    try {
+      setProcessing(true);
+      const token = localStorage.getItem('accessToken');
+      await axios.post(
+        `${API_URL}/change-requests/${requestId}/approve`,
+        { reviewNote },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      showAlert('success', 'Değişiklik onaylandı ve uygulandı!');
+      setSelectedRequest(null);
+      setReviewNote('');
+      setConfirmAction(null);
+      fetchRequests();
+    } catch (error) {
+      console.error('Error approving request:', error);
+      showAlert('error', 'Onaylama işlemi başarısız oldu.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleReject = async (requestId: string) => {
+    try {
+      setProcessing(true);
+      const token = localStorage.getItem('accessToken');
+      await axios.post(
+        `${API_URL}/change-requests/${requestId}/reject`,
+        { reviewNote },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      showAlert('success', 'Değişiklik reddedildi.');
+      setSelectedRequest(null);
+      setReviewNote('');
+      setConfirmAction(null);
+      fetchRequests();
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+      showAlert('error', 'Reddetme işlemi başarısız oldu.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const getChangeTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+      TEACHER_CREATE: '👨‍🏫 Yeni Öğretmen Ekleme',
+      TEACHER_UPDATE: '✏️ Öğretmen Güncelleme',
+      TEACHER_DELETE: '🗑️ Öğretmen Silme',
+      BRANCH_UPDATE: '🏢 Şube Bilgisi Güncelleme',
+      PACKAGE_CREATE: '📦 Yeni Paket Ekleme',
+      PACKAGE_UPDATE: '✏️ Paket Güncelleme',
+      PACKAGE_DELETE: '🗑️ Paket Silme',
+      BLOG_CREATE: '📰 Yeni Haber Ekleme',
+      BLOG_UPDATE: '✏️ Haber Güncelleme',
+      BLOG_DELETE: '🗑️ Haber Silme',
+    };
+    return labels[type] || type;
+  };
+
+  const getStatusBadge = (status: string) => {
+    const badges: Record<string, { bg: string; text: string; label: string }> = {
+      PENDING: { bg: 'bg-yellow-100', text: 'text-yellow-700', label: 'Bekliyor' },
+      APPROVED: { bg: 'bg-green-100', text: 'text-green-700', label: 'Onaylandı' },
+      REJECTED: { bg: 'bg-red-100', text: 'text-red-700', label: 'Reddedildi' },
+    };
+    const badge = badges[status] || badges.PENDING;
+    return (
+      <span className={`px-3 py-1 ${badge.bg} ${badge.text} text-xs font-bold rounded-full`}>
+        {badge.label}
+      </span>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {alert.show && (
+        <Alert
+          type={alert.type}
+          message={alert.message}
+          onClose={hideAlert}
+        />
+      )}
+      
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-black text-brand-dark">Onay Bekleyen Değişiklikler</h1>
+          <p className="text-slate-500 mt-1">Şube yöneticilerinin yaptığı değişiklikleri inceleyin</p>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-2xl p-2 shadow-sm">
+        <div className="flex space-x-2">
+          {(['PENDING', 'APPROVED', 'REJECTED', 'ALL'] as const).map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilter(status)}
+              className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all ${
+                filter === status
+                  ? 'bg-brand-blue text-white shadow-lg'
+                  : 'text-slate-600 hover:bg-slate-50'
+              }`}
+            >
+              {status === 'PENDING' && '⏳ Bekleyenler'}
+              {status === 'APPROVED' && '✅ Onaylananlar'}
+              {status === 'REJECTED' && '❌ Reddedilenler'}
+              {status === 'ALL' && '📋 Tümü'}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Requests List */}
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-blue mx-auto"></div>
+        </div>
+      ) : requests.length === 0 ? (
+        <div className="bg-white rounded-3xl p-12 text-center shadow-sm">
+          <Clock className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+          <p className="text-slate-500 font-medium">Gösterilecek talep yok</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {requests.map((request) => (
+            <div key={request.id} className="bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <h3 className="text-lg font-black text-brand-dark">
+                      {getChangeTypeLabel(request.changeType)}
+                    </h3>
+                    {getStatusBadge(request.status)}
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="flex items-center space-x-2 text-slate-600">
+                      <Building2 className="w-4 h-4" />
+                      <span>{request.branch.name}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-slate-600">
+                      <User className="w-4 h-4" />
+                      <span>{request.requester.name}</span>
+                    </div>
+                    <div className="flex items-center space-x-2 text-slate-600">
+                      <Clock className="w-4 h-4" />
+                      <span>
+                        {new Date(request.createdAt).toLocaleDateString('tr-TR', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric',
+                          hour: '2-digit',
+                          minute: '2-digit'
+                        })}
+                      </span>
+                    </div>
+                    {request.reviewer && (
+                      <div className="flex items-center space-x-2 text-slate-600">
+                        <UsersIcon className="w-4 h-4" />
+                        <span>İnceleyen: {request.reviewer.name}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2 ml-4">
+                  <button
+                    onClick={() => setSelectedRequest(request)}
+                    className="p-2 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all"
+                  >
+                    <Eye className="w-5 h-5" />
+                  </button>
+                  
+                  {request.status === 'PENDING' && (
+                    <>
+                      <button
+                        onClick={() => {
+                          setSelectedRequest(request);
+                          setConfirmAction({ type: 'approve', id: request.id });
+                          setReviewNote('');
+                        }}
+                        className="px-4 py-2 bg-green-500 text-white font-bold rounded-xl hover:bg-green-600 transition-all flex items-center space-x-2"
+                      >
+                        <Check className="w-4 h-4" />
+                        <span>Onayla</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSelectedRequest(request);
+                          setConfirmAction({ type: 'reject', id: request.id });
+                          setReviewNote('');
+                        }}
+                        className="px-4 py-2 bg-red-500 text-white font-bold rounded-xl hover:bg-red-600 transition-all flex items-center space-x-2"
+                      >
+                        <X className="w-4 h-4" />
+                        <span>Reddet</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Detail Modal */}
+      {selectedRequest && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-slate-100 px-8 py-6 flex items-center justify-between rounded-t-3xl">
+              <h3 className="text-2xl font-black text-brand-dark">
+                {getChangeTypeLabel(selectedRequest.changeType)}
+              </h3>
+              <button
+                onClick={() => setSelectedRequest(null)}
+                className="p-2 hover:bg-slate-100 rounded-xl transition-all"
+              >
+                <X className="w-5 h-5 text-slate-400" />
+              </button>
+            </div>
+
+            <div className="p-8 space-y-6">
+              {/* Request Info */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-xs font-black text-slate-400 uppercase mb-1">Şube</p>
+                  <p className="text-sm font-bold text-brand-dark">{selectedRequest.branch.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-slate-400 uppercase mb-1">Talep Eden</p>
+                  <p className="text-sm font-bold text-brand-dark">{selectedRequest.requester.name}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-slate-400 uppercase mb-1">Tarih</p>
+                  <p className="text-sm font-bold text-brand-dark">
+                    {new Date(selectedRequest.createdAt).toLocaleDateString('tr-TR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs font-black text-slate-400 uppercase mb-1">Durum</p>
+                  {getStatusBadge(selectedRequest.status)}
+                </div>
+              </div>
+
+              {/* Changes Comparison */}
+              <div className="bg-slate-50 rounded-2xl p-6">
+                <h4 className="text-lg font-black text-brand-dark mb-4">Değişiklikler</h4>
+                
+                {selectedRequest.changeType === 'TEACHER_CREATE' && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Öğretmen Adı</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.name || ''}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Branş</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.subject || ''}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                    </div>
+                    {selectedRequest.newData.image && (
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Fotoğraf</label>
+                        <img src={selectedRequest.newData.image} alt="Teacher" className="w-32 h-32 rounded-full object-cover border-4 border-green-200" />
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {selectedRequest.changeType === 'TEACHER_UPDATE' && (
+                  <div className="space-y-4">
+                    {Object.keys(selectedRequest.newData).map((key) => {
+                      if (key === 'branchId' || key === 'id') return null;
+                      const oldValue = selectedRequest.oldData?.[key];
+                      const newValue = selectedRequest.newData[key];
+                      const hasChanged = oldValue !== newValue;
+                      
+                      if (!hasChanged) return null;
+
+                      return (
+                        <div key={key} className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                              {key === 'name' ? 'Öğretmen Adı' : key === 'subject' ? 'Branş' : key === 'image' ? 'Fotoğraf' : key} (Eski)
+                            </label>
+                            {key === 'image' && oldValue ? (
+                              <img src={oldValue} alt="Old" className="w-24 h-24 rounded-full object-cover border-2 border-red-200" />
+                            ) : (
+                              <input
+                                type="text"
+                                value={oldValue || '-'}
+                                readOnly
+                                className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-bold text-slate-600 line-through"
+                              />
+                            )}
+                          </div>
+                          <div>
+                            <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                              {key === 'name' ? 'Öğretmen Adı' : key === 'subject' ? 'Branş' : key === 'image' ? 'Fotoğraf' : key} (Yeni)
+                            </label>
+                            {key === 'image' && newValue ? (
+                              <img src={newValue} alt="New" className="w-24 h-24 rounded-full object-cover border-2 border-green-200" />
+                            ) : (
+                              <input
+                                type="text"
+                                value={newValue || '-'}
+                                readOnly
+                                className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {selectedRequest.changeType === 'TEACHER_DELETE' && selectedRequest.oldData && (
+                  <div className="space-y-4">
+                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                      <p className="text-sm font-bold text-red-700 mb-3">⚠️ Bu öğretmen silinecek:</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Öğretmen Adı</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.oldData.name || ''}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Branş</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.oldData.subject || ''}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                          />
+                        </div>
+                      </div>
+                      {selectedRequest.oldData.image && (
+                        <div className="mt-4">
+                          <img src={selectedRequest.oldData.image} alt="Teacher" className="w-24 h-24 rounded-full object-cover border-4 border-red-300" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {selectedRequest.changeType === 'BRANCH_UPDATE' && (
+                  <div className="space-y-4">
+                    {Object.keys(selectedRequest.newData).map((key) => {
+                      if (key === 'id' || key === 'slug' || key === 'createdAt' || key === 'updatedAt') return null;
+                      const oldValue = selectedRequest.oldData?.[key];
+                      const newValue = selectedRequest.newData[key];
+                      const hasChanged = oldValue !== newValue;
+                      
+                      if (!hasChanged) return null;
+
+                      const fieldLabels: Record<string, string> = {
+                        name: 'Şube Adı',
+                        description: 'Açıklama',
+                        address: 'Adres',
+                        phone: 'Telefon',
+                        whatsapp: 'WhatsApp',
+                        email: 'E-posta',
+                        lat: 'Enlem',
+                        lng: 'Boylam',
+                        image: 'Kapak Görseli',
+                        logo: 'Logo',
+                        successBanner: 'Başarı Banner',
+                        customBanner: 'Özel Banner',
+                        primaryColor: 'Ana Renk',
+                      };
+
+                      const isImage = ['image', 'logo', 'successBanner', 'customBanner'].includes(key);
+
+                      return (
+                        <div key={key} className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                              {fieldLabels[key] || key} (Eski)
+                            </label>
+                            {isImage && oldValue ? (
+                              <img src={oldValue} alt="Old" className="w-full h-32 object-cover rounded-xl border-2 border-red-200" />
+                            ) : key === 'description' ? (
+                              <textarea
+                                value={oldValue || '-'}
+                                readOnly
+                                rows={3}
+                                className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-medium text-slate-600 line-through resize-none"
+                              />
+                            ) : (
+                              <input
+                                type="text"
+                                value={oldValue || '-'}
+                                readOnly
+                                className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-bold text-slate-600 line-through"
+                              />
+                            )}
+                          </div>
+                          <div>
+                            <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                              {fieldLabels[key] || key} (Yeni)
+                            </label>
+                            {isImage && newValue ? (
+                              <img src={newValue} alt="New" className="w-full h-32 object-cover rounded-xl border-2 border-green-200" />
+                            ) : key === 'description' ? (
+                              <textarea
+                                value={newValue || '-'}
+                                readOnly
+                                rows={3}
+                                className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-medium text-brand-dark resize-none"
+                              />
+                            ) : (
+                              <input
+                                type="text"
+                                value={newValue || '-'}
+                                readOnly
+                                className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {selectedRequest.changeType === 'PACKAGE_CREATE' && (
+                  <div className="space-y-4">
+                    {selectedRequest.newData.image && (
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Paket Görseli</label>
+                        <img 
+                          src={selectedRequest.newData.image} 
+                          alt="Package" 
+                          className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-green-200" 
+                        />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Paket Adı</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.name || ''}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Paket Tipi</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.type || ''}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Kısa Açıklama</label>
+                      <input
+                        type="text"
+                        value={selectedRequest.newData.shortDescription || ''}
+                        readOnly
+                        className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                      />
+                    </div>
+                    {selectedRequest.newData.description && (
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Detaylı Açıklama</label>
+                        <textarea
+                          value={selectedRequest.newData.description}
+                          readOnly
+                          rows={3}
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-medium text-brand-dark resize-none"
+                        />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-3 gap-4">
+                      {selectedRequest.newData.price && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Fiyat</label>
+                          <input
+                            type="text"
+                            value={`${selectedRequest.newData.price}₺`}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                      {selectedRequest.newData.originalPrice && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Eski Fiyat</label>
+                          <input
+                            type="text"
+                            value={`${selectedRequest.newData.originalPrice}₺`}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                      {selectedRequest.newData.duration && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Süre</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.duration}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      {selectedRequest.newData.videoCount && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Video Sayısı</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.videoCount}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                      {selectedRequest.newData.subjectCount && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Konu Sayısı</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.subjectCount}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {selectedRequest.changeType === 'PACKAGE_UPDATE' && (
+                  <div className="space-y-4">
+                    {Object.keys(selectedRequest.newData).map((key) => {
+                      if (key === 'branchId' || key === 'id' || key === 'createdAt' || key === 'updatedAt') return null;
+                      const oldValue = selectedRequest.oldData?.[key];
+                      const newValue = selectedRequest.newData[key];
+                      const hasChanged = oldValue !== newValue;
+                      
+                      if (!hasChanged) return null;
+
+                      const fieldLabels: Record<string, string> = {
+                        name: 'Paket Adı',
+                        type: 'Paket Tipi',
+                        shortDescription: 'Kısa Açıklama',
+                        description: 'Detaylı Açıklama',
+                        price: 'Fiyat',
+                        originalPrice: 'Eski Fiyat',
+                        duration: 'Süre',
+                        videoCount: 'Video Sayısı',
+                        subjectCount: 'Konu Sayısı',
+                        image: 'Görsel',
+                      };
+
+                      const isImage = key === 'image';
+                      const isPrice = ['price', 'originalPrice'].includes(key);
+                      const isTextarea = key === 'description';
+
+                      return (
+                        <div key={key} className={isImage ? 'col-span-2' : 'grid grid-cols-2 gap-4'}>
+                          {isImage ? (
+                            <div className="space-y-2">
+                              <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                                {fieldLabels[key] || key}
+                              </label>
+                              <div className="grid grid-cols-2 gap-4">
+                                {oldValue && (
+                                  <div>
+                                    <p className="text-xs text-slate-500 mb-2">Eski</p>
+                                    <img src={oldValue} alt="Old" className="w-full h-48 object-cover rounded-xl border-2 border-red-200" />
+                                  </div>
+                                )}
+                                {newValue && (
+                                  <div>
+                                    <p className="text-xs text-slate-500 mb-2">Yeni</p>
+                                    <img src={newValue} alt="New" className="w-full h-48 object-cover rounded-xl border-2 border-green-200" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div>
+                                <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                                  {fieldLabels[key] || key} (Eski)
+                                </label>
+                                {isTextarea ? (
+                                  <textarea
+                                    value={oldValue || '-'}
+                                    readOnly
+                                    rows={3}
+                                    className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-medium text-slate-600 line-through resize-none"
+                                  />
+                                ) : (
+                                  <input
+                                    type="text"
+                                    value={isPrice && oldValue ? `${oldValue}₺` : oldValue || '-'}
+                                    readOnly
+                                    className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-bold text-slate-600 line-through"
+                                  />
+                                )}
+                              </div>
+                              <div>
+                                <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                                  {fieldLabels[key] || key} (Yeni)
+                                </label>
+                                {isTextarea ? (
+                                  <textarea
+                                    value={newValue || '-'}
+                                    readOnly
+                                    rows={3}
+                                    className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-medium text-brand-dark resize-none"
+                                  />
+                                ) : (
+                                  <input
+                                    type="text"
+                                    value={isPrice && newValue ? `${newValue}₺` : newValue || '-'}
+                                    readOnly
+                                    className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                                  />
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {selectedRequest.changeType === 'PACKAGE_DELETE' && selectedRequest.oldData && (
+                  <div className="space-y-4">
+                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                      <p className="text-sm font-bold text-red-700 mb-3">⚠️ Bu paket silinecek:</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Paket Adı</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.oldData.name || ''}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Paket Tipi</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.oldData.type || ''}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Kısa Açıklama</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.oldData.shortDescription || ''}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                        />
+                      </div>
+                      {selectedRequest.oldData.price && (
+                        <div className="mt-4">
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Fiyat</label>
+                          <input
+                            type="text"
+                            value={`${selectedRequest.oldData.price}₺`}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* BLOG POST DISPLAYS */}
+                {selectedRequest.changeType === 'BLOG_CREATE' && (
+                  <div className="space-y-4">
+                    {selectedRequest.newData.image && (
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Haber Görseli</label>
+                        <img 
+                          src={selectedRequest.newData.image} 
+                          alt="News" 
+                          className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-green-200" 
+                        />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Başlık</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.title || ''}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Kategori</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.category || ''}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Özet</label>
+                      <textarea
+                        value={selectedRequest.newData.excerpt || ''}
+                        readOnly
+                        rows={2}
+                        className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-medium text-brand-dark resize-none"
+                      />
+                    </div>
+                    {selectedRequest.newData.content && (
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">İçerik</label>
+                        <textarea
+                          value={selectedRequest.newData.content}
+                          readOnly
+                          rows={6}
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-medium text-brand-dark resize-none"
+                        />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-3 gap-4">
+                      {selectedRequest.newData.author && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Yazar</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.author}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                      {selectedRequest.newData.date && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Tarih</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.date}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                      {selectedRequest.newData.readTime && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Okuma Süresi</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.readTime}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {selectedRequest.changeType === 'BLOG_UPDATE' && (
+                  <div className="space-y-4">
+                    {Object.keys(selectedRequest.newData).map((key) => {
+                      if (key === 'branchId' || key === 'id' || key === 'createdAt' || key === 'updatedAt') return null;
+                      const oldValue = selectedRequest.oldData?.[key];
+                      const newValue = selectedRequest.newData[key];
+                      const hasChanged = oldValue !== newValue;
+                      
+                      if (!hasChanged) return null;
+
+                      const fieldLabels: Record<string, string> = {
+                        title: 'Başlık',
+                        excerpt: 'Özet',
+                        content: 'İçerik',
+                        category: 'Kategori',
+                        author: 'Yazar',
+                        date: 'Tarih',
+                        readTime: 'Okuma Süresi',
+                        image: 'Görsel',
+                        isActive: 'Aktif',
+                      };
+
+                      const isImage = key === 'image';
+                      const isTextarea = ['excerpt', 'content'].includes(key);
+
+                      return (
+                        <div key={key} className={isImage ? 'col-span-2' : 'grid grid-cols-2 gap-4'}>
+                          {isImage ? (
+                            <div className="space-y-2">
+                              <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                                {fieldLabels[key] || key}
+                              </label>
+                              <div className="grid grid-cols-2 gap-4">
+                                {oldValue && (
+                                  <div>
+                                    <p className="text-xs text-slate-500 mb-2">Eski</p>
+                                    <img src={oldValue} alt="Old" className="w-full h-48 object-cover rounded-xl border-2 border-red-200" />
+                                  </div>
+                                )}
+                                {newValue && (
+                                  <div>
+                                    <p className="text-xs text-slate-500 mb-2">Yeni</p>
+                                    <img src={newValue} alt="New" className="w-full h-48 object-cover rounded-xl border-2 border-green-200" />
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          ) : (
+                            <>
+                              <div>
+                                <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                                  {fieldLabels[key] || key} (Eski)
+                                </label>
+                                {isTextarea ? (
+                                  <textarea
+                                    value={oldValue || '-'}
+                                    readOnly
+                                    rows={key === 'content' ? 6 : 2}
+                                    className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-medium text-slate-600 line-through resize-none"
+                                  />
+                                ) : (
+                                  <input
+                                    type="text"
+                                    value={oldValue || '-'}
+                                    readOnly
+                                    className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-bold text-slate-600 line-through"
+                                  />
+                                )}
+                              </div>
+                              <div>
+                                <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                                  {fieldLabels[key] || key} (Yeni)
+                                </label>
+                                {isTextarea ? (
+                                  <textarea
+                                    value={newValue || '-'}
+                                    readOnly
+                                    rows={key === 'content' ? 6 : 2}
+                                    className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-medium text-brand-dark resize-none"
+                                  />
+                                ) : (
+                                  <input
+                                    type="text"
+                                    value={newValue || '-'}
+                                    readOnly
+                                    className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                                  />
+                                )}
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {selectedRequest.changeType === 'BLOG_DELETE' && selectedRequest.oldData && (
+                  <div className="space-y-4">
+                    <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4">
+                      <p className="text-sm font-bold text-red-700 mb-3">⚠️ Bu haber silinecek:</p>
+                      {selectedRequest.oldData.image && (
+                        <div className="mb-4">
+                          <img src={selectedRequest.oldData.image} alt="News" className="w-full h-48 object-cover rounded-xl border-2 border-red-300" />
+                        </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Başlık</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.oldData.title || ''}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Kategori</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.oldData.category || ''}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-bold text-red-700"
+                          />
+                        </div>
+                      </div>
+                      <div className="mt-4">
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Özet</label>
+                        <textarea
+                          value={selectedRequest.oldData.excerpt || ''}
+                          readOnly
+                          rows={2}
+                          className="w-full px-4 py-3 bg-white border-2 border-red-300 rounded-xl font-medium text-red-700 resize-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Review Note */}
+              {selectedRequest.status === 'PENDING' && (
+                <div>
+                  <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                    İnceleme Notu (Opsiyonel)
+                  </label>
+                  <textarea
+                    value={reviewNote}
+                    onChange={(e) => setReviewNote(e.target.value)}
+                    rows={3}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-brand-blue resize-none"
+                    placeholder="Onay/red nedeni..."
+                  />
+                </div>
+              )}
+
+              {selectedRequest.reviewNote && (
+                <div>
+                  <p className="text-xs font-black text-slate-400 uppercase mb-2">İnceleme Notu</p>
+                  <p className="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl">
+                    {selectedRequest.reviewNote}
+                  </p>
+                </div>
+              )}
+
+              {/* Actions */}
+              {selectedRequest.status === 'PENDING' && (
+                <div className="flex items-center space-x-4 pt-4">
+                  <button
+                    onClick={() => setConfirmAction({ type: 'reject', id: selectedRequest.id })}
+                    disabled={processing}
+                    className="flex-1 px-6 py-3 bg-red-500 text-white font-black rounded-xl hover:bg-red-600 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                  >
+                    <X className="w-5 h-5" />
+                    <span>{processing ? 'İşleniyor...' : 'Reddet'}</span>
+                  </button>
+                  <button
+                    onClick={() => setConfirmAction({ type: 'approve', id: selectedRequest.id })}
+                    disabled={processing}
+                    className="flex-1 px-6 py-3 bg-green-500 text-white font-black rounded-xl hover:bg-green-600 transition-all disabled:opacity-50 flex items-center justify-center space-x-2"
+                  >
+                    <Check className="w-5 h-5" />
+                    <span>{processing ? 'İşleniyor...' : 'Onayla'}</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal */}
+      {confirmAction && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8">
+            <div className="text-center mb-6">
+              <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${
+                confirmAction.type === 'approve' ? 'bg-green-100' : 'bg-red-100'
+              }`}>
+                {confirmAction.type === 'approve' ? (
+                  <Check className={`w-8 h-8 text-green-600`} />
+                ) : (
+                  <X className={`w-8 h-8 text-red-600`} />
+                )}
+              </div>
+              <h3 className="text-2xl font-black text-brand-dark mb-2">
+                {confirmAction.type === 'approve' ? 'Değişikliği Onayla' : 'Değişikliği Reddet'}
+              </h3>
+              <p className="text-slate-600">
+                {confirmAction.type === 'approve' 
+                  ? 'Bu değişikliği onaylamak istediğinize emin misiniz? Değişiklik hemen uygulanacaktır.'
+                  : 'Bu değişikliği reddetmek istediğinize emin misiniz?'
+                }
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={() => setConfirmAction(null)}
+                disabled={processing}
+                className="flex-1 px-6 py-3 bg-slate-100 text-slate-600 font-black rounded-xl hover:bg-slate-200 transition-all disabled:opacity-50"
+              >
+                İptal
+              </button>
+              <button
+                onClick={() => {
+                  if (confirmAction.type === 'approve') {
+                    handleApprove(confirmAction.id);
+                  } else {
+                    handleReject(confirmAction.id);
+                  }
+                }}
+                disabled={processing}
+                className={`flex-1 px-6 py-3 text-white font-black rounded-xl transition-all disabled:opacity-50 ${
+                  confirmAction.type === 'approve' 
+                    ? 'bg-green-500 hover:bg-green-600' 
+                    : 'bg-red-500 hover:bg-red-600'
+                }`}
+              >
+                {processing ? 'İşleniyor...' : confirmAction.type === 'approve' ? 'Onayla' : 'Reddet'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};

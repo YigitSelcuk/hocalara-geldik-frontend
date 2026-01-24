@@ -27,17 +27,41 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ isStyle2 = false }) => 
     useEffect(() => {
         const fetchDates = async () => {
             try {
-                const { data } = await examDateService.getAll();
-                const dates: Record<string, Date> = { ...examDates };
-                // Check if data is an array before calling forEach
-                if (Array.isArray(data)) {
-                    data.forEach((d: ExamDate) => {
-                        if (['TYT', 'AYT', 'LGS'].includes(d.examName)) {
-                            dates[d.examName] = new Date(d.examDate);
-                        }
-                    });
-                    setExamDates(dates);
+                const response = await examDateService.getAll();
+                console.log('📅 Fetched exam dates response:', response);
+                
+                // API returns { data: { success: true, data: [...] } }
+                const apiData = response.data;
+                console.log('📅 API data:', apiData);
+                
+                let examList = [];
+                if (apiData?.data && Array.isArray(apiData.data)) {
+                    examList = apiData.data;
+                } else if (Array.isArray(apiData)) {
+                    examList = apiData;
                 }
+                
+                console.log('📅 Exam list:', examList);
+                
+                const dates: Record<string, Date> = { ...examDates };
+                examList.forEach((d: ExamDate) => {
+                    if (['TYT', 'AYT', 'LGS'].includes(d.examName)) {
+                        // Parse the ISO date string directly without timezone conversion
+                        // The date is stored as "YYYY-MM-DDTHH:mm:ss.sssZ"
+                        const isoString = d.examDate;
+                        // Extract date parts from ISO string
+                        const [datePart, timePart] = isoString.split('T');
+                        const [year, month, day] = datePart.split('-').map(Number);
+                        const [hours, minutes] = timePart.split(':').map(Number);
+                        
+                        // Create date in local timezone with the exact values from database
+                        const examDate = new Date(year, month - 1, day, hours, minutes, 0, 0);
+                        console.log(`📆 Setting ${d.examName} to:`, examDate);
+                        dates[d.examName] = examDate;
+                    }
+                });
+                console.log('✅ Final exam dates:', dates);
+                setExamDates(dates);
             } catch (error) {
                 console.error('Error fetching exam dates:', error);
             }
@@ -115,7 +139,7 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ isStyle2 = false }) => 
                 <div className="flex items-center justify-center space-x-2">
                     <Clock className={`w-4 h-4 ${primaryColorText}`} />
                     <span className="text-xs font-bold text-slate-500">
-                        Saat 09:00
+                        Saat {examDates[selectedExam].toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                 </div>
             </div>

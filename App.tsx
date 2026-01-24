@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HashRouter, Routes, Route, useParams, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, useParams, Navigate, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import MainHome from './pages/MainHome';
@@ -27,6 +27,17 @@ import GuidancePage from './pages/GuidancePage';
 import AdminLayout from './components/AdminLayout';
 import { branchService } from './services/cms.service';
 import { AdminUser, UserRole, Branch } from './types';
+
+// ScrollToTop component - scrolls to top on route change
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
+
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+};
 
 const BranchWrapper: React.FC = () => {
   const [branch, setBranch] = React.useState<Branch | null>(null);
@@ -64,8 +75,28 @@ const BranchWrapper: React.FC = () => {
 };
 
 // Protected Admin Route Component
-const ProtectedAdminRoute = ({ user }: { user: AdminUser | null }) => {
+const ProtectedAdminRoute = ({ user, setUser }: { user: AdminUser | null; setUser: (user: AdminUser | null) => void }) => {
   const token = localStorage.getItem('adminToken');
+
+  React.useEffect(() => {
+    // Reload user from localStorage when component mounts
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        setUser({
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role as UserRole,
+          branchId: userData.branchId,
+          avatar: userData.avatar
+        });
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, [setUser]);
 
   if (!token) {
     return <Navigate to="/admin/login" replace />;
@@ -89,20 +120,35 @@ const SiteLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 );
 
 const App: React.FC = () => {
-  const [user] = React.useState<AdminUser | null>({
-    id: '1',
-    name: 'Admin User',
-    email: 'admin@hocalarageldik.com',
-    role: UserRole.SUPER_ADMIN,
-    avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=facearea&facepad=2&w=256&h=256&q=80'
-  });
+  const [user, setUser] = React.useState<AdminUser | null>(null);
+
+  React.useEffect(() => {
+    // Get user from localStorage
+    const userStr = localStorage.getItem('user');
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr);
+        setUser({
+          id: userData.id,
+          name: userData.name,
+          email: userData.email,
+          role: userData.role as UserRole,
+          branchId: userData.branchId,
+          avatar: userData.avatar
+        });
+      } catch (error) {
+        console.error('Error parsing user data:', error);
+      }
+    }
+  }, []);
 
   return (
     <HashRouter>
+      <ScrollToTop />
       <Routes>
         {/* Admin Routes - No Site Header/Footer */}
         <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/*" element={<ProtectedAdminRoute user={user} />} />
+        <Route path="/admin/*" element={<ProtectedAdminRoute user={user} setUser={setUser} />} />
 
         {/* Public Routes - Wrapped in SiteLayout */}
         <Route

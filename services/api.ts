@@ -1,5 +1,8 @@
 import axios from 'axios';
 
+// Backend API base URL - empty string for relative paths when using proxy
+export const API_BASE_URL = '';
+
 const api = axios.create({
     baseURL: '/api',
     headers: {

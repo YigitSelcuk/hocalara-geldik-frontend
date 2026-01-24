@@ -28,8 +28,7 @@ const BranchSuccessPage: React.FC = () => {
 
                 // Handle success data with array safety
                 if (successRes.status === 'fulfilled') {
-                    const successData = successRes.value.data;
-                    const successes = (successData as any)?.yearlySuccesses || successData;
+                    const successes = successRes.value.data.data || successRes.value.data;
 
                     // Ensure successes is an array before setting state
                     if (Array.isArray(successes)) {
@@ -171,7 +170,7 @@ const BranchSuccessPage: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-4xl font-black text-brand-dark tracking-tight">
-                                            {branchStudents.filter(s => s.rank.includes('Türkiye')).length}
+                                            {branchStudents.filter(s => s.rank.toLowerCase().includes('türkiye')).length}
                                         </p>
                                         <p className="text-slate-600 font-bold text-sm mt-1">Türkiye Derecesi</p>
                                     </div>
@@ -186,7 +185,7 @@ const BranchSuccessPage: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-4xl font-black text-brand-dark tracking-tight">
-                                            {branchStudents.filter(s => s.exam.includes('YKS')).length}
+                                            {branchStudents.filter(s => s.exam === 'YKS' || s.exam === 'TYT' || s.exam === 'AYT').length}
                                         </p>
                                         <p className="text-slate-600 font-bold text-sm mt-1">YKS Derecesi</p>
                                     </div>
@@ -201,7 +200,7 @@ const BranchSuccessPage: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-4xl font-black text-brand-dark tracking-tight">
-                                            {branchStudents.filter(s => s.exam.includes('LGS')).length}
+                                            {branchStudents.filter(s => s.exam === 'LGS').length}
                                         </p>
                                         <p className="text-slate-600 font-bold text-sm mt-1">LGS Derecesi</p>
                                     </div>

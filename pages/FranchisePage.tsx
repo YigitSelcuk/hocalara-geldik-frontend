@@ -1,8 +1,48 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Target, CheckCircle2, ShieldCheck, Zap, ArrowRight, Phone, Mail } from 'lucide-react';
+import { homeSectionService } from '../services/homepage.service';
 
 const FranchisePage: React.FC = () => {
+  const [pageContent, setPageContent] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+
+  const getContent = (section: string, field: 'title' | 'subtitle' | 'buttonText' | 'buttonLink' = 'title', defaultValue: string = '') => {
+    const content = pageContent[section];
+    return content?.[field] || defaultValue;
+  };
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const contentRes = await homeSectionService.getAll();
+        const contentData = contentRes.data?.data || contentRes.data;
+        
+        if (Array.isArray(contentData)) {
+          const sections = contentData.filter((s: any) => s.page === 'franchise');
+          const contentMap: any = {};
+          sections.forEach((s: any) => {
+            contentMap[s.section] = s;
+          });
+          setPageContent(contentMap);
+        }
+      } catch (error) {
+        console.error('Error fetching franchise content:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchContent();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-blue"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen mesh-bg pb-24">
       {/* Hero */}
@@ -15,19 +55,21 @@ const FranchisePage: React.FC = () => {
           <div className="md:w-1/2 space-y-8">
             <div className={`inline-flex items-center space-x-2 text-brand-blue font-black uppercase text-xs tracking-widest bg-brand-blue/10 px-4 py-2 rounded-full border border-brand-blue/20 backdrop-blur-xl transition-all duration-300`}>
               <Target className="w-5 h-5" />
-              <span>Geleceğin Eğitim Yatırımı</span>
+              <span>{getContent('franchise-hero-badge', 'title', 'Geleceğin Eğitim Yatırımı')}</span>
             </div>
-            <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter capitalize leading-none italic">Şubemiz <span className="text-brand-blue">Olun</span></h1>
+            <h1 className="text-5xl md:text-8xl font-black text-white tracking-tighter capitalize leading-none italic">
+              {getContent('franchise-hero-title', 'title', 'Şubemiz Olun').split(' ').slice(0, -1).join(' ')} <span className="text-brand-blue">{getContent('franchise-hero-title', 'title', 'Şubemiz Olun').split(' ').slice(-1)}</span>
+            </h1>
             <p className="text-slate-200 text-xl font-medium leading-relaxed">
-              Hocalara Geldik ekosistemine katılarak Türkiye'nin en dinamik eğitim ağıyla başarıya ortak olun.
+              {getContent('franchise-hero-subtitle', 'subtitle', 'Hocalara Geldik ekosistemine katılarak Türkiye\'nin en dinamik eğitim ağıyla başarıya ortak olun.')}
             </p>
             <div className="flex flex-wrap gap-4">
-              <a href="#apply" className="px-10 py-5 bg-brand-blue text-white font-black rounded-custom hover:bg-white hover:text-brand-dark transition-all shadow-2xl shadow-brand-blue/20 capitalize tracking-widest text-sm flex items-center space-x-2">
-                <span>Başvuru Yap</span>
+              <a href={getContent('franchise-hero-button-primary', 'buttonLink', '#apply')} className="px-10 py-5 bg-brand-blue text-white font-black rounded-custom hover:bg-white hover:text-brand-dark transition-all shadow-2xl shadow-brand-blue/20 capitalize tracking-widest text-sm flex items-center space-x-2">
+                <span>{getContent('franchise-hero-button-primary', 'buttonText', 'Başvuru Yap')}</span>
                 <ArrowRight className="w-5 h-5" />
               </a>
               <button className="px-10 py-5 bg-white/10 backdrop-blur-md text-white border border-white/20 font-black rounded-custom hover:bg-white/20 transition-all capitalize tracking-widest text-sm">
-                Sunum Dosyası (PDF)
+                {getContent('franchise-hero-button-secondary', 'buttonText', 'Sunum Dosyası (PDF)')}
               </button>
             </div>
           </div>
@@ -42,9 +84,21 @@ const FranchisePage: React.FC = () => {
         {/* Why Us */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 mb-32">
           {[
-            { title: "Güçlü İçerik Altyapısı", desc: "Binlerce video ders, PDF yayınlar ve deneme sınavlarıyla içerik derdiniz olmasın.", icon: Zap },
-            { title: "Dijital Yönetim", desc: "Öğrenci takip, devamsızlık ve sınav analiz yazılımlarımızla şubenizi kolayca yönetin.", icon: ShieldCheck },
-            { title: "Bölge Güvencesi", desc: "Haksız rekabeti önlemek adına bölgenizde tek şube olma garantisi sağlıyoruz.", icon: Target },
+            { 
+              title: getContent('franchise-why-card1-title', 'title', 'Güçlü İçerik Altyapısı'), 
+              desc: getContent('franchise-why-card1-desc', 'subtitle', 'Binlerce video ders, PDF yayınlar ve deneme sınavlarıyla içerik derdiniz olmasın.'), 
+              icon: Zap 
+            },
+            { 
+              title: getContent('franchise-why-card2-title', 'title', 'Dijital Yönetim'), 
+              desc: getContent('franchise-why-card2-desc', 'subtitle', 'Öğrenci takip, devamsızlık ve sınav analiz yazılımlarımızla şubenizi kolayca yönetin.'), 
+              icon: ShieldCheck 
+            },
+            { 
+              title: getContent('franchise-why-card3-title', 'title', 'Bölge Güvencesi'), 
+              desc: getContent('franchise-why-card3-desc', 'subtitle', 'Haksız rekabeti önlemek adına bölgenizde tek şube olma garantisi sağlıyoruz.'), 
+              icon: Target 
+            },
           ].map((item, i) => (
             <div key={i} className="bg-white p-12 rounded-custom shadow-sm border border-slate-100 space-y-6 hover:shadow-xl transition-all group">
               <div className="w-16 h-16 bg-brand-gray rounded-custom flex items-center justify-center text-brand-blue group-hover:bg-brand-blue group-hover:text-white transition-all">
@@ -60,12 +114,27 @@ const FranchisePage: React.FC = () => {
         <div id="apply" className="grid grid-cols-1 lg:grid-cols-12 gap-16">
           <div className="lg:col-span-5 space-y-12">
             <div className="space-y-6">
-              <h2 className="text-4xl font-black text-brand-dark capitalize tracking-tighter leading-none italic">Franchise <br /><span className="text-brand-blue">Süreci</span> Nasıl İşler?</h2>
+              <h2 className="text-4xl font-black text-brand-dark capitalize tracking-tighter leading-none italic">
+                {getContent('franchise-process-title', 'title', 'Franchise Süreci Nasıl İşler?').split(' ').slice(0, 2).join(' ')} <br />
+                <span className="text-brand-blue">{getContent('franchise-process-title', 'title', 'Franchise Süreci Nasıl İşler?').split(' ').slice(2).join(' ')}</span>
+              </h2>
               <div className="space-y-8">
                 {[
-                  { step: "01", title: "Başvuru & Ön Görüşme", desc: "Aşağıdaki formu doldurarak ilk adımı atın, temsilcilerimiz sizi arasın." },
-                  { step: "02", title: "Bölge Analizi", desc: "Kurulması planlanan şube için pazar ve potansiyel analizi yapılır." },
-                  { step: "03", title: "Sözleşme & Kurulum", desc: "Karşılıklı onay sonrası kurumsal kimliğimize uygun şube kurulumu başlar." }
+                  { 
+                    step: "01", 
+                    title: getContent('franchise-process-step1-title', 'title', 'Başvuru & Ön Görüşme'), 
+                    desc: getContent('franchise-process-step1-desc', 'subtitle', 'Aşağıdaki formu doldurarak ilk adımı atın, temsilcilerimiz sizi arasın.') 
+                  },
+                  { 
+                    step: "02", 
+                    title: getContent('franchise-process-step2-title', 'title', 'Bölge Analizi'), 
+                    desc: getContent('franchise-process-step2-desc', 'subtitle', 'Kurulması planlanan şube için pazar ve potansiyel analizi yapılır.') 
+                  },
+                  { 
+                    step: "03", 
+                    title: getContent('franchise-process-step3-title', 'title', 'Sözleşme & Kurulum'), 
+                    desc: getContent('franchise-process-step3-desc', 'subtitle', 'Karşılıklı onay sonrası kurumsal kimliğimize uygun şube kurulumu başlar.') 
+                  }
                 ].map((item, i) => (
                   <div key={i} className="flex space-x-6 group">
                     <span className="text-5xl font-black text-slate-100 group-hover:text-brand-blue/20 transition-colors leading-none">{item.step}</span>
@@ -79,15 +148,17 @@ const FranchisePage: React.FC = () => {
             </div>
 
             <div className="p-10 bg-brand-dark rounded-custom text-white space-y-6 shadow-2xl">
-              <h3 className="text-xl font-black uppercase italic tracking-tight">Hızlı İletişim</h3>
+              <h3 className="text-xl font-black uppercase italic tracking-tight">
+                {getContent('franchise-contact-title', 'title', 'Hızlı İletişim')}
+              </h3>
               <div className="space-y-4">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-white/5 rounded-custom flex items-center justify-center text-brand-blue"><Phone className="w-5 h-5" /></div>
-                  <p className="font-black text-lg">0212 555 00 00</p>
+                  <p className="font-black text-lg">{getContent('franchise-contact-phone', 'title', '0212 555 00 00')}</p>
                 </div>
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-white/5 rounded-custom flex items-center justify-center text-brand-blue"><Mail className="w-5 h-5" /></div>
-                  <p className="font-bold text-slate-400">kurumsal@hocalarageldik.com</p>
+                  <p className="font-bold text-slate-400">{getContent('franchise-contact-email', 'title', 'kurumsal@hocalarageldik.com')}</p>
                 </div>
               </div>
             </div>
@@ -95,7 +166,9 @@ const FranchisePage: React.FC = () => {
 
           <div className="lg:col-span-7">
             <div className="bg-white p-12 rounded-custom shadow-2xl border border-slate-100 space-y-8">
-              <h3 className="text-3xl font-black text-brand-dark capitalize tracking-tight">Ön Başvuru Formu</h3>
+              <h3 className="text-3xl font-black text-brand-dark capitalize tracking-tight">
+                {getContent('franchise-form-title', 'title', 'Ön Başvuru Formu')}
+              </h3>
               <form className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
                   <label className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Ad Soyad</label>
@@ -125,9 +198,11 @@ const FranchisePage: React.FC = () => {
                 </div>
                 <div className="md:col-span-2">
                   <button type="submit" className="w-full py-5 bg-brand-blue text-white font-black rounded-custom hover:bg-brand-dark transition-all shadow-xl shadow-brand-blue/20 capitalize tracking-widest text-sm">
-                    Başvuruyu Tamamla
+                    {getContent('franchise-form-button', 'buttonText', 'Başvuruyu Tamamla')}
                   </button>
-                  <p className="mt-4 text-[10px] text-slate-400 text-center font-medium">Verdiğiniz bilgiler KVKK kapsamında güvence altındadır.</p>
+                  <p className="mt-4 text-[10px] text-slate-400 text-center font-medium">
+                    {getContent('franchise-form-privacy', 'subtitle', 'Verdiğiniz bilgiler KVKK kapsamında güvence altındadır.')}
+                  </p>
                 </div>
               </form>
             </div>

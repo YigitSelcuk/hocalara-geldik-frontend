@@ -11,7 +11,7 @@ export interface AdminUser {
   name: string;
   email: string;
   role: UserRole;
-  assignedBranchId?: string; // Only for BRANCH_ADMIN
+  branchId?: string; // Branch assignment (for BRANCH_ADMIN)
   avatar?: string;
 }
 
@@ -42,6 +42,8 @@ export interface Teacher {
   branch?: Branch;
   isActive: boolean;
   order: number;
+  isPending?: boolean;
+  pendingType?: 'CREATE' | 'UPDATE' | 'DELETE';
 }
 
 export interface NewsItem {
@@ -67,6 +69,10 @@ export interface SliderItem {
   target: 'main' | string; // 'main' or branchId
   order: number;
   isActive: boolean;
+  primaryButtonText?: string;
+  primaryButtonLink?: string;
+  secondaryButtonText?: string;
+  secondaryButtonLink?: string;
 }
 
 export interface YearlySuccess {
@@ -236,6 +242,7 @@ export interface BannerCard {
   bgColor: string;
   hoverColor: string;
   link: string;
+  buttonText?: string;
   order: number;
   isActive: boolean;
 }

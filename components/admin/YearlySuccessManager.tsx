@@ -135,8 +135,8 @@ export const YearlySuccessManager: React.FC<YearlySuccessManagerProps> = ({
                                 </div>
 
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                                    {activeSuccess.students?.map((student) => (
-                                        <div key={student.id} className="bg-slate-50 p-6 rounded-[24px] border border-transparent hover:border-brand-blue/20 transition-all group relative">
+                                    {activeSuccess.students?.map((student, index) => (
+                                        <div key={student.id || index} className="bg-slate-50 p-6 rounded-[24px] border border-transparent hover:border-brand-blue/20 transition-all group relative">
                                             <button
                                                 onClick={() => handleDeleteStudent(activeSuccess.id, student.id)}
                                                 className="absolute top-4 right-4 p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
@@ -145,8 +145,14 @@ export const YearlySuccessManager: React.FC<YearlySuccessManagerProps> = ({
                                             </button>
 
                                             <div className="flex items-center space-x-4">
-                                                <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-sm">
-                                                    <img src={student.image || 'https://via.placeholder.com/150'} className="w-full h-full object-cover" alt="" />
+                                                <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-sm bg-slate-200">
+                                                    {student.image ? (
+                                                        <img src={student.image} className="w-full h-full object-cover" alt={student.name} />
+                                                    ) : (
+                                                        <div className="w-full h-full flex items-center justify-center text-slate-400 font-black text-2xl">
+                                                            {student.name?.charAt(0)?.toUpperCase() || '?'}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div>
                                                     <h4 className="font-black text-brand-dark text-sm">{student.name}</h4>

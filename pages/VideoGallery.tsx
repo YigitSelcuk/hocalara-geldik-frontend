@@ -1,28 +1,66 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Play, Clock, Eye, Search, X, BookOpen } from 'lucide-react';
-import { VIDEO_LESSONS } from '../constants';
 import { VideoCategory } from '../types';
+import { homeSectionService } from '../services/homepage.service';
+import { videoService } from '../services/cms.service';
 
 const VideoGallery: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState<VideoCategory | 'ALL'>('ALL');
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [pageContent, setPageContent] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const [videos, setVideos] = useState<any[]>([]);
+
+  const getContent = (section: string, field: 'title' | 'subtitle' | 'buttonText' = 'title', defaultValue: string = '') => {
+    const content = pageContent[section];
+    return content?.[field] || defaultValue;
+  };
+
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const [contentRes, videosRes] = await Promise.all([
+          homeSectionService.getAll(),
+          videoService.getAll()
+        ]);
+        
+        const contentData = contentRes.data?.data || contentRes.data;
+        if (Array.isArray(contentData)) {
+          const sections = contentData.filter((s: any) => s.page === 'video-gallery');
+          const contentMap: any = {};
+          sections.forEach((s: any) => {
+            contentMap[s.section] = s;
+          });
+          setPageContent(contentMap);
+        }
+
+        const videosData = videosRes.data?.data || videosRes.data?.videos || [];
+        setVideos(videosData);
+      } catch (error) {
+        console.error('Error fetching video gallery content:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchContent();
+  }, []);
 
   const categories = [
-    { id: 'ALL' as const, label: 'Tüm Videolar', count: VIDEO_LESSONS.length },
-    { id: VideoCategory.YKS_TYT, label: 'YKS TYT', count: VIDEO_LESSONS.filter(v => v.category === VideoCategory.YKS_TYT).length },
-    { id: VideoCategory.YKS_AYT, label: 'YKS AYT', count: VIDEO_LESSONS.filter(v => v.category === VideoCategory.YKS_AYT).length },
-    { id: VideoCategory.LGS, label: 'LGS', count: VIDEO_LESSONS.filter(v => v.category === VideoCategory.LGS).length },
-    { id: VideoCategory.KPSS, label: 'KPSS', count: VIDEO_LESSONS.filter(v => v.category === VideoCategory.KPSS).length }
+    { id: 'ALL' as const, label: getContent('video-gallery-tab-all', 'title', 'Tüm Videolar'), count: videos.length },
+    { id: VideoCategory.YKS_TYT, label: getContent('video-gallery-tab-yks-tyt', 'title', 'YKS TYT'), count: videos.filter(v => v.category === VideoCategory.YKS_TYT).length },
+    { id: VideoCategory.YKS_AYT, label: getContent('video-gallery-tab-yks-ayt', 'title', 'YKS AYT'), count: videos.filter(v => v.category === VideoCategory.YKS_AYT).length },
+    { id: VideoCategory.LGS, label: getContent('video-gallery-tab-lgs', 'title', 'LGS'), count: videos.filter(v => v.category === VideoCategory.LGS).length },
+    { id: VideoCategory.KPSS, label: getContent('video-gallery-tab-kpss', 'title', 'KPSS'), count: videos.filter(v => v.category === VideoCategory.KPSS).length }
   ];
 
-  const filteredVideos = VIDEO_LESSONS.filter(video => {
+  const filteredVideos = videos.filter(video => {
     const matchesCategory = activeCategory === 'ALL' || video.category === activeCategory;
     const matchesSearch = searchQuery === '' ||
       video.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       video.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      video.description.toLowerCase().includes(searchQuery.toLowerCase());
+      (video.description && video.description.toLowerCase().includes(searchQuery.toLowerCase()));
     return matchesCategory && matchesSearch;
   });
 
@@ -47,13 +85,13 @@ const VideoGallery: React.FC = () => {
         <div className="max-w-[1600px] mx-auto px-12 relative z-10 text-center">
           <div className="inline-flex items-center space-x-3 text-brand-blue font-black capitalize text-xs tracking-widest bg-brand-blue/20 backdrop-blur-xl px-8 py-4 rounded-2xl mb-10 border border-brand-blue/30">
             <Play className="w-6 h-6" />
-            <span>Örnek Ders Videoları</span>
+            <span>{getContent('video-gallery-hero-badge', 'title', 'Örnek Ders Videoları')}</span>
           </div>
           <h1 className="text-6xl md:text-8xl font-black text-white tracking-tighter leading-none mb-8 capitalize">
-            Video <span className="text-brand-blue italic">Kütüphanemiz</span>
+            {getContent('video-gallery-hero-title', 'title', 'Video')} <span className="text-brand-blue italic">{getContent('video-gallery-hero-title-highlight', 'title', 'Kütüphanemiz')}</span>
           </h1>
           <p className="text-slate-200 text-2xl max-w-full mx-auto font-medium leading-relaxed">
-            5000+ saatlik profesyonel ders videoları ile akademik başarınızı artırın.
+            {getContent('video-gallery-hero-subtitle', 'subtitle', '5000+ saatlik profesyonel ders videoları ile akademik başarınızı artırın.')}
           </p>
         </div>
       </section>
@@ -65,7 +103,7 @@ const VideoGallery: React.FC = () => {
             <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-slate-400" />
             <input
               type="text"
-              placeholder="Video, ders veya konu ara..."
+              placeholder={getContent('video-gallery-search-placeholder', 'title', 'Video, ders veya konu ara...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-16 pr-6 py-5 bg-brand-gray rounded-2xl text-brand-dark font-bold text-lg border-2 border-transparent focus:border-brand-blue focus:outline-none transition-all"
@@ -100,14 +138,14 @@ const VideoGallery: React.FC = () => {
         </div>
 
         {/* Video Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredVideos.map((video) => (
             <div
               key={video.id}
               className="group bg-white rounded-[20px] overflow-hidden shadow-lg border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer"
               onClick={() => setSelectedVideo(video.id)}
             >
-              <div className="relative aspect-video bg-brand-dark overflow-hidden">
+              <div className="relative aspect-[16/10] bg-brand-dark overflow-hidden">
                 <img
                   src={video.thumbnail}
                   alt={video.title}
@@ -134,7 +172,7 @@ const VideoGallery: React.FC = () => {
                 </div>
               </div>
 
-              <div className="p-6 space-y-4">
+              <div className="p-5 space-y-3">
                 <div className="flex items-center space-x-2 text-slate-400 text-xs font-bold">
                   <BookOpen className="w-4 h-4 text-brand-blue" />
                   <span>{video.subject}</span>
@@ -146,15 +184,11 @@ const VideoGallery: React.FC = () => {
                   )}
                 </div>
 
-                <h3 className="text-lg font-black text-brand-dark leading-tight line-clamp-2 group-hover:text-brand-blue transition-colors">
+                <h3 className="text-base font-black text-brand-dark leading-tight line-clamp-2 group-hover:text-brand-blue transition-colors">
                   {video.title}
                 </h3>
 
-                <p className="text-sm text-slate-500 font-medium line-clamp-2 leading-relaxed">
-                  {video.description}
-                </p>
-
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                <div className="flex items-center justify-between pt-2 border-t border-slate-100">
                   {video.teacher && (
                     <div className="text-xs font-bold text-slate-400">
                       <span className="text-brand-blue">{video.teacher}</span>
@@ -174,7 +208,7 @@ const VideoGallery: React.FC = () => {
 
         {filteredVideos.length === 0 && (
           <div className="text-center py-20">
-            <p className="text-xl font-black text-slate-400">Aradığınız kriterlere uygun video bulunamadı.</p>
+            <p className="text-xl font-black text-slate-400">{getContent('video-gallery-empty-message', 'title', 'Aradığınız kriterlere uygun video bulunamadı.')}</p>
           </div>
         )}
       </div>
@@ -186,35 +220,24 @@ const VideoGallery: React.FC = () => {
           onClick={() => setSelectedVideo(null)}
         >
           <div
-            className="relative w-full max-w-5xl bg-brand-dark rounded-[20px] overflow-hidden"
+            className="relative w-full max-w-6xl"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={() => setSelectedVideo(null)}
-              className="absolute top-6 right-6 z-10 w-12 h-12 bg-white/10 backdrop-blur-xl text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all"
+              className="absolute -top-14 right-0 z-10 w-12 h-12 bg-white/10 backdrop-blur-xl text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all"
             >
               <X className="w-6 h-6" />
             </button>
 
-            <div className="aspect-video bg-brand-dark">
+            <div className="aspect-video bg-brand-dark rounded-[20px] overflow-hidden shadow-2xl">
               <iframe
-                src={getVideoEmbedUrl(VIDEO_LESSONS.find(v => v.id === selectedVideo)?.videoUrl || '')}
+                src={getVideoEmbedUrl(videos.find(v => v.id === selectedVideo)?.videoUrl || '')}
                 className="w-full h-full"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
               ></iframe>
             </div>
-
-            {VIDEO_LESSONS.find(v => v.id === selectedVideo) && (
-              <div className="p-8 bg-brand-dark text-white">
-                <h2 className="text-3xl font-black mb-4">
-                  {VIDEO_LESSONS.find(v => v.id === selectedVideo)?.title}
-                </h2>
-                <p className="text-slate-300 font-medium leading-relaxed">
-                  {VIDEO_LESSONS.find(v => v.id === selectedVideo)?.description}
-                </p>
-              </div>
-            )}
           </div>
         </div>
       )}
