@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Search, User, Phone, Facebook, Instagram, Twitter, ChevronDown } from 'lucide-react';
+import { Menu, X, Search, User, Phone, Facebook, Instagram, Twitter } from 'lucide-react';
 
 import { branchService, settingsService } from '../services/cms.service';
 import { homeSectionService } from '../services/homepage.service';
@@ -27,11 +27,9 @@ const Header: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isHomeDropdownOpen, setIsHomeDropdownOpen] = useState(false);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [homeSections, setHomeSections] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({});
-  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const getSection = (section: string, field: 'title' | 'buttonLink', defaultValue: string = '') => {
     const content = homeSections.find(s => s.section === section);
@@ -123,15 +121,7 @@ const Header: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsHomeDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+
 
   return (
     <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
@@ -216,23 +206,7 @@ const Header: React.FC = () => {
                   ))
                 ) : (
                   <>
-                    <div className="relative" ref={dropdownRef}>
-                      <button
-                        onClick={() => setIsHomeDropdownOpen(!isHomeDropdownOpen)}
-                        className={`text-[13px] font-bold transition-all px-5 py-2 relative group tracking-wide flex items-center space-x-1 ${location.pathname === '/' ? 'text-brand-blue' : 'text-brand-dark hover:text-brand-blue'}`}
-                      >
-                        <span>Ana Sayfa</span>
-                        <ChevronDown className={`w-4 h-4 transition-transform ${isHomeDropdownOpen ? 'rotate-180' : ''}`} />
-                        <span className={`absolute bottom-0 left-5 right-5 h-[3px] bg-brand-blue rounded-full transition-all duration-300 ${location.pathname === '/' ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'}`}></span>
-                      </button>
-
-                      {isHomeDropdownOpen && (
-                        <div className="absolute top-full left-0 mt-2 bg-white rounded-[20px] shadow-2xl border border-slate-100 py-2 min-w-[160px] z-50 overflow-hidden">
-                          <Link to="/?style=1" onClick={() => setIsHomeDropdownOpen(false)} className="block px-6 py-3 text-[13px] font-bold text-brand-dark hover:bg-brand-gray hover:text-brand-blue transition-colors">Style 1</Link>
-                          <Link to="/?style=2" onClick={() => setIsHomeDropdownOpen(false)} className="block px-6 py-3 text-[13px] font-bold text-brand-dark hover:bg-brand-gray hover:text-brand-blue transition-colors">Style 2</Link>
-                        </div>
-                      )}
-                    </div>
+                    <NavLink to="/">Ana Sayfa</NavLink>
                     <NavLink to="/videolar">Videolar</NavLink>
                     <NavLink to="/paketler">Paketler</NavLink>
                     <NavLink to="/subeler">Şubeler</NavLink>
