@@ -60,7 +60,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
   console.log('👤 AdminPanel User:', user);
   console.log('👤 User Role:', user?.role);
   console.log('👤 Is BRANCH_ADMIN?', user?.role === UserRole.BRANCH_ADMIN);
-  
+
   // If user is BRANCH_ADMIN, show branch-specific routes
   if (user?.role === UserRole.BRANCH_ADMIN) {
     console.log('🏢 Showing BranchAdmin Routes');
@@ -75,15 +75,15 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
       </Routes>
     );
   }
-  
+
   console.log('⚙️ Showing full AdminPanel');
-  
+
   // Alert hook
   const { alert, showAlert, hideAlert } = useAlert();
-  
+
   // Confirmation modal state
   const [deleteConfirm, setDeleteConfirm] = useState<{ type: string; id: string } | null>(null);
-  
+
   // --- PERSISTENT STATE ---
   const [sliders, setSliders] = useState<SliderItem[]>([]);
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -145,7 +145,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         setSliders(slidersRes.status === 'fulfilled' ? (slidersRes.value.data.sliders || []) : []);
         setNews(newsRes.status === 'fulfilled' ? (newsRes.value.data.pages || []) : []);
         setBranches(branchesRes.status === 'fulfilled' ? (branchesRes.value.data.branches || []) : []);
-        
+
         // Debug video response
         if (videosRes.status === 'fulfilled') {
           console.log('🎬 Videos Response:', videosRes.value);
@@ -166,7 +166,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         setBannerCards(bannerCardsRes.status === 'fulfilled' ? ((bannerCardsRes.value.data as any).bannerCards || (bannerCardsRes.value.data as any).data || []) : []);
         setStatistics(statisticsRes.status === 'fulfilled' ? ((statisticsRes.value.data as any).statistics || (statisticsRes.value.data as any).data || []) : []);
         setFeatures(featuresRes.status === 'fulfilled' ? ((featuresRes.value.data as any).features || (featuresRes.value.data as any).data || []) : []);
-        
+
         // Blog posts response format: { success: true, data: [...] }
         if (blogPostsRes.status === 'fulfilled') {
           console.log('📰 Blog Posts Response:', blogPostsRes.value);
@@ -177,7 +177,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
           console.error('❌ Blog posts fetch failed:', blogPostsRes);
           setBlogPosts([]);
         }
-        
+
         setExamDates(examDatesRes.status === 'fulfilled' ? ((examDatesRes.value.data as any).examDates || (examDatesRes.value.data as any).data || []) : []);
         setSocialMedia(socialMediaRes.status === 'fulfilled' ? ((socialMediaRes.value.data as any).socialMedia || (socialMediaRes.value.data as any).data || []) : []);
         setYoutubeChannels(youtubeChannelsRes.status === 'fulfilled' ? ((youtubeChannelsRes.value.data as any).youtubeChannels || (youtubeChannelsRes.value.data as any).data || []) : []);
@@ -205,10 +205,10 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
     console.log('🗑️ handleDelete called:', { type, id });
     setDeleteConfirm({ type, id });
   };
-  
+
   const confirmDelete = async () => {
     if (!deleteConfirm) return;
-    
+
     const { type, id } = deleteConfirm;
     console.log('🗑️ Confirming delete:', { type, id });
 
@@ -270,10 +270,6 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
           await featureService.delete(id);
           setFeatures((prev: Feature[]) => prev.filter((item: Feature) => item.id !== id));
           break;
-        case 'blog':
-          await blogPostService.delete(id);
-          setBlogPosts((prev: BlogPost[]) => prev.filter((item: BlogPost) => item.id !== id));
-          break;
         case 'examDate':
           await examDateService.delete(id);
           setExamDates((prev: ExamDate[]) => prev.filter((item: ExamDate) => item.id !== id));
@@ -316,12 +312,12 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
   const handleDeleteStudent = async (successId: string, studentId: string) => {
     setDeleteConfirm({ type: 'student', id: `${successId}:${studentId}` });
   };
-  
+
   const confirmDeleteStudent = async () => {
     if (!deleteConfirm || deleteConfirm.type !== 'student') return;
-    
+
     const [successId, studentId] = deleteConfirm.id.split(':');
-    
+
     try {
       await yearlySuccessService.deleteStudent(successId, studentId);
       setYearlySuccesses((prev: YearlySuccess[]) => prev.map((s: YearlySuccess) => {
@@ -378,18 +374,18 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         console.log('🔵 Cleaned student data:', studentData);
         console.log('🔵 YearlySuccessId:', editingItem.yearlySuccessId);
         console.log('🔵 Student image:', studentData.image);
-        
+
         const newItem = await yearlySuccessService.addStudent(editingItem.yearlySuccessId, studentData);
         console.log('✅ Student added:', newItem);
         console.log('✅ Student data from backend:', newItem.data);
-        
+
         setYearlySuccesses((prev: YearlySuccess[]) => prev.map((s: YearlySuccess) => {
           if (s.id === editingItem.yearlySuccessId) {
             return { ...s, students: [newItem.data, ...(s.students || [])] };
           }
           return s;
         }));
-        
+
         setIsModalOpen(false);
         return;
       }
@@ -401,7 +397,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         cleanedData = videoData;
         console.log('🎥 Cleaned video data:', cleanedData);
       }
-      
+
       if (editingItem) {
         console.log('🔄 UPDATE mode');
         // Update
@@ -489,10 +485,10 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             // Şube oluştur
             newItem = await branchService.create(data);
             const createdBranch = newItem.data.branch || newItem.data;
-            
+
             console.log('✅ Branch created:', createdBranch);
             console.log('✅ Branch ID:', createdBranch.id);
-            
+
             // Eğer admin bilgileri varsa, şube yöneticisi hesabı oluştur
             if (data.adminName && data.adminEmail && data.adminPassword) {
               try {
@@ -503,9 +499,9 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                   role: 'BRANCH_ADMIN',
                   branchId: createdBranch.id
                 };
-                
+
                 console.log('📤 Creating user with payload:', userPayload);
-                
+
                 const userResponse = await userService.create(userPayload);
                 console.log('✅ Şube yöneticisi hesabı oluşturuldu:', userResponse.data);
                 showAlert('success', `Şube ve yönetici hesabı başarıyla oluşturuldu!\n\nGiriş Bilgileri:\nE-posta: ${data.adminEmail}\nŞifre: ${data.adminPassword}\n\nBu bilgileri şube yöneticisine iletin.`);
@@ -515,7 +511,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                 showAlert('warning', 'Şube oluşturuldu ancak yönetici hesabı oluşturulamadı. Lütfen manuel olarak kullanıcı ekleyin.');
               }
             }
-            
+
             setBranches((prev: Branch[]) => [createdBranch, ...prev]);
             break;
           case 'video':
@@ -678,44 +674,44 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Haber Başlığı *</label>
-                <input 
-                  type="text" 
-                  value={formData.title || ''} 
-                  onChange={e => setFormData({ ...formData, title: e.target.value })} 
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                <input
+                  type="text"
+                  value={formData.title || ''}
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                   placeholder="Örn: 2024 YKS Sonuçları Açıklandı"
                 />
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">URL Slug</label>
-                <input 
-                  type="text" 
-                  value={formData.slug || ''} 
-                  onChange={e => setFormData({ ...formData, slug: e.target.value })} 
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                <input
+                  type="text"
+                  value={formData.slug || ''}
+                  onChange={e => setFormData({ ...formData, slug: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                   placeholder="Otomatik oluşturulacak"
                 />
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Özet (Excerpt)</label>
-                <textarea 
-                  rows={2} 
-                  value={formData.excerpt || ''} 
-                  onChange={e => setFormData({ ...formData, excerpt: e.target.value })} 
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" 
+                <textarea
+                  rows={2}
+                  value={formData.excerpt || ''}
+                  onChange={e => setFormData({ ...formData, excerpt: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none"
                   placeholder="Kısa özet (liste görünümünde gösterilir)"
                 />
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Haber İçeriği *</label>
-                <textarea 
-                  rows={8} 
-                  value={formData.content || ''} 
-                  onChange={e => setFormData({ ...formData, content: e.target.value })} 
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" 
+                <textarea
+                  rows={8}
+                  value={formData.content || ''}
+                  onChange={e => setFormData({ ...formData, content: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none"
                   placeholder="HTML içerik desteklenir"
                 />
               </div>
@@ -723,8 +719,8 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapak Görseli *</label>
                 <div className="flex gap-4 items-end">
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     accept="image/*"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
@@ -748,9 +744,9 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kategori</label>
-                  <select 
-                    value={formData.categoryId || ''} 
-                    onChange={e => setFormData({ ...formData, categoryId: e.target.value || null })} 
+                  <select
+                    value={formData.categoryId || ''}
+                    onChange={e => setFormData({ ...formData, categoryId: e.target.value || null })}
                     className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                   >
                     <option value="">Kategori Seçin</option>
@@ -759,9 +755,9 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapsam</label>
-                  <select 
-                    value={formData.branchId || ''} 
-                    onChange={e => setFormData({ ...formData, branchId: e.target.value || null })} 
+                  <select
+                    value={formData.branchId || ''}
+                    onChange={e => setFormData({ ...formData, branchId: e.target.value || null })}
                     className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                   >
                     <option value="">Genel / Kurumsal</option>
@@ -772,9 +768,9 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Durum</label>
-                <select 
-                  value={formData.status || 'DRAFT'} 
-                  onChange={e => setFormData({ ...formData, status: e.target.value })} 
+                <select
+                  value={formData.status || 'DRAFT'}
+                  onChange={e => setFormData({ ...formData, status: e.target.value })}
                   className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                 >
                   <option value="DRAFT">Taslak</option>
@@ -785,10 +781,10 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
 
               <div className="flex items-center space-x-4 pt-2">
                 <label className="flex items-center space-x-2 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={formData.isFeatured || false} 
-                    onChange={e => setFormData({ ...formData, isFeatured: e.target.checked })} 
+                  <input
+                    type="checkbox"
+                    checked={formData.isFeatured || false}
+                    onChange={e => setFormData({ ...formData, isFeatured: e.target.checked })}
                     className="w-4 h-4 rounded border-slate-300 text-brand-blue focus:ring-brand-blue"
                   />
                   <span className="text-xs font-bold text-slate-600">Öne Çıkan Haber</span>
@@ -801,31 +797,31 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                 <div className="space-y-3">
                   <div className="space-y-2">
                     <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">SEO Başlık</label>
-                    <input 
-                      type="text" 
-                      value={formData.seoTitle || ''} 
-                      onChange={e => setFormData({ ...formData, seoTitle: e.target.value })} 
-                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                    <input
+                      type="text"
+                      value={formData.seoTitle || ''}
+                      onChange={e => setFormData({ ...formData, seoTitle: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                       placeholder="Boş bırakılırsa haber başlığı kullanılır"
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">SEO Açıklama</label>
-                    <textarea 
-                      rows={2} 
-                      value={formData.seoDescription || ''} 
-                      onChange={e => setFormData({ ...formData, seoDescription: e.target.value })} 
-                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" 
+                    <textarea
+                      rows={2}
+                      value={formData.seoDescription || ''}
+                      onChange={e => setFormData({ ...formData, seoDescription: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none"
                       placeholder="Arama motorları için açıklama"
                     />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">SEO Anahtar Kelimeler</label>
-                    <input 
-                      type="text" 
-                      value={formData.seoKeywords || ''} 
-                      onChange={e => setFormData({ ...formData, seoKeywords: e.target.value })} 
-                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                    <input
+                      type="text"
+                      value={formData.seoKeywords || ''}
+                      onChange={e => setFormData({ ...formData, seoKeywords: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                       placeholder="Virgülle ayırın: yks, üniversite, başarı"
                     />
                   </div>
@@ -878,13 +874,13 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                   <input type="number" step="0.000001" value={formData.lng || ''} onChange={e => setFormData({ ...formData, lng: parseFloat(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
               </div>
-              
+
               {/* Logo Upload */}
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Logo</label>
                 <div className="flex gap-4 items-end">
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     accept="image/*"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
@@ -909,8 +905,8 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapak Görseli</label>
                 <div className="flex gap-4 items-end">
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     accept="image/*"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
@@ -935,8 +931,8 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Başarı Banner</label>
                 <div className="flex gap-4 items-end">
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     accept="image/*"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
@@ -972,27 +968,27 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                     Şube Yöneticisi Hesap Bilgileri
                   </h3>
                   <p className="text-xs text-slate-500 mb-4">Bu bilgilerle şube yöneticisi admin panele giriş yapabilecek.</p>
-                  
+
                   <div className="space-y-4 bg-slate-50 p-4 rounded-xl">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Yönetici Adı *</label>
-                        <input 
-                          type="text" 
-                          value={formData.adminName || ''} 
-                          onChange={e => setFormData({ ...formData, adminName: e.target.value })} 
-                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                        <input
+                          type="text"
+                          value={formData.adminName || ''}
+                          onChange={e => setFormData({ ...formData, adminName: e.target.value })}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                           placeholder="Örn: Ahmet Yılmaz"
                           required
                         />
                       </div>
                       <div className="space-y-2">
                         <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">E-posta (Giriş) *</label>
-                        <input 
-                          type="email" 
-                          value={formData.adminEmail || ''} 
-                          onChange={e => setFormData({ ...formData, adminEmail: e.target.value })} 
-                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                        <input
+                          type="email"
+                          value={formData.adminEmail || ''}
+                          onChange={e => setFormData({ ...formData, adminEmail: e.target.value })}
+                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                           placeholder="sube@hocalarageldik.com"
                           required
                         />
@@ -1000,11 +996,11 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                     </div>
                     <div className="space-y-2">
                       <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Şifre *</label>
-                      <input 
-                        type="password" 
-                        value={formData.adminPassword || ''} 
-                        onChange={e => setFormData({ ...formData, adminPassword: e.target.value })} 
-                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                      <input
+                        type="password"
+                        value={formData.adminPassword || ''}
+                        onChange={e => setFormData({ ...formData, adminPassword: e.target.value })}
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                         placeholder="Minimum 6 karakter"
                         minLength={6}
                         required
@@ -1037,31 +1033,31 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             <div className="space-y-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Video Başlığı *</label>
-                <input 
-                  type="text" 
-                  value={formData.title || ''} 
-                  onChange={e => setFormData({ ...formData, title: e.target.value })} 
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                <input
+                  type="text"
+                  value={formData.title || ''}
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                   placeholder="Örn: Matematik - Türev Konusu"
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">YouTube Video URL *</label>
-                <input 
-                  type="text" 
-                  value={formData.videoUrl || ''} 
+                <input
+                  type="text"
+                  value={formData.videoUrl || ''}
                   onChange={e => {
                     const url = e.target.value;
-                    setFormData({ 
-                      ...formData, 
+                    setFormData({
+                      ...formData,
                       videoUrl: url,
                       thumbnail: getYouTubeThumbnail(url) || formData.thumbnail
                     });
-                  }} 
+                  }}
                   placeholder="https://www.youtube.com/watch?v=..."
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                 />
                 {thumbnailUrl && (
                   <div className="mt-3 p-4 bg-slate-50 rounded-xl border border-slate-200">
@@ -1082,9 +1078,9 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kategori *</label>
-                  <select 
-                    value={formData.category || ''} 
-                    onChange={e => setFormData({ ...formData, category: e.target.value })} 
+                  <select
+                    value={formData.category || ''}
+                    onChange={e => setFormData({ ...formData, category: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                     required
                   >
@@ -1094,11 +1090,11 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Ders / Branş *</label>
-                  <input 
-                    type="text" 
-                    value={formData.subject || ''} 
-                    onChange={e => setFormData({ ...formData, subject: e.target.value })} 
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                  <input
+                    type="text"
+                    value={formData.subject || ''}
+                    onChange={e => setFormData({ ...formData, subject: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                     placeholder="Örn: Matematik"
                     required
                   />
@@ -1116,12 +1112,12 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Açıklama</label>
-                <textarea 
-                  rows={3} 
-                  value={formData.description || ''} 
-                  onChange={e => setFormData({ ...formData, description: e.target.value })} 
+                <textarea
+                  rows={3}
+                  value={formData.description || ''}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Video hakkında kısa açıklama..."
-                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" 
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none"
                 />
               </div>
             </div>
@@ -1136,16 +1132,16 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Tür</label>
-                  <input 
-                    type="text" 
-                    value={formData.type || ''} 
-                    onChange={e => setFormData({ ...formData, type: e.target.value })} 
+                  <input
+                    type="text"
+                    value={formData.type || ''}
+                    onChange={e => setFormData({ ...formData, type: e.target.value })}
                     placeholder="Örn: YKS 2026, LGS 2026, KPSS"
-                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                   />
                 </div>
               </div>
-              
+
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kısa Açıklama</label>
                 <textarea rows={2} value={formData.shortDescription || ''} onChange={e => setFormData({ ...formData, shortDescription: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none" />
@@ -1191,16 +1187,16 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                 <div className="space-y-2">
                   {(Array.isArray(formData.features) ? formData.features : []).map((feature: string, index: number) => (
                     <div key={index} className="flex gap-2">
-                      <input 
-                        type="text" 
-                        value={feature} 
+                      <input
+                        type="text"
+                        value={feature}
                         onChange={e => {
                           const newFeatures = [...(Array.isArray(formData.features) ? formData.features : [])];
                           newFeatures[index] = e.target.value;
                           setFormData({ ...formData, features: newFeatures });
                         }}
                         placeholder={`Özellik ${index + 1}`}
-                        className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" 
+                        className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                       />
                       <button
                         type="button"
@@ -1231,8 +1227,8 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Paket Görseli</label>
                 <div className="flex gap-4 items-end">
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     accept="image/*"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
@@ -1255,31 +1251,31 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
 
               <div className="grid grid-cols-3 gap-4">
                 <div className="flex items-center space-x-2">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     id="isPopular"
-                    checked={formData.isPopular || false} 
-                    onChange={e => setFormData({ ...formData, isPopular: e.target.checked })} 
+                    checked={formData.isPopular || false}
+                    onChange={e => setFormData({ ...formData, isPopular: e.target.checked })}
                     className="w-4 h-4 text-brand-blue rounded focus:ring-brand-blue"
                   />
                   <label htmlFor="isPopular" className="text-xs font-black text-slate-600">Popüler</label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     id="isNew"
-                    checked={formData.isNew || false} 
-                    onChange={e => setFormData({ ...formData, isNew: e.target.checked })} 
+                    checked={formData.isNew || false}
+                    onChange={e => setFormData({ ...formData, isNew: e.target.checked })}
                     className="w-4 h-4 text-brand-blue rounded focus:ring-brand-blue"
                   />
                   <label htmlFor="isNew" className="text-xs font-black text-slate-600">Yeni</label>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <input 
-                    type="checkbox" 
+                  <input
+                    type="checkbox"
                     id="isActive"
-                    checked={formData.isActive !== false} 
-                    onChange={e => setFormData({ ...formData, isActive: e.target.checked })} 
+                    checked={formData.isActive !== false}
+                    onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
                     className="w-4 h-4 text-brand-blue rounded focus:ring-brand-blue"
                   />
                   <label htmlFor="isActive" className="text-xs font-black text-slate-600">Aktif</label>
@@ -1461,8 +1457,8 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapak Görseli *</label>
                 <div className="flex gap-4 items-end">
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     accept="image/*"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
@@ -1482,7 +1478,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                   )}
                 </div>
               </div>
-              
+
               {/* SEO Fields */}
               <div className="pt-4 border-t border-slate-200">
                 <h4 className="text-xs font-black text-slate-600 mb-3">SEO Ayarları</h4>
@@ -1501,7 +1497,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                   </div>
                 </div>
               </div>
-              
+
               {/* Checkboxes */}
               <div className="flex items-center space-x-6 pt-2">
                 <label className="flex items-center space-x-2 cursor-pointer">
@@ -1633,8 +1629,8 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Banner Görseli</label>
                   <div className="flex gap-4 items-end">
-                    <input 
-                      type="file" 
+                    <input
+                      type="file"
                       accept="image/*"
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
@@ -1690,12 +1686,12 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Şube</label>
-                <select 
-                  value={formData.branch || ''} 
+                <select
+                  value={formData.branch || ''}
                   onChange={e => {
                     const selectedBranch = branches.find(b => b.name === e.target.value);
                     setFormData({ ...formData, branch: selectedBranch?.name || '' });
-                  }} 
+                  }}
                   className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                 >
                   <option value="">Şube Seçiniz</option>
@@ -1708,8 +1704,8 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
               <div className="space-y-2">
                 <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Öğrenci Fotoğrafı</label>
                 <div className="flex gap-4 items-end">
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     accept="image/*"
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
@@ -1909,15 +1905,15 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
           onClose={hideAlert}
         />
       )}
-      
+
       {/* Delete Confirmation Modal */}
       {deleteConfirm && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8">
             <h3 className="text-2xl font-black text-brand-dark mb-4">Silme Onayı</h3>
             <p className="text-slate-600 mb-8">
-              {deleteConfirm.type === 'student' 
-                ? 'Bu öğrenciyi silmek istediğinize emin misiniz?' 
+              {deleteConfirm.type === 'student'
+                ? 'Bu öğrenciyi silmek istediğinize emin misiniz?'
                 : 'Bu içeriği silmek istediğinize emin misiniz?'}
             </p>
             <div className="flex gap-3">
@@ -1937,7 +1933,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
           </div>
         </div>
       )}
-      
+
       <Routes>
         <Route path="/" element={<Dashboard />} />
         <Route path="/approvals" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <ApprovalsManager /> : <Navigate to="/admin" />} />
