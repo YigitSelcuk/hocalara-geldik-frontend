@@ -107,7 +107,7 @@ const NewsDetail: React.FC = () => {
               {/* Featured Image */}
               <div className="relative aspect-[16/9] overflow-hidden bg-slate-100 flex items-center justify-center">
                 <img 
-                  src={news.image ? (news.image.startsWith('http') ? news.image : `${API_BASE_URL}${news.image}`) : '/uploads/placeholder.jpg'} 
+                  src={news.image ? (news.image.startsWith('http') ? news.image : (news.image.startsWith('/assets') ? news.image : `${API_BASE_URL}${news.image}`)) : '/uploads/placeholder.jpg'} 
                   alt={news.title}
                   className="w-full h-full object-contain"
                 />
@@ -247,7 +247,7 @@ const NewsDetail: React.FC = () => {
                         <div className="flex gap-4">
                           <div className="relative w-24 h-24 rounded-2xl overflow-hidden flex-shrink-0 bg-slate-100 flex items-center justify-center">
                             <img 
-                              src={item.image ? (item.image.startsWith('http') ? item.image : `${API_BASE_URL}${item.image}`) : '/uploads/placeholder.jpg'} 
+                              src={item.image ? (item.image.startsWith('http') ? item.image : (item.image.startsWith('/assets') ? item.image : `${API_BASE_URL}${item.image}`)) : '/uploads/placeholder.jpg'} 
                               alt={item.title}
                               className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-500"
                             />

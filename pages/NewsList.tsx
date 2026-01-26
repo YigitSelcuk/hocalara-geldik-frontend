@@ -135,7 +135,7 @@ const NewsList: React.FC = () => {
                 >
                   <div className="relative aspect-[16/10] overflow-hidden bg-slate-100 flex items-center justify-center">
                     <img
-                      src={item.image ? (item.image.startsWith('http') ? item.image : `${API_BASE_URL}${item.image}`) : '/uploads/placeholder.jpg'}
+                      src={item.image ? (item.image.startsWith('http') ? item.image : (item.image.startsWith('/assets') ? item.image : `${API_BASE_URL}${item.image}`)) : '/uploads/placeholder.jpg'}
                       alt={item.title}
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-700"
                     />

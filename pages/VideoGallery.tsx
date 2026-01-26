@@ -4,6 +4,7 @@ import { Play, Clock, Eye, Search, X, BookOpen } from 'lucide-react';
 import { VideoCategory } from '../types';
 import { homeSectionService } from '../services/homepage.service';
 import { videoService } from '../services/cms.service';
+import { API_BASE_URL } from '../services/api';
 import { useSEO } from '../hooks/useSEO';
 
 const VideoGallery: React.FC = () => {
@@ -151,7 +152,7 @@ const VideoGallery: React.FC = () => {
             >
               <div className="relative aspect-[16/10] bg-brand-dark overflow-hidden">
                 <img
-                  src={video.thumbnail}
+                  src={video.thumbnail?.startsWith('http') ? video.thumbnail : (video.thumbnail?.startsWith('/assets') ? video.thumbnail : `${API_BASE_URL}${video.thumbnail}`)}
                   alt={video.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />

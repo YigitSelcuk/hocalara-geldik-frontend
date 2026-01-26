@@ -43,7 +43,7 @@ export const TeacherManager: React.FC<TeacherManagerProps> = ({
                     <div className="relative aspect-square bg-slate-100 overflow-hidden">
                         {teacher.image ? (
                             <img
-                                src={teacher.image}
+                                src={teacher.image?.startsWith('http') ? teacher.image : (teacher.image?.startsWith('/assets') ? teacher.image : `${API_BASE_URL}${teacher.image}`)}
                                 alt={teacher.name}
                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                             />

@@ -159,7 +159,7 @@ const MainHome: React.FC = () => {
       <section className="relative h-[500px] lg:h-[600px] w-full overflow-hidden bg-brand-dark mx-auto max-w-[1920px]">
         {mainSliders.map((slide, index) => {
           const Icon = (slide as any).key === 'hero' ? IconMap['Zap'] : null;
-          const imageUrl = slide.image?.startsWith('http') ? slide.image : `${API_BASE_URL}${slide.image}`;
+          const imageUrl = slide.image?.startsWith('http') ? slide.image : (slide.image?.startsWith('/assets') ? slide.image : `${API_BASE_URL}${slide.image}`);
           return (
             <div
               key={slide.id}
@@ -471,7 +471,7 @@ const MainHome: React.FC = () => {
               >
                 <div className="relative aspect-video overflow-hidden">
                   <img
-                    src={channel.thumbnail}
+                    src={channel.thumbnail ? (channel.thumbnail.startsWith('http') ? channel.thumbnail : (channel.thumbnail.startsWith('/assets') ? channel.thumbnail : `${API_BASE_URL}${channel.thumbnail}`)) : ''}
                     alt={channel.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
@@ -791,7 +791,7 @@ const MainHome: React.FC = () => {
             {(() => {
               const imageUrl = getSection('cta-image', 'buttonLink', '');
               const finalUrl = imageUrl 
-                ? (imageUrl.startsWith('http') ? imageUrl : `${API_BASE_URL}${imageUrl}`)
+                ? (imageUrl.startsWith('http') ? imageUrl : (imageUrl.startsWith('/assets') ? imageUrl : `${API_BASE_URL}${imageUrl}`))
                 : "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop";
               return <img src={finalUrl} className="rounded-[20px] shadow-2xl relative z-10 w-full" alt="CTA" />;
             })()}

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Settings2, Trash } from 'lucide-react';
 import { AdminUser, UserRole, Branch } from '../../types';
+import { API_BASE_URL } from '../../services/api';
 
 interface UserManagerProps {
     adminUsers: AdminUser[];
@@ -36,7 +37,7 @@ export const UserManager: React.FC<UserManagerProps> = ({
             {adminUsers.map((admin) => (
                 <div key={admin.id} className="bg-white p-6 rounded-[24px] border border-slate-100 flex items-center justify-between hover:shadow-lg transition-all">
                     <div className="flex items-center space-x-5">
-                        <img src={admin.avatar} className="w-14 h-14 rounded-2xl object-cover shadow-sm" alt="" />
+                        <img src={admin.avatar?.startsWith('http') ? admin.avatar : (admin.avatar?.startsWith('/assets') ? admin.avatar : `${API_BASE_URL}${admin.avatar}`)} className="w-14 h-14 rounded-2xl object-cover shadow-sm" alt="" />
                         <div>
                             <h3 className="font-black text-brand-dark capitalize tracking-tight">{admin.name}</h3>
                             <p className="text-xs text-slate-400 font-bold">{admin.email}</p>

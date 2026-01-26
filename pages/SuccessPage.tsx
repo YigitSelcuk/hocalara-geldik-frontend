@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Trophy, Star, Users, Award, ChevronRight, TrendingUp, Calendar, GraduationCap, Target, Zap, MapPin } from 'lucide-react';
 import { yearlySuccessService, homeSectionService } from '../services/homepage.service';
+import { API_BASE_URL } from '../services/api';
 import { YearlySuccess } from '../types';
 import { useSEO } from '../hooks/useSEO';
 
@@ -403,7 +404,7 @@ const SuccessPage: React.FC = () => {
               <div className="flex">
                 <div className="w-1/3 aspect-[3/4] overflow-hidden bg-brand-gray">
                   <img
-                    src={student.image || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400'}
+                    src={student.image ? (student.image.startsWith('http') ? student.image : (student.image.startsWith('/assets') ? student.image : `${API_BASE_URL}${student.image}`)) : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400'}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     alt={student.name}
                   />

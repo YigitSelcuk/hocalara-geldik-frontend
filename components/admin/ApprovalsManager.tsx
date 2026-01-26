@@ -3,6 +3,7 @@ import { Check, X, Clock, Eye, User, Building2, Users as UsersIcon } from 'lucid
 import axios from 'axios';
 import Alert from '../Alert';
 import { useAlert } from '../../hooks/useAlert';
+import { API_BASE_URL } from '../../services/api';
 
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
@@ -356,7 +357,7 @@ export const ApprovalsManager: React.FC = () => {
                     {selectedRequest.newData.image && (
                       <div>
                         <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Fotoğraf</label>
-                        <img src={selectedRequest.newData.image} alt="Teacher" className="w-32 h-32 rounded-full object-cover border-4 border-green-200" />
+                        <img src={selectedRequest.newData.image?.startsWith('http') ? selectedRequest.newData.image : (selectedRequest.newData.image?.startsWith('/assets') ? selectedRequest.newData.image : `${API_BASE_URL}${selectedRequest.newData.image}`)} alt="Teacher" className="w-32 h-32 rounded-full object-cover border-4 border-green-200" />
                       </div>
                     )}
                   </div>
@@ -379,7 +380,7 @@ export const ApprovalsManager: React.FC = () => {
                               {key === 'name' ? 'Öğretmen Adı' : key === 'subject' ? 'Branş' : key === 'image' ? 'Fotoğraf' : key} (Eski)
                             </label>
                             {key === 'image' && oldValue ? (
-                              <img src={oldValue} alt="Old" className="w-24 h-24 rounded-full object-cover border-2 border-red-200" />
+                              <img src={oldValue?.startsWith('http') ? oldValue : (oldValue?.startsWith('/assets') ? oldValue : `${API_BASE_URL}${oldValue}`)} alt="Old" className="w-24 h-24 rounded-full object-cover border-2 border-red-200" />
                             ) : (
                               <input
                                 type="text"
@@ -394,7 +395,7 @@ export const ApprovalsManager: React.FC = () => {
                               {key === 'name' ? 'Öğretmen Adı' : key === 'subject' ? 'Branş' : key === 'image' ? 'Fotoğraf' : key} (Yeni)
                             </label>
                             {key === 'image' && newValue ? (
-                              <img src={newValue} alt="New" className="w-24 h-24 rounded-full object-cover border-2 border-green-200" />
+                              <img src={newValue?.startsWith('http') ? newValue : (newValue?.startsWith('/assets') ? newValue : `${API_BASE_URL}${newValue}`)} alt="New" className="w-24 h-24 rounded-full object-cover border-2 border-green-200" />
                             ) : (
                               <input
                                 type="text"
@@ -436,7 +437,7 @@ export const ApprovalsManager: React.FC = () => {
                       </div>
                       {selectedRequest.oldData.image && (
                         <div className="mt-4">
-                          <img src={selectedRequest.oldData.image} alt="Teacher" className="w-24 h-24 rounded-full object-cover border-4 border-red-300" />
+                          <img src={selectedRequest.oldData.image?.startsWith('http') ? selectedRequest.oldData.image : (selectedRequest.oldData.image?.startsWith('/assets') ? selectedRequest.oldData.image : `${API_BASE_URL}${selectedRequest.oldData.image}`)} alt="Teacher" className="w-24 h-24 rounded-full object-cover border-4 border-red-300" />
                         </div>
                       )}
                     </div>
@@ -482,7 +483,7 @@ export const ApprovalsManager: React.FC = () => {
                               {fieldLabels[key] || key} (Eski)
                             </label>
                             {isImage && oldValue ? (
-                              <img src={oldValue} alt="Old" className="w-full h-32 object-cover rounded-xl border-2 border-red-200" />
+                              <img src={oldValue?.startsWith('http') ? oldValue : (oldValue?.startsWith('/assets') ? oldValue : `${API_BASE_URL}${oldValue}`)} alt="Old" className="w-full h-32 object-cover rounded-xl border-2 border-red-200" />
                             ) : isFeatures && Array.isArray(oldValue) ? (
                               <div className="space-y-2">
                                 {oldValue.map((feature: any, idx: number) => (
@@ -513,7 +514,7 @@ export const ApprovalsManager: React.FC = () => {
                               {fieldLabels[key] || key} (Yeni)
                             </label>
                             {isImage && newValue ? (
-                              <img src={newValue} alt="New" className="w-full h-32 object-cover rounded-xl border-2 border-green-200" />
+                              <img src={newValue?.startsWith('http') ? newValue : (newValue?.startsWith('/assets') ? newValue : `${API_BASE_URL}${newValue}`)} alt="New" className="w-full h-32 object-cover rounded-xl border-2 border-green-200" />
                             ) : isFeatures && Array.isArray(newValue) ? (
                               <div className="space-y-2">
                                 {newValue.map((feature: any, idx: number) => (
@@ -551,7 +552,7 @@ export const ApprovalsManager: React.FC = () => {
                       <div>
                         <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Paket Görseli</label>
                         <img
-                          src={selectedRequest.newData.image}
+                          src={selectedRequest.newData.image?.startsWith('http') ? selectedRequest.newData.image : (selectedRequest.newData.image?.startsWith('/assets') ? selectedRequest.newData.image : `${API_BASE_URL}${selectedRequest.newData.image}`)}
                           alt="Package"
                           className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-green-200"
                         />
@@ -742,7 +743,7 @@ export const ApprovalsManager: React.FC = () => {
                               {fieldLabels[key] || key} (Eski)
                             </label>
                             {isImage && oldValue ? (
-                              <img src={oldValue} alt="Old" className="w-full h-32 object-cover rounded-xl border-2 border-red-200" />
+                              <img src={oldValue?.startsWith('http') ? oldValue : (oldValue?.startsWith('/assets') ? oldValue : `${API_BASE_URL}${oldValue}`)} alt="Old" className="w-full h-32 object-cover rounded-xl border-2 border-red-200" />
                             ) : isFeatures && Array.isArray(oldValue) ? (
                               <div className="space-y-2">
                                 {oldValue.map((feature: string, idx: number) => (
@@ -777,7 +778,7 @@ export const ApprovalsManager: React.FC = () => {
                               {fieldLabels[key] || key} (Yeni)
                             </label>
                             {isImage && newValue ? (
-                              <img src={newValue} alt="New" className="w-full h-32 object-cover rounded-xl border-2 border-green-200" />
+                              <img src={newValue?.startsWith('http') ? newValue : (newValue?.startsWith('/assets') ? newValue : `${API_BASE_URL}${newValue}`)} alt="New" className="w-full h-32 object-cover rounded-xl border-2 border-green-200" />
                             ) : isFeatures && Array.isArray(newValue) ? (
                               <div className="space-y-2">
                                 {newValue.map((feature: string, idx: number) => (
@@ -868,7 +869,7 @@ export const ApprovalsManager: React.FC = () => {
                       <div>
                         <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Haber Görseli</label>
                         <img
-                          src={selectedRequest.newData.image}
+                          src={selectedRequest.newData.image?.startsWith('http') ? selectedRequest.newData.image : (selectedRequest.newData.image?.startsWith('/assets') ? selectedRequest.newData.image : `${API_BASE_URL}${selectedRequest.newData.image}`)}
                           alt="News"
                           className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-green-200"
                         />

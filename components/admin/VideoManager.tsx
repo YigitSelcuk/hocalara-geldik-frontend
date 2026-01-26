@@ -54,7 +54,7 @@ export const VideoManager: React.FC<VideoManagerProps> = ({
                         <div key={video.id} className="bg-white rounded-[24px] border border-slate-100 overflow-hidden shadow-sm hover:shadow-xl transition-all group">
                             <div className="aspect-video relative">
                                 <img 
-                                    src={video.thumbnail || getYouTubeThumbnail(video.videoUrl)} 
+                                    src={video.thumbnail ? (video.thumbnail.startsWith('http') ? video.thumbnail : (video.thumbnail.startsWith('/assets') ? video.thumbnail : `${API_BASE_URL}${video.thumbnail}`)) : getYouTubeThumbnail(video.videoUrl)} 
                                     className="w-full h-full object-cover" 
                                     alt={video.title}
                                     onError={(e) => {

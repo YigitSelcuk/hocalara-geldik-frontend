@@ -38,10 +38,17 @@ const Header: React.FC = () => {
 
   const getLogoUrl = () => {
     const logoPath = getSection('header-logo', 'buttonLink', '/assets/images/logoblue.svg');
-    if (logoPath.startsWith('http') || logoPath.startsWith('/assets')) {
+    // If it's a full URL (http/https), use it as is
+    if (logoPath.startsWith('http')) {
       return logoPath;
     }
-    return `${API_BASE_URL}${logoPath}`;
+    // If it's an uploaded file (starts with /uploads), prepend API_BASE_URL
+    if (logoPath.startsWith('/uploads')) {
+      return `${API_BASE_URL}${logoPath}`;
+    }
+    // For local assets (like /assets/...), use them directly from frontend
+    // Do NOT prepend API_BASE_URL for local assets
+    return logoPath;
   };
 
   const getTopbarLinks = () => {

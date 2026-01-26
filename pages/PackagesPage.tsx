@@ -152,7 +152,7 @@ const PackagesPage: React.FC = () => {
 
                 <div className="aspect-[16/9] overflow-hidden bg-brand-gray">
                   <img
-                    src={pkg.image?.startsWith('http') ? pkg.image : `${API_BASE_URL}${pkg.image}`}
+                    src={pkg.image?.startsWith('http') ? pkg.image : (pkg.image?.startsWith('/assets') ? pkg.image : `${API_BASE_URL}${pkg.image}`)}
                     alt={pkg.name}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />

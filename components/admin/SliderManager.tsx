@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Settings2, Trash, Link as LinkIcon } from 'lucide-react';
 import { SliderItem } from '../../types';
+import { API_BASE_URL } from '../../services/api';
 
 interface SliderManagerProps {
     sliders: SliderItem[];
@@ -34,7 +35,7 @@ export const SliderManager: React.FC<SliderManagerProps> = ({
             {sliders.map((slider) => (
                 <div key={slider.id} className="bg-white rounded-[28px] border border-slate-100 overflow-hidden shadow-sm hover:shadow-2xl transition-all duration-500 group">
                     <div className="aspect-[21/9] relative overflow-hidden">
-                        <img src={slider.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt={slider.title} />
+                        <img src={slider.image?.startsWith('http') ? slider.image : (slider.image?.startsWith('/assets') ? slider.image : `${API_BASE_URL}${slider.image}`)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" alt={slider.title} />
                         <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/90 via-brand-dark/20 to-transparent"></div>
                         <div className="absolute bottom-6 left-8 right-8">
                             <div className="flex items-center space-x-3 mb-3">

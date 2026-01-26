@@ -273,7 +273,7 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
                   {form.featuredImage ? (
                     <div className="relative flex-1">
                       <img
-                        src={form.featuredImage.startsWith('http') ? form.featuredImage : `${API_BASE_URL}${form.featuredImage}`}
+                        src={form.featuredImage.startsWith('http') ? form.featuredImage : (form.featuredImage.startsWith('/assets') ? form.featuredImage : `${API_BASE_URL}${form.featuredImage}`)}
                         alt="News"
                         className="w-full h-48 object-contain rounded-xl border-2 border-slate-200 bg-slate-50"
                       />
@@ -421,7 +421,7 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
               {newsItem.image ? (
                 <div className="w-full h-48 bg-slate-100 flex items-center justify-center">
                   <img
-                    src={newsItem.image.startsWith('http') ? newsItem.image : `${API_BASE_URL}${newsItem.image}`}
+                    src={newsItem.image.startsWith('http') ? newsItem.image : (newsItem.image.startsWith('/assets') ? newsItem.image : `${API_BASE_URL}${newsItem.image}`)}
                     alt={newsItem.title}
                     className="w-full h-full object-contain"
                   />

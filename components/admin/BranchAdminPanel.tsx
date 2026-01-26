@@ -7,6 +7,7 @@ import {
 import { Branch, AdminUser, Teacher } from '../../types';
 import { branchService, mediaService } from '../../services/cms.service';
 import { teacherService } from '../../services/homepage.service';
+import { API_BASE_URL } from '../../services/api';
 import BranchPackageManager from './BranchPackageManager';
 import BranchSuccessManager from './BranchSuccessManager';
 import LeadManager from './LeadManager';
@@ -472,7 +473,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
                   />
                   {teacherForm.image && (
                     <div className="flex items-center justify-center">
-                      <img src={teacherForm.image} alt="Preview" className="w-32 h-32 rounded-full object-cover border-4 border-slate-200" />
+                      <img src={teacherForm.image.startsWith('http') ? teacherForm.image : (teacherForm.image.startsWith('/assets') ? teacherForm.image : `${API_BASE_URL}${teacherForm.image}`)} alt="Preview" className="w-32 h-32 rounded-full object-cover border-4 border-slate-200" />
                     </div>
                   )}
                 </div>
@@ -505,7 +506,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
           <div className="flex items-center space-x-6">
             {branch.logo && (
               <div className="w-20 h-20 bg-white rounded-2xl p-3 shadow-xl">
-                <img src={branch.logo} alt={branch.name} className="w-full h-full object-contain" />
+                <img src={branch.logo.startsWith('http') ? branch.logo : (branch.logo.startsWith('/assets') ? branch.logo : `${API_BASE_URL}${branch.logo}`)} alt={branch.name} className="w-full h-full object-contain" />
               </div>
             )}
             <div>
@@ -870,7 +871,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
                     />
                     {basicInfo.logo && (
                       <div className="w-24 h-24 bg-slate-50 rounded-xl border-2 border-slate-200 p-2 flex items-center justify-center">
-                        <img src={basicInfo.logo} alt="Logo" className="max-w-full max-h-full object-contain" />
+                        <img src={basicInfo.logo.startsWith('http') ? basicInfo.logo : (basicInfo.logo.startsWith('/assets') ? basicInfo.logo : `${API_BASE_URL}${basicInfo.logo}`)} alt="Logo" className="max-w-full max-h-full object-contain" />
                       </div>
                     )}
                   </div>
@@ -900,7 +901,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
                       className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-blue file:text-white file:font-bold file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     {basicInfo.image && (
-                      <img src={basicInfo.image} alt="Kapak" className="w-40 h-24 object-cover rounded-xl border-2 border-slate-200" />
+                      <img src={basicInfo.image.startsWith('http') ? basicInfo.image : (basicInfo.image.startsWith('/assets') ? basicInfo.image : `${API_BASE_URL}${basicInfo.image}`)} alt="Kapak" className="w-40 h-24 object-cover rounded-xl border-2 border-slate-200" />
                     )}
                   </div>
                 </div>
@@ -929,7 +930,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
                       className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-blue file:text-white file:font-bold file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                     {basicInfo.successBanner && (
-                      <img src={basicInfo.successBanner} alt="Banner" className="w-40 h-24 object-cover rounded-xl border-2 border-slate-200" />
+                      <img src={basicInfo.successBanner.startsWith('http') ? basicInfo.successBanner : (basicInfo.successBanner.startsWith('/assets') ? basicInfo.successBanner : `${API_BASE_URL}${basicInfo.successBanner}`)} alt="Banner" className="w-40 h-24 object-cover rounded-xl border-2 border-slate-200" />
                     )}
                   </div>
                 </div>

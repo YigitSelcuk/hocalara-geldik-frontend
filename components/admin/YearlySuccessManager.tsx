@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Plus, Settings2, Trash, Trophy, Users, Layout, ChevronRight, GraduationCap } from 'lucide-react';
 import { YearlySuccess, TopStudent } from '../../types';
+import { API_BASE_URL } from '../../services/api';
 
 interface YearlySuccessManagerProps {
     successes: YearlySuccess[];
@@ -103,7 +104,7 @@ export const YearlySuccessManager: React.FC<YearlySuccessManagerProps> = ({
                                 {activeSuccess.banner ? (
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div className="aspect-video rounded-2xl overflow-hidden border border-slate-100 shadow-inner md:col-span-1">
-                                            <img src={activeSuccess.banner.image} className="w-full h-full object-cover" alt="" />
+                                            <img src={activeSuccess.banner.image?.startsWith('http') ? activeSuccess.banner.image : (activeSuccess.banner.image?.startsWith('/assets') ? activeSuccess.banner.image : `${API_BASE_URL}${activeSuccess.banner.image}`)} className="w-full h-full object-cover" alt="" />
                                         </div>
                                         <div className="md:col-span-2 space-y-2">
                                             <h4 className="font-black text-brand-dark text-lg">{activeSuccess.banner.title}</h4>
@@ -147,7 +148,7 @@ export const YearlySuccessManager: React.FC<YearlySuccessManagerProps> = ({
                                             <div className="flex items-center space-x-4">
                                                 <div className="w-16 h-16 rounded-2xl overflow-hidden shadow-sm bg-slate-200">
                                                     {student.image ? (
-                                                        <img src={student.image} className="w-full h-full object-cover" alt={student.name} />
+                                                        <img src={student.image?.startsWith('http') ? student.image : (student.image?.startsWith('/assets') ? student.image : `${API_BASE_URL}${student.image}`)} className="w-full h-full object-cover" alt={student.name} />
                                                     ) : (
                                                         <div className="w-full h-full flex items-center justify-center text-slate-400 font-black text-2xl">
                                                             {student.name?.charAt(0)?.toUpperCase() || '?'}

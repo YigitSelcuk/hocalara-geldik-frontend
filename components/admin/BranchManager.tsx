@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Settings2, Trash, Building2, MapPin } from 'lucide-react';
 import { Branch } from '../../types';
+import { API_BASE_URL } from '../../services/api';
 
 interface BranchManagerProps {
     branches: Branch[];
@@ -41,7 +42,7 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
                             style={{ borderTop: `4px solid ${branch.primaryColor || '#0052FF'}` }}
                         >
                             {branch.logo ? (
-                                <img src={branch.logo} className="w-10 h-10 object-contain" alt={branch.name} />
+                                <img src={branch.logo.startsWith('http') ? branch.logo : (branch.logo.startsWith('/assets') ? branch.logo : `${API_BASE_URL}${branch.logo}`)} className="w-10 h-10 object-contain" alt={branch.name} />
                             ) : (
                                 <Building2 className="w-7 h-7 text-brand-blue group-hover:text-brand-dark transition-colors" />
                             )}

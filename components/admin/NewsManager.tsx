@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Settings2, Trash, Eye, Calendar, MapPin } from 'lucide-react';
 import { NewsItem, AdminUser, UserRole } from '../../types';
+import { API_BASE_URL } from '../../services/api';
 
 interface NewsManagerProps {
     user: AdminUser | null;
@@ -70,7 +71,7 @@ export const NewsManager: React.FC<NewsManagerProps> = ({
                             <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
                                 {newsItem.featuredImage ? (
                                     <img 
-                                        src={newsItem.featuredImage} 
+                                        src={newsItem.featuredImage.startsWith('http') ? newsItem.featuredImage : (newsItem.featuredImage.startsWith('/assets') ? newsItem.featuredImage : `${API_BASE_URL}${newsItem.featuredImage}`)} 
                                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" 
                                         alt={newsItem.title} 
                                     />

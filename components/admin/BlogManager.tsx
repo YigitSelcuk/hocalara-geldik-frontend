@@ -1,5 +1,6 @@
 import React from 'react';
 import { Plus, Settings2, Trash, FileText, Calendar, Clock } from 'lucide-react';
+import { API_BASE_URL } from '../../services/api';
 
 interface BlogPost {
     id: string;
@@ -56,7 +57,7 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                     {/* Image */}
                     <div className="relative aspect-video overflow-hidden bg-slate-100">
                         <img
-                            src={post.image}
+                            src={post.image?.startsWith('http') ? post.image : (post.image?.startsWith('/assets') ? post.image : `${API_BASE_URL}${post.image}`)}
                             alt={post.title}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />

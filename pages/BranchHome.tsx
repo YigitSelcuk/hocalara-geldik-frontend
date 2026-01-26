@@ -4,6 +4,7 @@ import { Branch, SliderItem, NewsItem } from '../types';
 import { MapPin, MessageCircle, Calendar, Users, Phone, GraduationCap, Zap, Cpu, ChevronRight, FileText, TrendingUp, Mail, Award } from 'lucide-react';
 import { sliderService, pageService } from '../services/cms.service';
 import { Link } from 'react-router-dom';
+import { API_BASE_URL } from '../services/api';
 import axios from 'axios';
 import Alert from '../components/Alert';
 import { useAlert } from '../hooks/useAlert';
@@ -321,7 +322,7 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
                   {branch.teachers && branch.teachers.length > 0 ? branch.teachers.map((t, i) => (
                     <div key={i} className="group text-center space-y-3">
                       <div className="w-20 h-20 mx-auto rounded-full overflow-hidden border-2 border-slate-200 group-hover:border-brand-blue transition-colors">
-                        <img src={t.image} className="w-full h-full object-cover" alt={t.name} />
+                        <img src={t.image?.startsWith('http') ? t.image : (t.image?.startsWith('/assets') ? t.image : `${API_BASE_URL}${t.image}`)} className="w-full h-full object-cover" alt={t.name} />
                       </div>
                       <div>
                         <h4 className="font-bold text-brand-dark text-sm">{t.name}</h4>
@@ -359,7 +360,7 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
                   {news.length > 0 ? news.slice(0, 3).map(n => (
                     <Link key={n.id} to={`/haberler/${n.id}`} className="group bg-slate-50 rounded-xl overflow-hidden hover:shadow-lg transition-all">
                       <div className="aspect-video w-full overflow-hidden bg-slate-100">
-                        <img src={n.image || '/uploads/placeholder.jpg'} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" alt={n.title} />
+                        <img src={n.image ? (n.image.startsWith('http') ? n.image : (n.image.startsWith('/assets') ? n.image : `${API_BASE_URL}${n.image}`)) : '/uploads/placeholder.jpg'} className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" alt={n.title} />
                       </div>
                       <div className="p-4">
                         <p className="text-xs text-slate-400 font-medium mb-2">{n.publishedAt ? new Date(n.publishedAt).toLocaleDateString('tr-TR') : ''}</p>
@@ -403,7 +404,7 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
                   {branch.successBanner ? (
                     <>
                       <img
-                        src={branch.successBanner}
+                        src={branch.successBanner?.startsWith('http') ? branch.successBanner : (branch.successBanner?.startsWith('/assets') ? branch.successBanner : `${API_BASE_URL}${branch.successBanner}`)}
                         alt="Gurur Tablosu"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />

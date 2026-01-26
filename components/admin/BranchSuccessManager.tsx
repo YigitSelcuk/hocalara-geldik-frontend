@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Award, Plus, Edit2, Trash2, X, Save, Upload, User } from 'lucide-react';
-import api from '../../services/api';
+import api, { API_BASE_URL } from '../../services/api';
 import { yearlySuccessService } from '../../services/homepage.service';
 import { mediaService } from '../../services/cms.service';
 import Alert from '../Alert';
@@ -606,7 +606,7 @@ const BranchSuccessManager: React.FC<BranchSuccessManagerProps> = ({ branchId })
                       {form.bannerImage ? (
                         <div className="relative flex-1">
                           <img
-                            src={form.bannerImage}
+                            src={form.bannerImage?.startsWith('http') ? form.bannerImage : (form.bannerImage?.startsWith('/assets') ? form.bannerImage : `${API_BASE_URL}${form.bannerImage}`)}
                             alt="Banner"
                             className="w-full h-32 object-cover rounded-xl border-2 border-slate-200"
                           />
@@ -860,7 +860,7 @@ const BranchSuccessManager: React.FC<BranchSuccessManagerProps> = ({ branchId })
                         <div className="flex items-center space-x-4">
                           {student.image && (
                             <img
-                              src={student.image}
+                              src={student.image?.startsWith('http') ? student.image : (student.image?.startsWith('/assets') ? student.image : `${API_BASE_URL}${student.image}`)}
                               alt={student.name}
                               className="w-16 h-16 rounded-full object-cover border-2 border-slate-200"
                             />

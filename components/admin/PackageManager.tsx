@@ -97,7 +97,7 @@ const DraggablePackageCard: React.FC<DraggablePackageCardProps> = ({
             <div className="relative h-40 bg-slate-50 overflow-hidden">
                 {pkg.image && (
                     <img
-                        src={pkg.image?.startsWith('http') ? pkg.image : `${API_BASE_URL}${pkg.image}`}
+                        src={pkg.image?.startsWith('http') ? pkg.image : (pkg.image?.startsWith('/assets') ? pkg.image : `${API_BASE_URL}${pkg.image}`)}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         alt={pkg.name}
                     />

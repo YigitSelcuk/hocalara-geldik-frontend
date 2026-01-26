@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { MapPin, Phone, ArrowRight, Search, Map as MapIcon, List as ListIcon, Navigation, ExternalLink } from 'lucide-react';
 import { branchService } from '../services/cms.service';
 import { homeSectionService } from '../services/homepage.service';
+import { API_BASE_URL } from '../services/api';
 import { useSEO } from '../hooks/useSEO';
 import { Branch } from '../types';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
@@ -222,7 +223,7 @@ const BranchList: React.FC = () => {
                     <Popup className="custom-popup" maxWidth={300}>
                       <div className="flex flex-col overflow-hidden">
                         <div className="relative h-32 overflow-hidden rounded-t-lg">
-                          <img src={branch.image} alt={branch.name} className="w-full h-full object-cover" />
+                          <img src={branch.image?.startsWith('http') ? branch.image : (branch.image?.startsWith('/assets') ? branch.image : `${API_BASE_URL}${branch.image}`)} alt={branch.name} className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
                           <div className="absolute bottom-3 left-3 right-3">
                             <h4 className="font-black text-white text-sm drop-shadow-lg">{branch.name}</h4>

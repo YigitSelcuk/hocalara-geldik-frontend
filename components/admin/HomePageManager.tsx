@@ -126,7 +126,7 @@ export const HomePageManager = () => {
     setSelectedFile(null);
     // Fix image URL for preview
     const imageUrl = item.image || item.thumbnail || '';
-    const fullImageUrl = imageUrl && !imageUrl.startsWith('http') ? `${API_BASE_URL}${imageUrl}` : imageUrl;
+    const fullImageUrl = imageUrl && !imageUrl.startsWith('http') ? (imageUrl.startsWith('/assets') ? imageUrl : `${API_BASE_URL}${imageUrl}`) : imageUrl;
     setPreviewUrl(fullImageUrl);
     setShowModal(true);
   };
@@ -917,7 +917,7 @@ export const HomePageManager = () => {
         return (
           <div className="space-y-4">
             {sliders.map(slider => {
-              const imageUrl = slider.image?.startsWith('http') ? slider.image : `${API_BASE_URL}${slider.image}`;
+              const imageUrl = slider.image?.startsWith('http') ? slider.image : (slider.image?.startsWith('/assets') ? slider.image : `${API_BASE_URL}${slider.image}`);
               return (
                 <div key={slider.id} className="bg-white rounded-xl border border-slate-100 overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="flex">

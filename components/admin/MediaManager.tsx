@@ -24,7 +24,7 @@ export const MediaManager: React.FC<MediaManagerProps> = ({
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
             {(mediaItems || []).map((item: any) => (
                 <div key={item.id} className="bg-white p-2 rounded-2xl border border-slate-100 group relative">
-                    <img src={item.url || ''} className="w-full aspect-square object-cover rounded-xl" alt="" />
+                    <img src={item.url ? (item.url.startsWith('http') ? item.url : (item.url.startsWith('/assets') ? item.url : `${API_BASE_URL}${item.url}`)) : ''} className="w-full aspect-square object-cover rounded-xl" alt="" />
                     <div className="absolute inset-0 bg-brand-dark/60 opacity-0 group-hover:opacity-100 transition-opacity rounded-2xl flex items-center justify-center space-x-2">
                         <button onClick={() => handleDelete('media', item.id)} className="p-2 bg-red-500 text-white rounded-lg"><Trash className="w-4 h-4" /></button>
                     </div>

@@ -33,12 +33,17 @@ const Footer: React.FC = () => {
 
   const getLogoUrl = () => {
     const logoPath = getSection('footer-logo', 'buttonLink', '/assets/images/logoblue.svg');
-    // If it's already a full URL or starts with /, return as is
-    if (logoPath.startsWith('http') || logoPath.startsWith('/assets')) {
+    // If it's a full URL (http/https), use it as is
+    if (logoPath.startsWith('http')) {
       return logoPath;
     }
-    // Otherwise, prepend API base URL
-    return `${API_BASE_URL}${logoPath}`;
+    // If it's an uploaded file (starts with /uploads), prepend API_BASE_URL
+    if (logoPath.startsWith('/uploads')) {
+      return `${API_BASE_URL}${logoPath}`;
+    }
+    // For local assets (like /assets/...), use them directly from frontend
+    // Do NOT prepend API_BASE_URL for local assets
+    return logoPath;
   };
 
   useEffect(() => {

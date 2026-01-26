@@ -509,7 +509,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
               {pkg.image ? (
                 <div className="w-full h-48 bg-slate-200">
                   <img
-                    src={pkg.image}
+                    src={pkg.image?.startsWith('http') ? pkg.image : (pkg.image?.startsWith('/assets') ? pkg.image : `${API_BASE_URL}${pkg.image}`)}
                     alt={pkg.name}
                     className="w-full h-full object-cover"
                   />

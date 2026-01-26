@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link, Navigate } from 'react-router-dom';
 import { Award, TrendingUp, Users, Star, ChevronLeft, Calendar, Trophy, Medal, Target } from 'lucide-react';
 import { branchService } from '../services/cms.service';
+import { API_BASE_URL } from '../services/api';
 import { yearlySuccessService } from '../services/homepage.service';
 import { Branch, YearlySuccess } from '../types';
 
@@ -70,7 +71,7 @@ const BranchSuccessPage: React.FC = () => {
             <section className="relative h-[400px] md:h-[500px] bg-brand-dark overflow-hidden">
                 <div className="absolute inset-0">
                     <img
-                        src={branch.successBanner || branch.image}
+                        src={(branch.successBanner || branch.image)?.startsWith('http') ? (branch.successBanner || branch.image) : ((branch.successBanner || branch.image)?.startsWith('/assets') ? (branch.successBanner || branch.image) : `${API_BASE_URL}${branch.successBanner || branch.image}`)}
                         alt={`${branch.name} Başarıları`}
                         className="w-full h-full object-cover"
                     />
@@ -208,7 +209,7 @@ const BranchSuccessPage: React.FC = () => {
                                         <div className="relative shrink-0">
                                             <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-xl ring-4 ring-slate-100 group-hover:ring-brand-blue/20 transition-all">
                                                 <img
-                                                    src={student.image}
+                                                    src={student.image?.startsWith('http') ? student.image : (student.image?.startsWith('/assets') ? student.image : `${API_BASE_URL}${student.image}`)}
                                                     alt={student.name}
                                                     className="w-full h-full object-cover"
                                                 />
