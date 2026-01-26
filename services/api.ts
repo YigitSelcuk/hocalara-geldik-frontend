@@ -29,10 +29,16 @@ api.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response?.status === 401) {
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
-            localStorage.removeItem('user');
-            window.location.hash = '/admin/login';
+            // Only redirect to login if we're already on an admin page
+            const currentPath = window.location.hash.replace('#', '');
+            if (currentPath.startsWith('/admin') && currentPath !== '/admin/login') {
+                localStorage.removeItem('accessToken');
+                localStorage.removeItem('refreshToken');
+                localStorage.removeItem('user');
+                localStorage.removeItem('adminToken');
+                localStorage.removeItem('adminUser');
+                window.location.hash = '/admin/login';
+            }
         }
         return Promise.reject(error);
     }
