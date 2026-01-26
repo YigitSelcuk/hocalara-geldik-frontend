@@ -4,7 +4,7 @@ import axios from 'axios';
 import Alert from '../Alert';
 import { useAlert } from '../../hooks/useAlert';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface ChangeRequest {
   id: string;
@@ -52,14 +52,14 @@ export const ApprovalsManager: React.FC = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('accessToken');
-      const url = filter === 'ALL' 
+      const url = filter === 'ALL'
         ? `${API_URL}/change-requests`
         : `${API_URL}/change-requests?status=${filter}`;
-      
+
       const response = await axios.get(url, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      
+
       setRequests(response.data.data || []);
     } catch (error) {
       console.error('Error fetching requests:', error);
@@ -77,7 +77,7 @@ export const ApprovalsManager: React.FC = () => {
         { reviewNote },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       showAlert('success', 'Değişiklik onaylandı ve uygulandı!');
       setSelectedRequest(null);
       setReviewNote('');
@@ -100,7 +100,7 @@ export const ApprovalsManager: React.FC = () => {
         { reviewNote },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       showAlert('success', 'Değişiklik reddedildi.');
       setSelectedRequest(null);
       setReviewNote('');
@@ -158,7 +158,7 @@ export const ApprovalsManager: React.FC = () => {
           onClose={hideAlert}
         />
       )}
-      
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -174,11 +174,10 @@ export const ApprovalsManager: React.FC = () => {
             <button
               key={status}
               onClick={() => setFilter(status)}
-              className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all ${
-                filter === status
+              className={`flex-1 px-6 py-3 rounded-xl font-bold transition-all ${filter === status
                   ? 'bg-brand-blue text-white shadow-lg'
                   : 'text-slate-600 hover:bg-slate-50'
-              }`}
+                }`}
             >
               {status === 'PENDING' && '⏳ Bekleyenler'}
               {status === 'APPROVED' && '✅ Onaylananlar'}
@@ -211,7 +210,7 @@ export const ApprovalsManager: React.FC = () => {
                     </h3>
                     {getStatusBadge(request.status)}
                   </div>
-                  
+
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="flex items-center space-x-2 text-slate-600">
                       <Building2 className="w-4 h-4" />
@@ -249,7 +248,7 @@ export const ApprovalsManager: React.FC = () => {
                   >
                     <Eye className="w-5 h-5" />
                   </button>
-                  
+
                   {request.status === 'PENDING' && (
                     <>
                       <button
@@ -331,7 +330,7 @@ export const ApprovalsManager: React.FC = () => {
               {/* Changes Comparison */}
               <div className="bg-slate-50 rounded-2xl p-6">
                 <h4 className="text-lg font-black text-brand-dark mb-4">Değişiklikler</h4>
-                
+
                 {selectedRequest.changeType === 'TEACHER_CREATE' && (
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -370,7 +369,7 @@ export const ApprovalsManager: React.FC = () => {
                       const oldValue = selectedRequest.oldData?.[key];
                       const newValue = selectedRequest.newData[key];
                       const hasChanged = oldValue !== newValue;
-                      
+
                       if (!hasChanged) return null;
 
                       return (
@@ -451,7 +450,7 @@ export const ApprovalsManager: React.FC = () => {
                       const oldValue = selectedRequest.oldData?.[key];
                       const newValue = selectedRequest.newData[key];
                       const hasChanged = oldValue !== newValue;
-                      
+
                       if (!hasChanged) return null;
 
                       const fieldLabels: Record<string, string> = {
@@ -551,10 +550,10 @@ export const ApprovalsManager: React.FC = () => {
                     {selectedRequest.newData.image && (
                       <div>
                         <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Paket Görseli</label>
-                        <img 
-                          src={selectedRequest.newData.image} 
-                          alt="Package" 
-                          className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-green-200" 
+                        <img
+                          src={selectedRequest.newData.image}
+                          alt="Package"
+                          className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-green-200"
                         />
                       </div>
                     )}
@@ -709,7 +708,7 @@ export const ApprovalsManager: React.FC = () => {
                       if (key === 'branchId' || key === 'id' || key === 'createdAt' || key === 'updatedAt' || key === 'slug') return null;
                       const oldValue = selectedRequest.oldData?.[key];
                       const newValue = selectedRequest.newData[key];
-                      
+
                       // Check if values are different
                       const hasChanged = JSON.stringify(oldValue) !== JSON.stringify(newValue);
                       if (!hasChanged) return null;
@@ -868,10 +867,10 @@ export const ApprovalsManager: React.FC = () => {
                     {selectedRequest.newData.image && (
                       <div>
                         <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Haber Görseli</label>
-                        <img 
-                          src={selectedRequest.newData.image} 
-                          alt="News" 
-                          className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-green-200" 
+                        <img
+                          src={selectedRequest.newData.image}
+                          alt="News"
+                          className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-green-200"
                         />
                       </div>
                     )}
@@ -950,7 +949,7 @@ export const ApprovalsManager: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    
+
                     {/* SEO Section */}
                     {(selectedRequest.newData.seoTitle || selectedRequest.newData.seoDescription || selectedRequest.newData.seoKeywords) && (
                       <div className="border-t border-slate-200 pt-4 mt-4">
@@ -992,7 +991,7 @@ export const ApprovalsManager: React.FC = () => {
                         </div>
                       </div>
                     )}
-                    
+
                     {/* Status Badges */}
                     <div className="flex items-center gap-3 pt-2">
                       {selectedRequest.newData.isFeatured && (
@@ -1016,7 +1015,7 @@ export const ApprovalsManager: React.FC = () => {
                       const oldValue = selectedRequest.oldData?.[key];
                       const newValue = selectedRequest.newData[key];
                       const hasChanged = oldValue !== newValue;
-                      
+
                       if (!hasChanged) return null;
 
                       const fieldLabels: Record<string, string> = {
@@ -1168,10 +1167,10 @@ export const ApprovalsManager: React.FC = () => {
                     {selectedRequest.newData.banner?.image && (
                       <div>
                         <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Banner Görseli</label>
-                        <img 
-                          src={selectedRequest.newData.banner.image} 
-                          alt="Success Banner" 
-                          className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-green-200" 
+                        <img
+                          src={selectedRequest.newData.banner.image}
+                          alt="Success Banner"
+                          className="w-full max-w-md h-64 object-cover rounded-xl border-2 border-green-200"
                         />
                       </div>
                     )}
@@ -1291,13 +1290,13 @@ export const ApprovalsManager: React.FC = () => {
                       if (key === 'branchId' || key === 'id' || key === 'createdAt' || key === 'updatedAt' || key === 'students') return null;
                       const oldValue = selectedRequest.oldData?.[key];
                       const newValue = selectedRequest.newData[key];
-                      
+
                       // Handle banner object
                       if (key === 'banner') {
                         const oldBanner = oldValue;
                         const newBanner = newValue;
                         if (!oldBanner && !newBanner) return null;
-                        
+
                         return (
                           <div key={key} className="space-y-4 border-t pt-4">
                             <h5 className="font-black text-brand-dark">Banner Değişiklikleri</h5>
@@ -1318,7 +1317,7 @@ export const ApprovalsManager: React.FC = () => {
                           </div>
                         );
                       }
-                      
+
                       const hasChanged = JSON.stringify(oldValue) !== JSON.stringify(newValue);
                       if (!hasChanged) return null;
 
@@ -1403,10 +1402,10 @@ export const ApprovalsManager: React.FC = () => {
                     {selectedRequest.newData.image && (
                       <div>
                         <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Öğrenci Fotoğrafı</label>
-                        <img 
-                          src={selectedRequest.newData.image} 
-                          alt="Student" 
-                          className="w-32 h-32 rounded-full object-cover border-2 border-green-200" 
+                        <img
+                          src={selectedRequest.newData.image}
+                          alt="Student"
+                          className="w-32 h-32 rounded-full object-cover border-2 border-green-200"
                         />
                       </div>
                     )}
@@ -1585,9 +1584,8 @@ export const ApprovalsManager: React.FC = () => {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
           <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8">
             <div className="text-center mb-6">
-              <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${
-                confirmAction.type === 'approve' ? 'bg-green-100' : 'bg-red-100'
-              }`}>
+              <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${confirmAction.type === 'approve' ? 'bg-green-100' : 'bg-red-100'
+                }`}>
                 {confirmAction.type === 'approve' ? (
                   <Check className={`w-8 h-8 text-green-600`} />
                 ) : (
@@ -1598,13 +1596,13 @@ export const ApprovalsManager: React.FC = () => {
                 {confirmAction.type === 'approve' ? 'Değişikliği Onayla' : 'Değişikliği Reddet'}
               </h3>
               <p className="text-slate-600">
-                {confirmAction.type === 'approve' 
+                {confirmAction.type === 'approve'
                   ? 'Bu değişikliği onaylamak istediğinize emin misiniz? Değişiklik hemen uygulanacaktır.'
                   : 'Bu değişikliği reddetmek istediğinize emin misiniz?'
                 }
               </p>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setConfirmAction(null)}
@@ -1622,11 +1620,10 @@ export const ApprovalsManager: React.FC = () => {
                   }
                 }}
                 disabled={processing}
-                className={`flex-1 px-6 py-3 text-white font-black rounded-xl transition-all disabled:opacity-50 ${
-                  confirmAction.type === 'approve' 
-                    ? 'bg-green-500 hover:bg-green-600' 
+                className={`flex-1 px-6 py-3 text-white font-black rounded-xl transition-all disabled:opacity-50 ${confirmAction.type === 'approve'
+                    ? 'bg-green-500 hover:bg-green-600'
                     : 'bg-red-500 hover:bg-red-600'
-                }`}
+                  }`}
               >
                 {processing ? 'İşleniyor...' : confirmAction.type === 'approve' ? 'Onayla' : 'Reddet'}
               </button>

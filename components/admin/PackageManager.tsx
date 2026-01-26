@@ -6,7 +6,7 @@ import { EducationPackage } from '../../types';
 import { API_BASE_URL } from '../../services/api';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface PackageManagerProps {
     packages: EducationPackage[];
@@ -96,10 +96,10 @@ const DraggablePackageCard: React.FC<DraggablePackageCardProps> = ({
             {/* Image */}
             <div className="relative h-40 bg-slate-50 overflow-hidden">
                 {pkg.image && (
-                    <img 
-                        src={pkg.image?.startsWith('http') ? pkg.image : `${API_BASE_URL}${pkg.image}`} 
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
-                        alt={pkg.name} 
+                    <img
+                        src={pkg.image?.startsWith('http') ? pkg.image : `${API_BASE_URL}${pkg.image}`}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                        alt={pkg.name}
                     />
                 )}
                 {/* Badges */}
@@ -218,7 +218,7 @@ export const PackageManager: React.FC<PackageManagerProps> = ({
         try {
             setIsSaving(true);
             const token = localStorage.getItem('accessToken');
-            
+
             // Create array with id and order
             const reorderedPackages = packages.map((pkg, index) => ({
                 id: pkg.id,
@@ -234,7 +234,7 @@ export const PackageManager: React.FC<PackageManagerProps> = ({
             if (onReorder) {
                 onReorder();
             }
-            
+
             alert('Paket sıralaması başarıyla güncellendi!');
         } catch (error) {
             console.error('Error saving order:', error);

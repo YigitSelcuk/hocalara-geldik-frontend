@@ -5,7 +5,7 @@ import axios from 'axios';
 import Alert from '../Alert';
 import { useAlert } from '../../hooks/useAlert';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface BranchNewsManagerProps {
   branchId: string;
@@ -20,7 +20,7 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
   const [uploading, setUploading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const { alert, showAlert, hideAlert } = useAlert();
-  
+
   const [form, setForm] = useState({
     title: '',
     slug: '',
@@ -75,7 +75,7 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
       console.log('Upload response:', response.data);
       const imageUrl = response.data.url || response.data.data?.url || response.data.path;
       console.log('Image URL:', imageUrl);
-      
+
       if (imageUrl) {
         setForm(prev => ({ ...prev, featuredImage: imageUrl }));
       } else {
@@ -148,7 +148,7 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
 
     try {
       setSaving(true);
-      
+
       const data = {
         title: form.title,
         slug: form.slug,
@@ -177,7 +177,7 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
         console.log('✅ Create response:', response.data);
         showAlert('success', 'Haber ekleme talebi oluşturuldu!');
       }
-      
+
       setIsModalOpen(false);
       fetchNews();
     } catch (error: any) {
@@ -207,7 +207,7 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
           onClose={hideAlert}
         />
       )}
-      
+
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -405,11 +405,10 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
               {/* Pending Badge */}
               {newsItem.isPending && (
                 <div className="absolute top-3 right-3 z-10">
-                  <span className={`px-3 py-1 rounded-full text-xs font-black flex items-center space-x-1 ${
-                    newsItem.pendingType === 'CREATE' 
-                      ? 'bg-blue-100 text-blue-700' 
+                  <span className={`px-3 py-1 rounded-full text-xs font-black flex items-center space-x-1 ${newsItem.pendingType === 'CREATE'
+                      ? 'bg-blue-100 text-blue-700'
                       : 'bg-yellow-100 text-yellow-700'
-                  }`}>
+                    }`}>
                     <Clock className="w-3 h-3" />
                     <span>
                       {newsItem.pendingType === 'CREATE' ? 'Ekleme Bekliyor' : 'Güncelleme Bekliyor'}
@@ -417,7 +416,7 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
                   </span>
                 </div>
               )}
-              
+
               {/* News Image */}
               {newsItem.image ? (
                 <div className="w-full h-48 bg-slate-100 flex items-center justify-center">
@@ -432,19 +431,19 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
                   <ImageIcon className="w-16 h-16 text-white/30" />
                 </div>
               )}
-              
+
               <div className="p-6">
                 <div className="mb-4">
                   <span className="text-xs font-black text-brand-blue uppercase">{newsItem.category}</span>
                   <h3 className="text-lg font-black text-brand-dark mt-1">{newsItem.title}</h3>
                   <p className="text-sm text-slate-600 mt-2">{newsItem.excerpt}</p>
                 </div>
-                
+
                 <div className="flex items-center justify-between text-xs text-slate-500 mb-4">
                   {newsItem.author && <span>✍️ {newsItem.author}</span>}
                   {newsItem.readTime && <span>⏱️ {newsItem.readTime}</span>}
                 </div>
-                
+
                 {/* Action buttons */}
                 {!newsItem.isPending && (
                   <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -462,7 +461,7 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
                     </button>
                   </div>
                 )}
-                
+
                 {newsItem.isPending && (
                   <div className="text-center">
                     <p className="text-xs text-slate-500 italic">Admin onayı bekleniyor</p>
@@ -487,7 +486,7 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
                 Bu haberi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
               </p>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setDeleteConfirm(null)}

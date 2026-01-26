@@ -7,7 +7,7 @@ import { useSEO } from '../hooks/useSEO';
 const ContactPage: React.FC = () => {
     // SEO Hook
     useSEO('contact');
-    
+
     const [pageContent, setPageContent] = useState<any>({});
     const [loading, setLoading] = useState(true);
     const [formData, setFormData] = useState({
@@ -28,7 +28,7 @@ const ContactPage: React.FC = () => {
             try {
                 const contentRes = await homeSectionService.getAll();
                 const contentData = contentRes.data?.data || contentRes.data;
-                
+
                 if (Array.isArray(contentData)) {
                     const sections = contentData.filter((s: any) => s.page === 'contact');
                     const contentMap: any = {};
@@ -49,7 +49,8 @@ const ContactPage: React.FC = () => {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
-            const response = await fetch('http://localhost:3003/api/contact/submit', {
+            const apiUrl = import.meta.env.VITE_API_URL || '/api';
+            const response = await fetch(`${apiUrl}/contact/submit`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

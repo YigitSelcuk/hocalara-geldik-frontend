@@ -5,7 +5,7 @@ import axios from 'axios';
 import Alert from '../Alert';
 import { useAlert } from '../../hooks/useAlert';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3003/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface BranchPackageManagerProps {
   branchId: string;
@@ -20,7 +20,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
   const [uploading, setUploading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const { alert, showAlert, hideAlert } = useAlert();
-  
+
   const [form, setForm] = useState({
     name: '',
     type: 'STANDARD',
@@ -75,7 +75,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
       console.log('Upload response:', response.data);
       const imageUrl = response.data.url || response.data.data?.url || response.data.path;
       console.log('Image URL:', imageUrl);
-      
+
       if (imageUrl) {
         setForm(prev => ({ ...prev, image: imageUrl }));
       } else {
@@ -156,7 +156,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
 
     try {
       setSaving(true);
-      
+
       const data = {
         ...form,
         price: form.price ? parseFloat(form.price) : null,
@@ -173,7 +173,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
         await api.post('/packages', data);
         showAlert('success', 'Paket ekleme talebi oluşturuldu!');
       }
-      
+
       setIsModalOpen(false);
       fetchPackages();
     } catch (error: any) {
@@ -200,7 +200,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
           onClose={hideAlert}
         />
       )}
-      
+
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -334,7 +334,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                     <span>Özellik Ekle</span>
                   </button>
                 </div>
-                
+
                 <div className="space-y-2">
                   {form.features.map((feature, index) => (
                     <div key={index} className="flex items-center space-x-2">
@@ -361,7 +361,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                       </button>
                     </div>
                   ))}
-                  
+
                   {form.features.length === 0 && (
                     <p className="text-sm text-slate-400 italic text-center py-4">
                       Henüz özellik eklenmemiş. "Özellik Ekle" butonuna tıklayarak başlayın.
@@ -425,7 +425,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                   />
                   <span className="text-sm font-bold text-slate-700">Popüler</span>
                 </label>
-                
+
                 <label className="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-all">
                   <input
                     type="checkbox"
@@ -435,7 +435,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                   />
                   <span className="text-sm font-bold text-slate-700">Yeni</span>
                 </label>
-                
+
                 <label className="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-all">
                   <input
                     type="checkbox"
@@ -493,11 +493,10 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
               {/* Pending Badge */}
               {pkg.isPending && (
                 <div className="absolute top-3 right-3 z-10">
-                  <span className={`px-3 py-1 rounded-full text-xs font-black flex items-center space-x-1 ${
-                    pkg.pendingType === 'CREATE' 
-                      ? 'bg-blue-100 text-blue-700' 
+                  <span className={`px-3 py-1 rounded-full text-xs font-black flex items-center space-x-1 ${pkg.pendingType === 'CREATE'
+                      ? 'bg-blue-100 text-blue-700'
                       : 'bg-yellow-100 text-yellow-700'
-                  }`}>
+                    }`}>
                     <Clock className="w-3 h-3" />
                     <span>
                       {pkg.pendingType === 'CREATE' ? 'Onay Bekliyor' : 'Güncelleme Onayı Bekliyor'}
@@ -505,7 +504,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                   </span>
                 </div>
               )}
-              
+
               {/* Package Image */}
               {pkg.image ? (
                 <div className="w-full h-48 bg-slate-200">
@@ -520,13 +519,13 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                   <ImageIcon className="w-16 h-16 text-white/30" />
                 </div>
               )}
-              
+
               <div className="p-6">
                 <div className="mb-4">
                   <h3 className="text-lg font-black text-brand-dark">{pkg.name}</h3>
                   <p className="text-sm text-slate-600 mt-1">{pkg.shortDescription}</p>
                 </div>
-                
+
                 {pkg.price && (
                   <div className="flex items-baseline space-x-2 mb-4">
                     <span className="text-2xl font-black text-brand-blue">{pkg.price}₺</span>
@@ -535,13 +534,13 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                     )}
                   </div>
                 )}
-                
+
                 <div className="flex items-center justify-between text-xs text-slate-500 mb-4">
                   {pkg.videoCount && <span>📹 {pkg.videoCount} Video</span>}
                   {pkg.subjectCount && <span>📚 {pkg.subjectCount} Konu</span>}
                   {pkg.duration && <span>⏱️ {pkg.duration}</span>}
                 </div>
-                
+
                 {/* Action buttons */}
                 {!pkg.isPending && (
                   <div className="flex items-center space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -559,7 +558,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                     </button>
                   </div>
                 )}
-                
+
                 {pkg.isPending && (
                   <div className="text-center">
                     <p className="text-xs text-slate-500 italic">Admin onayı bekleniyor</p>
@@ -584,7 +583,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                 Bu paketi silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
               </p>
             </div>
-            
+
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setDeleteConfirm(null)}
