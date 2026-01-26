@@ -25,7 +25,7 @@ services:
     container_name: hocalara-frontend
     restart: unless-stopped
     environment:
-      VITE_API_URL: http://backend:4000
+      VITE_API_URL: http://localhost:4000
       VITE_SITE_NAME: Hocalara Geldik
       VITE_SITE_URL: http://localhost:3003
     ports:
