@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Branch, SliderItem, NewsItem } from '../types';
-import { MapPin, MessageCircle, Calendar, Users, Phone, GraduationCap, Zap, Cpu, ChevronRight, FileText, TrendingUp, Mail } from 'lucide-react';
+import { MapPin, MessageCircle, Calendar, Users, Phone, GraduationCap, Zap, Cpu, ChevronRight, FileText, TrendingUp, Mail, Award } from 'lucide-react';
 import { sliderService, pageService } from '../services/cms.service';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
@@ -274,23 +274,34 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-4">
                     <h3 className="text-lg font-bold text-brand-dark">Eğitim Vizyonumuz</h3>
-                    <p className="text-slate-600 leading-relaxed">
-                      {branch.name} olarak, her öğrencinin potansiyelini en üst düzeye çıkarmayı hedefliyoruz.
-                      Modern dersliklerimiz ve uzman kadromuzla başarıya ulaşmanızı sağlıyoruz.
+                    <p className="text-slate-600 leading-relaxed whitespace-pre-line">
+                      {branch.description || `${branch.name} olarak, her öğrencinin potansiyelini en üst düzeye çıkarmayı hedefliyoruz. Modern dersliklerimiz ve uzman kadromuzla başarıya ulaşmanızı sağlıyoruz.`}
                     </p>
                   </div>
                   <div className="space-y-3">
-                    {[
-                      { text: 'Kişiye Özel Ders Programı', icon: Calendar },
-                      { text: 'Sınırsız Birebir Etüt', icon: Users },
-                      { text: 'Yapay Zeka Takip Sistemi', icon: Cpu },
-                      { text: 'Profesyonel Rehberlik', icon: GraduationCap }
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl hover:bg-brand-blue/5 transition-colors">
-                        <item.icon className="w-5 h-5 text-brand-blue" />
-                        <span className="text-slate-700 font-medium text-sm">{item.text}</span>
-                      </div>
-                    ))}
+                    {(branch.features && branch.features.length > 0 ? branch.features : [
+                      { text: 'Kişiye Özel Ders Programı', icon: 'Calendar' },
+                      { text: 'Sınırsız Birebir Etüt', icon: 'Users' },
+                      { text: 'Yapay Zeka Takip Sistemi', icon: 'Cpu' },
+                      { text: 'Profesyonel Rehberlik', icon: 'GraduationCap' }
+                    ]).map((item, i) => {
+                      const IconComponent = item.icon === 'Calendar' ? Calendar :
+                                          item.icon === 'Users' ? Users :
+                                          item.icon === 'Cpu' ? Cpu :
+                                          item.icon === 'GraduationCap' ? GraduationCap :
+                                          item.icon === 'Book' ? FileText :
+                                          item.icon === 'Award' ? Award :
+                                          item.icon === 'Target' ? TrendingUp :
+                                          item.icon === 'Zap' ? Zap :
+                                          Calendar;
+                      
+                      return (
+                        <div key={i} className="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl hover:bg-brand-blue/5 transition-colors">
+                          <IconComponent className="w-5 h-5 text-brand-blue" />
+                          <span className="text-slate-700 font-medium text-sm">{item.text}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -438,8 +449,8 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
 
                 <div className="p-4 bg-purple-50 rounded-xl">
                   <p className="text-xs text-purple-600 font-bold mb-2 uppercase tracking-wide">Çalışma Saatleri</p>
-                  <p className="text-brand-dark font-medium text-sm">Hafta içi: 08:30 - 19:30</p>
-                  <p className="text-slate-600 text-sm">Hafta sonu: 09:00 - 18:00</p>
+                  <p className="text-brand-dark font-medium text-sm">Hafta içi: {branch.weekdayHours || '08:30 - 19:30'}</p>
+                  <p className="text-slate-600 text-sm">Hafta sonu: {branch.weekendHours || '09:00 - 18:00'}</p>
                 </div>
 
                 <a
@@ -491,7 +502,7 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
 
               <div className="flex items-center space-x-3 p-4 bg-white/5 rounded-xl">
                 <Mail className="w-5 h-5 text-brand-blue" />
-                <span className="font-medium text-xs">bilgi@hocalarageldik.com</span>
+                <span className="font-medium text-xs">{branch.email || 'bilgi@hocalarageldik.com'}</span>
               </div>
             </div>
           </div>

@@ -464,6 +464,13 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             updatedItem = await teacherService.update(editingItem.id, data);
             setTeachers((prev: Teacher[]) => prev.map((item: Teacher) => item.id === editingItem.id ? updatedItem.data : item));
             break;
+          case 'blog':
+            updatedItem = await blogPostService.update(editingItem.id, data);
+            // Refetch blog posts to get complete data with image
+            const blogPostsRes = await blogPostService.getAll();
+            const blogData = (blogPostsRes.data as any).data || (blogPostsRes.data as any).blogPosts || [];
+            setBlogPosts(Array.isArray(blogData) ? blogData : []);
+            break;
         }
       } else {
         console.log('➕ CREATE mode');
@@ -561,7 +568,10 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             break;
           case 'blog':
             newItem = await blogPostService.create(data);
-            setBlogPosts((prev: BlogPost[]) => [newItem.data, ...prev]);
+            // Refetch blog posts to get complete data with image
+            const blogPostsRes = await blogPostService.getAll();
+            const blogData = (blogPostsRes.data as any).data || (blogPostsRes.data as any).blogPosts || [];
+            setBlogPosts(Array.isArray(blogData) ? blogData : []);
             break;
           case 'examDate':
             newItem = await examDateService.create(data);
@@ -590,7 +600,9 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         }
       }
       setIsModalOpen(false);
+      showAlert('success', editingItem ? 'Başarıyla güncellendi!' : 'Başarıyla eklendi!');
     } catch (error) {
+      console.error('Save error:', error);
       showAlert('error', 'Kaydetme işlemi başarısız oldu.');
     }
   };
@@ -1436,7 +1448,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                   <input type="text" value={formData.author || ''} onChange={e => setFormData({ ...formData, author: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
               </div>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Tarih</label>
                   <input type="text" value={formData.date || ''} onChange={e => setFormData({ ...formData, date: e.target.value })} placeholder="15 Ocak 2024" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
@@ -1445,9 +1457,29 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Okuma Süresi</label>
                   <input type="text" value={formData.readTime || ''} onChange={e => setFormData({ ...formData, readTime: e.target.value })} placeholder="5 dk" className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Görsel URL</label>
-                  <input type="text" value={formData.image || ''} onChange={e => setFormData({ ...formData, image: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapak Görseli *</label>
+                <div className="flex gap-4 items-end">
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        try {
+                          const url = await handleImageUpload(file);
+                          setFormData({ ...formData, image: url });
+                        } catch (error) {
+                          showAlert('error', 'Görsel yüklenemedi');
+                        }
+                      }
+                    }}
+                    className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                  />
+                  {formData.image && (
+                    <img src={formData.image} alt="Preview" className="w-24 h-16 object-cover border border-slate-200 rounded-lg" />
+                  )}
                 </div>
               </div>
               
@@ -1917,7 +1949,10 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         <Route path="/news" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN, UserRole.BRANCH_ADMIN]) ? <BlogManager blogPosts={blogPosts} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/branches" element={hasAccess([UserRole.SUPER_ADMIN]) ? <BranchManager branches={branches} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/videos" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <VideoManager videos={videos} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
-        <Route path="/packages" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <PackageManager packages={packages} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
+        <Route path="/packages" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <PackageManager packages={packages} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} onReorder={async () => {
+          const packagesRes = await packageService.getAll();
+          setPackages(packagesRes.data.data || packagesRes.data.packages || []);
+        }} /> : <Navigate to="/admin" />} />
         <Route path="/successes" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <YearlySuccessManager successes={yearlySuccesses} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} handleAddStudent={handleAddStudent} handleDeleteStudent={handleDeleteStudent} /> : <Navigate to="/admin" />} />
         <Route path="/media" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <MediaManager mediaItems={mediaItems} handleAdd={handleAdd} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/leads" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <LeadManager /> : <Navigate to="/admin" />} />

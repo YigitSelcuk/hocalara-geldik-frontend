@@ -461,6 +461,9 @@ export const ApprovalsManager: React.FC = () => {
                         phone: 'Telefon',
                         whatsapp: 'WhatsApp',
                         email: 'E-posta',
+                        weekdayHours: 'Hafta İçi Çalışma Saatleri',
+                        weekendHours: 'Hafta Sonu Çalışma Saatleri',
+                        features: 'Şube Özellikleri',
                         lat: 'Enlem',
                         lng: 'Boylam',
                         image: 'Kapak Görseli',
@@ -471,6 +474,7 @@ export const ApprovalsManager: React.FC = () => {
                       };
 
                       const isImage = ['image', 'logo', 'successBanner', 'customBanner'].includes(key);
+                      const isFeatures = key === 'features';
 
                       return (
                         <div key={key} className="grid grid-cols-2 gap-4">
@@ -480,6 +484,15 @@ export const ApprovalsManager: React.FC = () => {
                             </label>
                             {isImage && oldValue ? (
                               <img src={oldValue} alt="Old" className="w-full h-32 object-cover rounded-xl border-2 border-red-200" />
+                            ) : isFeatures && Array.isArray(oldValue) ? (
+                              <div className="space-y-2">
+                                {oldValue.map((feature: any, idx: number) => (
+                                  <div key={idx} className="flex items-center space-x-2 p-2 bg-white border-2 border-red-200 rounded-lg">
+                                    <span className="text-slate-600 line-through text-sm">{feature.text}</span>
+                                  </div>
+                                ))}
+                                {oldValue.length === 0 && <p className="text-slate-400 text-sm italic">Özellik yok</p>}
+                              </div>
                             ) : key === 'description' ? (
                               <textarea
                                 value={oldValue || '-'}
@@ -502,6 +515,15 @@ export const ApprovalsManager: React.FC = () => {
                             </label>
                             {isImage && newValue ? (
                               <img src={newValue} alt="New" className="w-full h-32 object-cover rounded-xl border-2 border-green-200" />
+                            ) : isFeatures && Array.isArray(newValue) ? (
+                              <div className="space-y-2">
+                                {newValue.map((feature: any, idx: number) => (
+                                  <div key={idx} className="flex items-center space-x-2 p-2 bg-white border-2 border-green-200 rounded-lg">
+                                    <span className="text-brand-dark font-medium text-sm">{feature.text}</span>
+                                  </div>
+                                ))}
+                                {newValue.length === 0 && <p className="text-slate-400 text-sm italic">Özellik yok</p>}
+                              </div>
                             ) : key === 'description' ? (
                               <textarea
                                 value={newValue || '-'}
@@ -577,7 +599,7 @@ export const ApprovalsManager: React.FC = () => {
                       </div>
                     )}
                     <div className="grid grid-cols-3 gap-4">
-                      {selectedRequest.newData.price && (
+                      {selectedRequest.newData.price !== undefined && selectedRequest.newData.price !== null && (
                         <div>
                           <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Fiyat</label>
                           <input
@@ -588,12 +610,47 @@ export const ApprovalsManager: React.FC = () => {
                           />
                         </div>
                       )}
-                      {selectedRequest.newData.originalPrice && (
+                      {selectedRequest.newData.originalPrice !== undefined && selectedRequest.newData.originalPrice !== null && (
                         <div>
-                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Eski Fiyat</label>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Orijinal Fiyat</label>
                           <input
                             type="text"
                             value={`${selectedRequest.newData.originalPrice}₺`}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                      {selectedRequest.newData.discount !== undefined && selectedRequest.newData.discount !== null && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">İndirim Oranı</label>
+                          <input
+                            type="text"
+                            value={`%${selectedRequest.newData.discount}`}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      {selectedRequest.newData.videoCount !== undefined && selectedRequest.newData.videoCount !== null && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Video Sayısı</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.videoCount}
+                            readOnly
+                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                          />
+                        </div>
+                      )}
+                      {selectedRequest.newData.subjectCount !== undefined && selectedRequest.newData.subjectCount !== null && (
+                        <div>
+                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Ders Sayısı</label>
+                          <input
+                            type="text"
+                            value={selectedRequest.newData.subjectCount}
                             readOnly
                             className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
                           />
@@ -611,29 +668,37 @@ export const ApprovalsManager: React.FC = () => {
                         </div>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      {selectedRequest.newData.videoCount && (
-                        <div>
-                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Video Sayısı</label>
-                          <input
-                            type="text"
-                            value={selectedRequest.newData.videoCount}
-                            readOnly
-                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
-                          />
+                    {selectedRequest.newData.features && Array.isArray(selectedRequest.newData.features) && selectedRequest.newData.features.length > 0 && (
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Özellikler</label>
+                        <div className="space-y-2">
+                          {selectedRequest.newData.features.map((feature: string, idx: number) => (
+                            <div key={idx} className="flex items-center space-x-2 p-3 bg-white border-2 border-green-200 rounded-lg">
+                              <span className="text-brand-dark font-medium text-sm">✓ {feature}</span>
+                            </div>
+                          ))}
                         </div>
-                      )}
-                      {selectedRequest.newData.subjectCount && (
-                        <div>
-                          <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Konu Sayısı</label>
-                          <input
-                            type="text"
-                            value={selectedRequest.newData.subjectCount}
-                            readOnly
-                            className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
-                          />
+                      </div>
+                    )}
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Popüler</label>
+                        <div className={`px-4 py-3 rounded-xl font-bold text-center ${selectedRequest.newData.isPopular ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                          {selectedRequest.newData.isPopular ? '✓ Evet' : '✗ Hayır'}
                         </div>
-                      )}
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Yeni</label>
+                        <div className={`px-4 py-3 rounded-xl font-bold text-center ${selectedRequest.newData.isNew ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}>
+                          {selectedRequest.newData.isNew ? '✓ Evet' : '✗ Hayır'}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">Aktif</label>
+                        <div className={`px-4 py-3 rounded-xl font-bold text-center ${selectedRequest.newData.isActive !== false ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                          {selectedRequest.newData.isActive !== false ? '✓ Evet' : '✗ Hayır'}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -641,96 +706,108 @@ export const ApprovalsManager: React.FC = () => {
                 {selectedRequest.changeType === 'PACKAGE_UPDATE' && (
                   <div className="space-y-4">
                     {Object.keys(selectedRequest.newData).map((key) => {
-                      if (key === 'branchId' || key === 'id' || key === 'createdAt' || key === 'updatedAt') return null;
+                      if (key === 'branchId' || key === 'id' || key === 'createdAt' || key === 'updatedAt' || key === 'slug') return null;
                       const oldValue = selectedRequest.oldData?.[key];
                       const newValue = selectedRequest.newData[key];
-                      const hasChanged = oldValue !== newValue;
                       
+                      // Check if values are different
+                      const hasChanged = JSON.stringify(oldValue) !== JSON.stringify(newValue);
                       if (!hasChanged) return null;
 
                       const fieldLabels: Record<string, string> = {
                         name: 'Paket Adı',
-                        type: 'Paket Tipi',
+                        type: 'Tür',
                         shortDescription: 'Kısa Açıklama',
                         description: 'Detaylı Açıklama',
                         price: 'Fiyat',
-                        originalPrice: 'Eski Fiyat',
-                        duration: 'Süre',
+                        originalPrice: 'Orijinal Fiyat',
+                        discount: 'İndirim Oranı',
+                        image: 'Paket Görseli',
                         videoCount: 'Video Sayısı',
-                        subjectCount: 'Konu Sayısı',
-                        image: 'Görsel',
+                        subjectCount: 'Ders Sayısı',
+                        duration: 'Süre',
+                        features: 'Özellikler',
+                        isPopular: 'Popüler',
+                        isNew: 'Yeni',
+                        isActive: 'Aktif',
                       };
 
                       const isImage = key === 'image';
-                      const isPrice = ['price', 'originalPrice'].includes(key);
-                      const isTextarea = key === 'description';
+                      const isFeatures = key === 'features';
+                      const isBoolean = ['isPopular', 'isNew', 'isActive'].includes(key);
 
                       return (
-                        <div key={key} className={isImage ? 'col-span-2' : 'grid grid-cols-2 gap-4'}>
-                          {isImage ? (
-                            <div className="space-y-2">
-                              <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
-                                {fieldLabels[key] || key}
-                              </label>
-                              <div className="grid grid-cols-2 gap-4">
-                                {oldValue && (
-                                  <div>
-                                    <p className="text-xs text-slate-500 mb-2">Eski</p>
-                                    <img src={oldValue} alt="Old" className="w-full h-48 object-cover rounded-xl border-2 border-red-200" />
+                        <div key={key} className="grid grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                              {fieldLabels[key] || key} (Eski)
+                            </label>
+                            {isImage && oldValue ? (
+                              <img src={oldValue} alt="Old" className="w-full h-32 object-cover rounded-xl border-2 border-red-200" />
+                            ) : isFeatures && Array.isArray(oldValue) ? (
+                              <div className="space-y-2">
+                                {oldValue.map((feature: string, idx: number) => (
+                                  <div key={idx} className="p-2 bg-white border-2 border-red-200 rounded-lg">
+                                    <span className="text-slate-600 line-through text-sm">✓ {feature}</span>
                                   </div>
-                                )}
-                                {newValue && (
-                                  <div>
-                                    <p className="text-xs text-slate-500 mb-2">Yeni</p>
-                                    <img src={newValue} alt="New" className="w-full h-48 object-cover rounded-xl border-2 border-green-200" />
+                                ))}
+                                {oldValue.length === 0 && <p className="text-slate-400 text-sm italic">Özellik yok</p>}
+                              </div>
+                            ) : isBoolean ? (
+                              <div className={`px-4 py-3 rounded-xl font-bold text-center border-2 border-red-200 ${oldValue ? 'bg-green-50 text-green-700' : 'bg-slate-50 text-slate-500'}`}>
+                                {oldValue ? '✓ Evet' : '✗ Hayır'}
+                              </div>
+                            ) : ['description', 'shortDescription'].includes(key) ? (
+                              <textarea
+                                value={oldValue || '-'}
+                                readOnly
+                                rows={3}
+                                className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-medium text-slate-600 line-through resize-none"
+                              />
+                            ) : (
+                              <input
+                                type="text"
+                                value={key === 'price' || key === 'originalPrice' ? `${oldValue}₺` : key === 'discount' ? `%${oldValue}` : oldValue || '-'}
+                                readOnly
+                                className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-bold text-slate-600 line-through"
+                              />
+                            )}
+                          </div>
+                          <div>
+                            <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
+                              {fieldLabels[key] || key} (Yeni)
+                            </label>
+                            {isImage && newValue ? (
+                              <img src={newValue} alt="New" className="w-full h-32 object-cover rounded-xl border-2 border-green-200" />
+                            ) : isFeatures && Array.isArray(newValue) ? (
+                              <div className="space-y-2">
+                                {newValue.map((feature: string, idx: number) => (
+                                  <div key={idx} className="p-2 bg-white border-2 border-green-200 rounded-lg">
+                                    <span className="text-brand-dark font-medium text-sm">✓ {feature}</span>
                                   </div>
-                                )}
+                                ))}
+                                {newValue.length === 0 && <p className="text-slate-400 text-sm italic">Özellik yok</p>}
                               </div>
-                            </div>
-                          ) : (
-                            <>
-                              <div>
-                                <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
-                                  {fieldLabels[key] || key} (Eski)
-                                </label>
-                                {isTextarea ? (
-                                  <textarea
-                                    value={oldValue || '-'}
-                                    readOnly
-                                    rows={3}
-                                    className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-medium text-slate-600 line-through resize-none"
-                                  />
-                                ) : (
-                                  <input
-                                    type="text"
-                                    value={isPrice && oldValue ? `${oldValue}₺` : oldValue || '-'}
-                                    readOnly
-                                    className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-bold text-slate-600 line-through"
-                                  />
-                                )}
+                            ) : isBoolean ? (
+                              <div className={`px-4 py-3 rounded-xl font-bold text-center border-2 border-green-200 ${newValue ? 'bg-green-50 text-green-700' : 'bg-slate-50 text-slate-500'}`}>
+                                {newValue ? '✓ Evet' : '✗ Hayır'}
                               </div>
-                              <div>
-                                <label className="text-xs font-black text-slate-400 uppercase mb-2 block">
-                                  {fieldLabels[key] || key} (Yeni)
-                                </label>
-                                {isTextarea ? (
-                                  <textarea
-                                    value={newValue || '-'}
-                                    readOnly
-                                    rows={3}
-                                    className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-medium text-brand-dark resize-none"
-                                  />
-                                ) : (
-                                  <input
-                                    type="text"
-                                    value={isPrice && newValue ? `${newValue}₺` : newValue || '-'}
-                                    readOnly
-                                    className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
-                                  />
-                                )}
-                              </div>
-                            </>
-                          )}
+                            ) : ['description', 'shortDescription'].includes(key) ? (
+                              <textarea
+                                value={newValue || '-'}
+                                readOnly
+                                rows={3}
+                                className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-medium text-brand-dark resize-none"
+                              />
+                            ) : (
+                              <input
+                                type="text"
+                                value={key === 'price' || key === 'originalPrice' ? `${newValue}₺` : key === 'discount' ? `%${newValue}` : newValue || '-'}
+                                readOnly
+                                className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                              />
+                            )}
+                          </div>
                         </div>
                       );
                     })}
@@ -873,6 +950,62 @@ export const ApprovalsManager: React.FC = () => {
                         </div>
                       )}
                     </div>
+                    
+                    {/* SEO Section */}
+                    {(selectedRequest.newData.seoTitle || selectedRequest.newData.seoDescription || selectedRequest.newData.seoKeywords) && (
+                      <div className="border-t border-slate-200 pt-4 mt-4">
+                        <h4 className="text-sm font-black text-slate-600 mb-3">SEO Bilgileri</h4>
+                        <div className="space-y-3">
+                          {selectedRequest.newData.seoTitle && (
+                            <div>
+                              <label className="text-xs font-black text-slate-400 uppercase mb-2 block">SEO Başlık</label>
+                              <input
+                                type="text"
+                                value={selectedRequest.newData.seoTitle}
+                                readOnly
+                                className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                              />
+                            </div>
+                          )}
+                          {selectedRequest.newData.seoDescription && (
+                            <div>
+                              <label className="text-xs font-black text-slate-400 uppercase mb-2 block">SEO Açıklama</label>
+                              <textarea
+                                value={selectedRequest.newData.seoDescription}
+                                readOnly
+                                rows={2}
+                                className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-medium text-brand-dark resize-none"
+                              />
+                            </div>
+                          )}
+                          {selectedRequest.newData.seoKeywords && (
+                            <div>
+                              <label className="text-xs font-black text-slate-400 uppercase mb-2 block">SEO Anahtar Kelimeler</label>
+                              <input
+                                type="text"
+                                value={selectedRequest.newData.seoKeywords}
+                                readOnly
+                                className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Status Badges */}
+                    <div className="flex items-center gap-3 pt-2">
+                      {selectedRequest.newData.isFeatured && (
+                        <span className="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">
+                          ⭐ Öne Çıkan
+                        </span>
+                      )}
+                      {selectedRequest.newData.isActive !== false && (
+                        <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">
+                          ✓ Aktif
+                        </span>
+                      )}
+                    </div>
                   </div>
                 )}
 
@@ -888,6 +1021,7 @@ export const ApprovalsManager: React.FC = () => {
 
                       const fieldLabels: Record<string, string> = {
                         title: 'Başlık',
+                        slug: 'URL Slug',
                         excerpt: 'Özet',
                         content: 'İçerik',
                         category: 'Kategori',
@@ -896,10 +1030,15 @@ export const ApprovalsManager: React.FC = () => {
                         readTime: 'Okuma Süresi',
                         image: 'Görsel',
                         isActive: 'Aktif',
+                        isFeatured: 'Öne Çıkan',
+                        seoTitle: 'SEO Başlık',
+                        seoDescription: 'SEO Açıklama',
+                        seoKeywords: 'SEO Anahtar Kelimeler',
                       };
 
                       const isImage = key === 'image';
-                      const isTextarea = ['excerpt', 'content'].includes(key);
+                      const isTextarea = ['excerpt', 'content', 'seoDescription'].includes(key);
+                      const isBoolean = ['isActive', 'isFeatured'].includes(key);
 
                       return (
                         <div key={key} className={isImage ? 'col-span-2' : 'grid grid-cols-2 gap-4'}>
@@ -936,6 +1075,10 @@ export const ApprovalsManager: React.FC = () => {
                                     rows={key === 'content' ? 6 : 2}
                                     className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-medium text-slate-600 line-through resize-none"
                                   />
+                                ) : isBoolean ? (
+                                  <div className="w-full px-4 py-3 bg-white border-2 border-red-200 rounded-xl font-bold text-slate-600 line-through">
+                                    {oldValue ? '✓ Evet' : '✗ Hayır'}
+                                  </div>
                                 ) : (
                                   <input
                                     type="text"
@@ -956,6 +1099,10 @@ export const ApprovalsManager: React.FC = () => {
                                     rows={key === 'content' ? 6 : 2}
                                     className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-medium text-brand-dark resize-none"
                                   />
+                                ) : isBoolean ? (
+                                  <div className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark">
+                                    {newValue ? '✓ Evet' : '✗ Hayır'}
+                                  </div>
                                 ) : (
                                   <input
                                     type="text"
@@ -1094,6 +1241,42 @@ export const ApprovalsManager: React.FC = () => {
                         <input
                           type="text"
                           value={selectedRequest.newData.cityCount || '0'}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">İlk 100</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.top100Count || '0'}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">İlk 1000</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.top1000Count || '0'}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">YKS Ortalaması</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.yksAverage || '0'}
+                          readOnly
+                          className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-xs font-black text-slate-400 uppercase mb-2 block">LGS Ortalaması</label>
+                        <input
+                          type="text"
+                          value={selectedRequest.newData.lgsAverage || '0'}
                           readOnly
                           className="w-full px-4 py-3 bg-white border-2 border-green-200 rounded-xl font-bold text-brand-dark"
                         />

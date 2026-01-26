@@ -28,10 +28,15 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
     description: '',
     price: '',
     originalPrice: '',
+    discount: '',
     image: '',
     videoCount: '',
     subjectCount: '',
     duration: '',
+    features: [] as string[],
+    isPopular: false,
+    isNew: false,
+    isActive: true,
   });
 
   useEffect(() => {
@@ -93,10 +98,15 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
       description: '',
       price: '',
       originalPrice: '',
+      discount: '',
       image: '',
       videoCount: '',
       subjectCount: '',
       duration: '',
+      features: [],
+      isPopular: false,
+      isNew: false,
+      isActive: true,
     });
     setIsModalOpen(true);
   };
@@ -110,10 +120,15 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
       description: pkg.description || '',
       price: pkg.price?.toString() || '',
       originalPrice: pkg.originalPrice?.toString() || '',
+      discount: pkg.discount?.toString() || '',
       image: pkg.image || '',
       videoCount: pkg.videoCount?.toString() || '',
       subjectCount: pkg.subjectCount?.toString() || '',
       duration: pkg.duration || '',
+      features: pkg.features || [],
+      isPopular: pkg.isPopular || false,
+      isNew: pkg.isNew || false,
+      isActive: pkg.isActive !== undefined ? pkg.isActive : true,
     });
     setIsModalOpen(true);
   };
@@ -146,6 +161,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
         ...form,
         price: form.price ? parseFloat(form.price) : null,
         originalPrice: form.originalPrice ? parseFloat(form.originalPrice) : null,
+        discount: form.discount ? parseInt(form.discount) : null,
         videoCount: form.videoCount ? parseInt(form.videoCount) : null,
         subjectCount: form.subjectCount ? parseInt(form.subjectCount) : null,
       };
@@ -254,11 +270,42 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Eski Fiyat (₺)</label>
+                  <label className="text-xs font-black text-slate-400 uppercase">Orijinal Fiyat (₺)</label>
                   <input
                     type="number"
                     value={form.originalPrice}
                     onChange={e => setForm({ ...form, originalPrice: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-400 uppercase">İndirim Oranı (%)</label>
+                  <input
+                    type="number"
+                    value={form.discount}
+                    onChange={e => setForm({ ...form, discount: e.target.value })}
+                    placeholder="Örn: 20"
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-5">
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-400 uppercase">Video Sayısı</label>
+                  <input
+                    type="number"
+                    value={form.videoCount}
+                    onChange={e => setForm({ ...form, videoCount: e.target.value })}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-400 uppercase">Ders Sayısı</label>
+                  <input
+                    type="number"
+                    value={form.subjectCount}
+                    onChange={e => setForm({ ...form, subjectCount: e.target.value })}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
                   />
                 </div>
@@ -274,24 +321,52 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Video Sayısı</label>
-                  <input
-                    type="number"
-                    value={form.videoCount}
-                    onChange={e => setForm({ ...form, videoCount: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                  />
+              {/* Özellikler */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black text-slate-400 uppercase">Özellikler</label>
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, features: [...form.features, ''] })}
+                    className="px-3 py-1 bg-brand-blue text-white text-xs font-bold rounded-lg hover:bg-brand-dark transition-all flex items-center space-x-1"
+                  >
+                    <Plus className="w-3 h-3" />
+                    <span>Özellik Ekle</span>
+                  </button>
                 </div>
+                
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Konu Sayısı</label>
-                  <input
-                    type="number"
-                    value={form.subjectCount}
-                    onChange={e => setForm({ ...form, subjectCount: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                  />
+                  {form.features.map((feature, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={feature}
+                        onChange={e => {
+                          const newFeatures = [...form.features];
+                          newFeatures[index] = e.target.value;
+                          setForm({ ...form, features: newFeatures });
+                        }}
+                        placeholder="Özellik açıklaması"
+                        className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold focus:outline-none focus:border-brand-blue"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newFeatures = form.features.filter((_, i) => i !== index);
+                          setForm({ ...form, features: newFeatures });
+                        }}
+                        className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  
+                  {form.features.length === 0 && (
+                    <p className="text-sm text-slate-400 italic text-center py-4">
+                      Henüz özellik eklenmemiş. "Özellik Ekle" butonuna tıklayarak başlayın.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -337,6 +412,39 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                     </label>
                   )}
                 </div>
+              </div>
+
+              {/* Checkboxes */}
+              <div className="grid grid-cols-3 gap-5">
+                <label className="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-all">
+                  <input
+                    type="checkbox"
+                    checked={form.isPopular}
+                    onChange={e => setForm({ ...form, isPopular: e.target.checked })}
+                    className="w-5 h-5 text-brand-blue rounded focus:ring-brand-blue"
+                  />
+                  <span className="text-sm font-bold text-slate-700">Popüler</span>
+                </label>
+                
+                <label className="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-all">
+                  <input
+                    type="checkbox"
+                    checked={form.isNew}
+                    onChange={e => setForm({ ...form, isNew: e.target.checked })}
+                    className="w-5 h-5 text-brand-blue rounded focus:ring-brand-blue"
+                  />
+                  <span className="text-sm font-bold text-slate-700">Yeni</span>
+                </label>
+                
+                <label className="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-all">
+                  <input
+                    type="checkbox"
+                    checked={form.isActive}
+                    onChange={e => setForm({ ...form, isActive: e.target.checked })}
+                    className="w-5 h-5 text-brand-blue rounded focus:ring-brand-blue"
+                  />
+                  <span className="text-sm font-bold text-slate-700">Aktif</span>
+                </label>
               </div>
 
               <div className="flex items-center space-x-4 pt-4">
@@ -392,7 +500,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
                   }`}>
                     <Clock className="w-3 h-3" />
                     <span>
-                      {pkg.pendingType === 'CREATE' ? 'Ekleme Bekliyor' : 'Güncelleme Bekliyor'}
+                      {pkg.pendingType === 'CREATE' ? 'Onay Bekliyor' : 'Güncelleme Onayı Bekliyor'}
                     </span>
                   </span>
                 </div>

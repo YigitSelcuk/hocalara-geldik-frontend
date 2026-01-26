@@ -62,15 +62,16 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState<'info' | 'content' | 'teachers' | 'media' | 'successes' | 'leads'>('info');
+  const [activeTab, setActiveTab] = useState<'info' | 'teachers' | 'successes' | 'leads'>('info');
   const [hasChanges, setHasChanges] = useState(false);
   const [hasPendingBranchUpdate, setHasPendingBranchUpdate] = useState(false);
+  const [pendingTabChange, setPendingTabChange] = useState<'info' | 'teachers' | 'successes' | 'leads' | null>(null);
   
   // Form states - tüm değişiklikler burada toplanacak
   const [basicInfo, setBasicInfo] = useState<Partial<Branch>>({});
   const [contentData, setContentData] = useState({
     description: '',
-    features: [] as string[],
+    features: [] as Array<{ text: string; icon: string }>,
     successStory: '',
   });
   
@@ -122,6 +123,14 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
         setContentData(prev => ({ ...prev, description: branchData.description }));
       }
       
+      // Parse features if exists
+      if (branchData.features) {
+        setContentData(prev => ({ 
+          ...prev, 
+          features: Array.isArray(branchData.features) ? branchData.features : []
+        }));
+      }
+      
       // Filter teachers for this branch
       const branchTeachers = teachersRes.data?.data || teachersRes.data?.teachers || [];
       setTeachers(branchTeachers.filter((t: Teacher) => t.branchId === user.branchId));
@@ -160,6 +169,27 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
   };
 
   // Tek kaydet butonu - tüm değişiklikleri toplu olarak gönder
+  const handleTabChange = (newTab: 'info' | 'teachers' | 'successes' | 'leads') => {
+    // Eğer değişiklik varsa ve farklı bir sekmeye geçiliyorsa uyarı göster
+    if (hasChanges && newTab !== activeTab) {
+      setPendingTabChange(newTab);
+    } else {
+      setActiveTab(newTab);
+    }
+  };
+
+  const confirmTabChange = () => {
+    if (pendingTabChange) {
+      setActiveTab(pendingTabChange);
+      setPendingTabChange(null);
+      setHasChanges(false);
+    }
+  };
+
+  const cancelTabChange = () => {
+    setPendingTabChange(null);
+  };
+
   const handleSaveAllChanges = async () => {
     if (!branch) return;
     
@@ -175,7 +205,8 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
       // Şube bilgilerini güncelle
       const branchUpdateData = {
         ...basicInfo,
-        description: contentData.description
+        description: contentData.description,
+        features: contentData.features
       };
       
       const response = await branchService.update(branch.id, branchUpdateData);
@@ -319,6 +350,54 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
       {/* Alert */}
       {alert && <Alert type={alert.type} message={alert.message} onClose={hideAlert} />}
       
+      {/* Tab Change Confirmation Modal */}
+      {pendingTabChange && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-md w-full">
+            <div className="p-8">
+              <div className="text-center mb-6">
+                <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <AlertCircle className="w-8 h-8 text-yellow-600" />
+                </div>
+                <h3 className="text-2xl font-black text-brand-dark mb-2">Kaydedilmemiş Değişiklikler</h3>
+                <p className="text-slate-600">
+                  Bu sekmede yaptığınız değişiklikler kaydedilmedi. Başka sekmeye geçerseniz değişiklikleriniz kaybolacak.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={cancelTabChange}
+                  className="flex-1 px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-all"
+                >
+                  İptal
+                </button>
+                <button
+                  onClick={confirmTabChange}
+                  className="flex-1 px-6 py-3 bg-red-500 text-white rounded-xl font-bold hover:bg-red-600 transition-all"
+                >
+                  Devam Et
+                </button>
+              </div>
+              
+              <button
+                onClick={async () => {
+                  await handleSaveAllChanges();
+                  if (pendingTabChange) {
+                    setActiveTab(pendingTabChange);
+                    setPendingTabChange(null);
+                  }
+                }}
+                className="w-full mt-3 px-6 py-3 bg-brand-blue text-white rounded-xl font-bold hover:bg-brand-dark transition-all flex items-center justify-center space-x-2"
+              >
+                <Save className="w-5 h-5" />
+                <span>Kaydet ve Devam Et</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {/* Sticky Save Button */}
       {hasChanges && !hasPendingBranchUpdate && (
         <div className="fixed bottom-8 right-8 z-50 animate-slide-up">
@@ -453,7 +532,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
       <div className="bg-white rounded-2xl p-2 shadow-sm">
         <div className="flex space-x-2">
           <button
-            onClick={() => setActiveTab('info')}
+            onClick={() => handleTabChange('info')}
             className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all ${
               activeTab === 'info'
                 ? 'bg-brand-blue text-white shadow-lg'
@@ -464,18 +543,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
             <span>Temel Bilgiler</span>
           </button>
           <button
-            onClick={() => setActiveTab('content')}
-            className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all ${
-              activeTab === 'content'
-                ? 'bg-brand-blue text-white shadow-lg'
-                : 'text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            <FileText className="w-5 h-5" />
-            <span>İçerik & Açıklama</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('teachers')}
+            onClick={() => handleTabChange('teachers')}
             className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all ${
               activeTab === 'teachers'
                 ? 'bg-brand-blue text-white shadow-lg'
@@ -486,7 +554,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
             <span>Öğretmenler</span>
           </button>
           <button
-            onClick={() => setActiveTab('successes')}
+            onClick={() => handleTabChange('successes')}
             className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all ${
               activeTab === 'successes'
                 ? 'bg-brand-blue text-white shadow-lg'
@@ -497,7 +565,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
             <span>Başarılar</span>
           </button>
           <button
-            onClick={() => setActiveTab('leads')}
+            onClick={() => handleTabChange('leads')}
             className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all ${
               activeTab === 'leads'
                 ? 'bg-brand-blue text-white shadow-lg'
@@ -506,17 +574,6 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
           >
             <Users className="w-5 h-5" />
             <span>Ön Kayıtlar</span>
-          </button>
-          <button
-            onClick={() => setActiveTab('media')}
-            className={`flex-1 flex items-center justify-center space-x-2 px-6 py-3 rounded-xl font-bold transition-all ${
-              activeTab === 'media'
-                ? 'bg-brand-blue text-white shadow-lg'
-                : 'text-slate-600 hover:bg-slate-50'
-            }`}
-          >
-            <ImageIcon className="w-5 h-5" />
-            <span>Görseller</span>
           </button>
         </div>
       </div>
@@ -644,6 +701,238 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
                     />
                   </div>
                 </div>
+
+                <div className="grid grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-400 uppercase">Hafta İçi Çalışma Saatleri</label>
+                    <input
+                      type="text"
+                      value={basicInfo.weekdayHours || ''}
+                      onChange={e => {
+                        setBasicInfo({ ...basicInfo, weekdayHours: e.target.value });
+                        setHasChanges(true);
+                      }}
+                      disabled={hasPendingBranchUpdate}
+                      placeholder="Örn: 08:30 - 19:30"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-black text-slate-400 uppercase">Hafta Sonu Çalışma Saatleri</label>
+                    <input
+                      type="text"
+                      value={basicInfo.weekendHours || ''}
+                      onChange={e => {
+                        setBasicInfo({ ...basicInfo, weekendHours: e.target.value });
+                        setHasChanges(true);
+                      }}
+                      disabled={hasPendingBranchUpdate}
+                      placeholder="Örn: 09:00 - 18:00"
+                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-400 uppercase">Şube Açıklaması</label>
+                  <textarea
+                    rows={6}
+                    value={contentData.description}
+                    onChange={e => {
+                      setContentData({ ...contentData, description: e.target.value });
+                      setHasChanges(true);
+                    }}
+                    disabled={hasPendingBranchUpdate}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-brand-blue resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="Şubeniz hakkında detaylı bilgi yazın..."
+                  />
+                </div>
+
+                {/* Özellikler */}
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black text-slate-400 uppercase">Şube Özellikleri</label>
+                    <button
+                      onClick={() => {
+                        setContentData({
+                          ...contentData,
+                          features: [...contentData.features, { text: '', icon: 'Calendar' }]
+                        });
+                        setHasChanges(true);
+                      }}
+                      disabled={hasPendingBranchUpdate}
+                      className="px-3 py-1 bg-brand-blue text-white text-xs font-bold rounded-lg hover:bg-brand-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                    >
+                      <Plus className="w-3 h-3" />
+                      <span>Özellik Ekle</span>
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    {contentData.features.map((feature, index) => (
+                      <div key={index} className="flex items-center space-x-2">
+                        <select
+                          value={feature.icon}
+                          onChange={e => {
+                            const newFeatures = [...contentData.features];
+                            newFeatures[index].icon = e.target.value;
+                            setContentData({ ...contentData, features: newFeatures });
+                            setHasChanges(true);
+                          }}
+                          disabled={hasPendingBranchUpdate}
+                          className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold focus:outline-none focus:border-brand-blue disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <option value="Calendar">📅 Takvim</option>
+                          <option value="Users">👥 Kullanıcılar</option>
+                          <option value="Cpu">🤖 Yapay Zeka</option>
+                          <option value="GraduationCap">🎓 Mezuniyet</option>
+                          <option value="Book">📚 Kitap</option>
+                          <option value="Award">🏆 Ödül</option>
+                          <option value="Target">🎯 Hedef</option>
+                          <option value="Zap">⚡ Hız</option>
+                        </select>
+                        <input
+                          type="text"
+                          value={feature.text}
+                          onChange={e => {
+                            const newFeatures = [...contentData.features];
+                            newFeatures[index].text = e.target.value;
+                            setContentData({ ...contentData, features: newFeatures });
+                            setHasChanges(true);
+                          }}
+                          disabled={hasPendingBranchUpdate}
+                          placeholder="Özellik açıklaması"
+                          className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold focus:outline-none focus:border-brand-blue disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <button
+                          onClick={() => {
+                            const newFeatures = contentData.features.filter((_, i) => i !== index);
+                            setContentData({ ...contentData, features: newFeatures });
+                            setHasChanges(true);
+                          }}
+                          disabled={hasPendingBranchUpdate}
+                          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    
+                    {contentData.features.length === 0 && (
+                      <p className="text-sm text-slate-400 italic text-center py-4">
+                        Henüz özellik eklenmemiş. "Özellik Ekle" butonuna tıklayarak başlayın.
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Görseller Bölümü */}
+            <div className="bg-white rounded-3xl p-8 shadow-sm relative">
+              {/* Pending Overlay */}
+              {hasPendingBranchUpdate && (
+                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-3xl z-10 flex items-center justify-center">
+                  <div className="text-center p-8">
+                    <Clock className="w-16 h-16 text-yellow-500 mx-auto mb-4 animate-pulse" />
+                    <h3 className="text-2xl font-black text-brand-dark mb-2">Onay Bekleniyor</h3>
+                    <p className="text-slate-600">Yaptığınız değişiklikler admin onayı bekliyor.</p>
+                    <p className="text-sm text-slate-500 mt-2">Onaylandıktan sonra tekrar düzenleme yapabilirsiniz.</p>
+                  </div>
+                </div>
+              )}
+              
+              <h2 className="text-2xl font-black text-brand-dark mb-6">Şube Görselleri</h2>
+              
+              <div className="space-y-6">
+                {/* Logo */}
+                <div className="space-y-3">
+                  <label className="text-sm font-black text-brand-dark">Logo</label>
+                  <div className="flex gap-4 items-center">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            const url = await handleImageUpload(file);
+                            setBasicInfo({ ...basicInfo, logo: url });
+                            setHasChanges(true);
+                            showAlert('success', '✅ Logo yüklendi! Kaydetmeyi unutmayın.');
+                          } catch (error) {
+                            showAlert('error', '❌ Görsel yüklenemedi');
+                          }
+                        }
+                      }}
+                      disabled={hasPendingBranchUpdate}
+                      className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-blue file:text-white file:font-bold file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    {basicInfo.logo && (
+                      <div className="w-24 h-24 bg-slate-50 rounded-xl border-2 border-slate-200 p-2 flex items-center justify-center">
+                        <img src={basicInfo.logo} alt="Logo" className="max-w-full max-h-full object-contain" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Kapak Görseli */}
+                <div className="space-y-3">
+                  <label className="text-sm font-black text-brand-dark">Kapak Görseli</label>
+                  <div className="flex gap-4 items-end">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            const url = await handleImageUpload(file);
+                            setBasicInfo({ ...basicInfo, image: url });
+                            setHasChanges(true);
+                            showAlert('success', '✅ Kapak görseli yüklendi! Kaydetmeyi unutmayın.');
+                          } catch (error) {
+                            showAlert('error', '❌ Görsel yüklenemedi');
+                          }
+                        }
+                      }}
+                      disabled={hasPendingBranchUpdate}
+                      className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-blue file:text-white file:font-bold file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    {basicInfo.image && (
+                      <img src={basicInfo.image} alt="Kapak" className="w-40 h-24 object-cover rounded-xl border-2 border-slate-200" />
+                    )}
+                  </div>
+                </div>
+
+                {/* Başarı Banner */}
+                <div className="space-y-3">
+                  <label className="text-sm font-black text-brand-dark">Başarı Banner</label>
+                  <div className="flex gap-4 items-end">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          try {
+                            const url = await handleImageUpload(file);
+                            setBasicInfo({ ...basicInfo, successBanner: url });
+                            setHasChanges(true);
+                            showAlert('success', '✅ Başarı banner yüklendi! Kaydetmeyi unutmayın.');
+                          } catch (error) {
+                            showAlert('error', '❌ Görsel yüklenemedi');
+                          }
+                        }
+                      }}
+                      disabled={hasPendingBranchUpdate}
+                      className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-blue file:text-white file:font-bold file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                    {basicInfo.successBanner && (
+                      <img src={basicInfo.successBanner} alt="Banner" className="w-40 h-24 object-cover rounded-xl border-2 border-slate-200" />
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -656,11 +945,11 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="opacity-90">Hafta İçi:</span>
-                  <span className="font-black">08:30 - 19:30</span>
+                  <span className="font-black">{basicInfo.weekdayHours || '08:30 - 19:30'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="opacity-90">Hafta Sonu:</span>
-                  <span className="font-black">09:00 - 18:00</span>
+                  <span className="font-black">{basicInfo.weekendHours || '09:00 - 18:00'}</span>
                 </div>
               </div>
             </div>
@@ -671,42 +960,8 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
                 <li>• Değişikliklerinizi kaydetmeyi unutmayın</li>
                 <li>• Görseller için önerilen boyut: 1920x1080px</li>
                 <li>• Konum bilgilerini Google Maps'ten alabilirsiniz</li>
+                <li>• Çalışma saatlerini "08:30 - 19:30" formatında yazın</li>
               </ul>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'content' && (
-        <div className="bg-white rounded-3xl p-8 shadow-sm relative">
-          {/* Pending Overlay */}
-          {hasPendingBranchUpdate && (
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-3xl z-10 flex items-center justify-center">
-              <div className="text-center p-8">
-                <Clock className="w-16 h-16 text-yellow-500 mx-auto mb-4 animate-pulse" />
-                <h3 className="text-2xl font-black text-brand-dark mb-2">Onay Bekleniyor</h3>
-                <p className="text-slate-600">Yaptığınız değişiklikler admin onayı bekliyor.</p>
-                <p className="text-sm text-slate-500 mt-2">Onaylandıktan sonra tekrar düzenleme yapabilirsiniz.</p>
-              </div>
-            </div>
-          )}
-          
-          <h2 className="text-2xl font-black text-brand-dark mb-6">Şube İçeriği</h2>
-          
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-xs font-black text-slate-400 uppercase">Şube Açıklaması</label>
-              <textarea
-                rows={8}
-                value={contentData.description}
-                onChange={e => {
-                  setContentData({ ...contentData, description: e.target.value });
-                  setHasChanges(true);
-                }}
-                disabled={hasPendingBranchUpdate}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-brand-blue resize-none disabled:opacity-50 disabled:cursor-not-allowed"
-                placeholder="Şubeniz hakkında detaylı bilgi yazın..."
-              />
             </div>
           </div>
         </div>
@@ -789,117 +1044,6 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
               ))}
             </div>
           )}
-        </div>
-      )}
-
-      {activeTab === 'media' && (
-        <div className="space-y-6">
-          <div className="bg-white rounded-3xl p-8 shadow-sm relative">
-            {/* Pending Overlay */}
-            {hasPendingBranchUpdate && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-3xl z-10 flex items-center justify-center">
-                <div className="text-center p-8">
-                  <Clock className="w-16 h-16 text-yellow-500 mx-auto mb-4 animate-pulse" />
-                  <h3 className="text-2xl font-black text-brand-dark mb-2">Onay Bekleniyor</h3>
-                  <p className="text-slate-600">Yaptığınız değişiklikler admin onayı bekliyor.</p>
-                  <p className="text-sm text-slate-500 mt-2">Onaylandıktan sonra tekrar düzenleme yapabilirsiniz.</p>
-                </div>
-              </div>
-            )}
-            
-            <h2 className="text-2xl font-black text-brand-dark mb-6">Şube Görselleri</h2>
-            
-            <div className="space-y-6">
-              {/* Logo */}
-              <div className="space-y-3">
-                <label className="text-sm font-black text-brand-dark">Logo</label>
-                <div className="flex gap-4 items-center">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        try {
-                          const url = await handleImageUpload(file);
-                          setBasicInfo({ ...basicInfo, logo: url });
-                          setHasChanges(true);
-                          showAlert('success', '✅ Logo yüklendi! Kaydetmeyi unutmayın.');
-                        } catch (error) {
-                          showAlert('error', '❌ Görsel yüklenemedi');
-                        }
-                      }
-                    }}
-                    disabled={hasPendingBranchUpdate}
-                    className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-blue file:text-white file:font-bold file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  {basicInfo.logo && (
-                    <div className="w-24 h-24 bg-slate-50 rounded-xl border-2 border-slate-200 p-2 flex items-center justify-center">
-                      <img src={basicInfo.logo} alt="Logo" className="max-w-full max-h-full object-contain" />
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Kapak Görseli */}
-              <div className="space-y-3">
-                <label className="text-sm font-black text-brand-dark">Kapak Görseli</label>
-                <div className="flex gap-4 items-end">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        try {
-                          const url = await handleImageUpload(file);
-                          setBasicInfo({ ...basicInfo, image: url });
-                          setHasChanges(true);
-                          showAlert('success', '✅ Kapak görseli yüklendi! Kaydetmeyi unutmayın.');
-                        } catch (error) {
-                          showAlert('error', '❌ Görsel yüklenemedi');
-                        }
-                      }
-                    }}
-                    disabled={hasPendingBranchUpdate}
-                    className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-blue file:text-white file:font-bold file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  {basicInfo.image && (
-                    <img src={basicInfo.image} alt="Kapak" className="w-40 h-24 object-cover rounded-xl border-2 border-slate-200" />
-                  )}
-                </div>
-              </div>
-
-              {/* Başarı Banner */}
-              <div className="space-y-3">
-                <label className="text-sm font-black text-brand-dark">Başarı Banner</label>
-                <div className="flex gap-4 items-end">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        try {
-                          const url = await handleImageUpload(file);
-                          setBasicInfo({ ...basicInfo, successBanner: url });
-                          setHasChanges(true);
-                          showAlert('success', '✅ Başarı banner yüklendi! Kaydetmeyi unutmayın.');
-                        } catch (error) {
-                          showAlert('error', '❌ Görsel yüklenemedi');
-                        }
-                      }
-                    }}
-                    disabled={hasPendingBranchUpdate}
-                    className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-brand-blue file:text-white file:font-bold file:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  {basicInfo.successBanner && (
-                    <img src={basicInfo.successBanner} alt="Banner" className="w-40 h-24 object-cover rounded-xl border-2 border-slate-200" />
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       )}
 

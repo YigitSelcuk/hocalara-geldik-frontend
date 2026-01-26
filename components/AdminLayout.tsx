@@ -200,7 +200,68 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
                             <ChevronRight className="w-3 h-3" />
                             <span className="text-brand-dark capitalize tracking-tight">Panel</span>
                             <ChevronRight className="w-3 h-3" />
-                            <span className="text-brand-blue capitalize">{location.pathname.split('/').pop() || 'Dashboard'}</span>
+                            <span className="text-brand-blue capitalize">
+                                {(() => {
+                                    const pathParts = location.pathname.split('/').filter(Boolean);
+                                    const lastPart = pathParts[pathParts.length - 1];
+                                    
+                                    // UUID pattern kontrolü (8-4-4-4-12 format)
+                                    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(lastPart);
+                                    
+                                    if (isUUID) {
+                                        // Eğer UUID ise, bir önceki path parçasını kullan
+                                        const previousPart = pathParts[pathParts.length - 2];
+                                        
+                                        // Path'e göre özel isimler
+                                        const pathNames: Record<string, string> = {
+                                            'branch': user?.role === 'BRANCH_ADMIN' ? 'Şubem' : 'Şube Detay',
+                                            'admin': 'Dashboard',
+                                            'sliders': 'Slider Yönetimi',
+                                            'news': 'Haberler',
+                                            'branches': 'Şubeler',
+                                            'videos': 'Videolar',
+                                            'packages': 'Paketler',
+                                            'successes': 'Başarılar',
+                                            'leads': 'Ön Kayıtlar',
+                                            'franchise': 'Franchise Başvuruları',
+                                            'users': 'Kullanıcılar',
+                                            'settings': 'Ayarlar',
+                                            'approvals': 'Onaylar',
+                                            'content-sections': 'Sayfa İçerikleri',
+                                            'branch-packages': 'Paketler',
+                                            'branch-news': 'Haberler',
+                                            'branch-successes': 'Başarılar',
+                                            'branch-leads': 'Ön Kayıtlar',
+                                        };
+                                        
+                                        return pathNames[previousPart] || previousPart;
+                                    }
+                                    
+                                    // UUID değilse normal göster
+                                    const pathNames: Record<string, string> = {
+                                        'admin': 'Dashboard',
+                                        'sliders': 'Slider Yönetimi',
+                                        'news': 'Haberler',
+                                        'branches': 'Şubeler',
+                                        'videos': 'Videolar',
+                                        'packages': 'Paketler',
+                                        'successes': 'Başarılar',
+                                        'leads': 'Ön Kayıtlar',
+                                        'franchise': 'Franchise Başvuruları',
+                                        'users': 'Kullanıcılar',
+                                        'settings': 'Ayarlar',
+                                        'approvals': 'Onaylar',
+                                        'content-sections': 'Sayfa İçerikleri',
+                                        'branch': user?.role === 'BRANCH_ADMIN' ? 'Şubem' : 'Şube Detay',
+                                        'branch-packages': 'Paketler',
+                                        'branch-news': 'Haberler',
+                                        'branch-successes': 'Başarılar',
+                                        'branch-leads': 'Ön Kayıtlar',
+                                    };
+                                    
+                                    return pathNames[lastPart] || lastPart;
+                                })()}
+                            </span>
                         </div>
                     </div>
 

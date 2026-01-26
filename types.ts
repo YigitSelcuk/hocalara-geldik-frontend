@@ -23,6 +23,10 @@ export interface Branch {
   address: string;
   phone: string;
   whatsapp: string;
+  email?: string;
+  weekdayHours?: string;
+  weekendHours?: string;
+  features?: Array<{ text: string; icon: string }>;
   lat: number;
   lng: number;
   image: string;
