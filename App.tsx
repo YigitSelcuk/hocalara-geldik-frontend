@@ -124,9 +124,9 @@ const ProtectedAdminRoute = ({ user, setUser }: { user: AdminUser | null; setUse
 };
 
 const SiteLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="flex flex-col min-h-screen">
+  <div className="flex flex-col min-h-screen w-full overflow-x-hidden max-w-[100vw]">
     <Header />
-    <main className="flex-grow pt-24">
+    <main className="flex-grow pt-24 w-full">
       {children}
     </main>
     <Footer />

@@ -156,7 +156,7 @@ const MainHome: React.FC = () => {
     <div className="mesh-bg overflow-x-hidden">
 
       {/* 1. Hero Slider Section */}
-      <section className="relative h-[600px] w-full overflow-hidden bg-brand-dark mx-auto" style={{ maxWidth: '1920px' }}>
+      <section className="relative h-[500px] lg:h-[600px] w-full overflow-hidden bg-brand-dark mx-auto max-w-[1920px]">
         {mainSliders.map((slide, index) => {
           const Icon = (slide as any).key === 'hero' ? IconMap['Zap'] : null;
           const imageUrl = slide.image?.startsWith('http') ? slide.image : `${API_BASE_URL}${slide.image}`;
@@ -171,14 +171,14 @@ const MainHome: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-transparent to-transparent"></div>
               </div>
 
-              <div className="relative z-10 h-full max-w-[1600px] mx-auto px-12 flex flex-col justify-center">
+              <div className="relative z-10 h-full max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12 flex flex-col justify-center">
                 <div className="max-w-4xl space-y-6">
                   <div className={`inline-flex items-center space-x-4 px-6 py-2.5 ${isStyle2 ? 'bg-brand-warm-orange/20 border-brand-warm-orange/30 text-brand-warm-orange' : 'bg-brand-blue/20 border-brand-blue/30 text-brand-blue'} backdrop-blur-xl rounded-2xl border text-[12px] font-black tracking-widest transition-all duration-1000 delay-300 ${index === currentSlide ? 'translate-x-0 opacity-100' : '-translate-x-12 opacity-0'}`}>
                     {Icon && <Icon className="w-4 h-4" />}
                     <span>{slide.subtitle || getSection('hero-subtitle', 'subtitle', 'Geleceğin Eğitim Vizyonu Burada')}</span>
                   </div>
 
-                  <h1 className={`text-6xl md:text-[90px] font-black text-white leading-[0.9] tracking-tighter transition-all duration-1000 delay-500 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
+                  <h1 className={`text-4xl md:text-6xl lg:text-[90px] font-black text-white leading-[0.9] tracking-tighter transition-all duration-1000 delay-500 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
                     {slide.title.split(' ').map((word, i) => (
                       <span key={i} className={i >= 2 ? `${isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'} italic` : ''}>{word} </span>
                     ))}
@@ -227,8 +227,8 @@ const MainHome: React.FC = () => {
       </section>
 
       {/* 2. Banner Kartları - Slider Üstüne Binme */}
-      <section className="relative z-30 -mt-20 pb-16">
-        <div className="max-w-[1600px] mx-auto px-12">
+      <section className="relative z-30 -mt-10 lg:-mt-20 pb-8 lg:pb-16">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-5">
             {bannerCards.sort((a, b) => a.order - b.order).map((item) => {
               const bgColorClass = item.bgColor || 'bg-brand-blue';
@@ -273,15 +273,15 @@ const MainHome: React.FC = () => {
           ];
 
         return (
-          <section className="py-32 bg-white relative overflow-hidden">
-            <div className="max-w-[1600px] mx-auto px-12">
-              <div className="grid lg:grid-cols-2 gap-20 items-center">
+          <section className="py-16 lg:py-32 bg-white relative overflow-hidden">
+            <div className="max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12">
+              <div className="grid lg:grid-cols-2 gap-10 lg:gap-20 items-center">
                 <div className="space-y-8">
                   <div className={`inline-flex items-center space-x-4 ${isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'} font-black tracking-[0.4em] text-[12px]`}>
                     <School className="w-6 h-6" />
                     <span>{getSection('centers-top-title', 'title', 'BAŞARI MERKEZLERİMİZ')}</span>
                   </div>
-                  <h2 className="text-6xl md:text-7xl font-black text-brand-dark tracking-tighter leading-none">
+                  <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-brand-dark tracking-tighter leading-none">
                     {getSection('centers-title', 'title', "Türkiye'nin En Büyük Eğitim Ağı").split('En Büyük').map((part, index) => (
                       <React.Fragment key={index}>
                         {part}
@@ -341,11 +341,11 @@ const MainHome: React.FC = () => {
           ];
 
         return (
-          <section className={`py-32 ${isStyle2 ? 'bg-gradient-to-b from-orange-50/50 to-white' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
-            <div className="max-w-[1600px] mx-auto px-12">
-              <div className="text-center mb-16 space-y-6">
+          <section className={`py-16 lg:py-32 ${isStyle2 ? 'bg-gradient-to-b from-orange-50/50 to-white' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
+            <div className="max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12">
+              <div className="text-center mb-8 lg:mb-16 space-y-4 lg:space-y-6">
                 <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px] uppercase`}>{getSection('digital-top-title', 'title', 'DİJİTAL EĞİTİM SİSTEMİ')}</span>
-                <h2 className="text-5xl md:text-6xl font-black text-brand-dark tracking-tighter leading-none">
+                <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-brand-dark tracking-tighter leading-none">
                   {getSection('digital-title', 'title', 'Yapay Zeka Destekli Eğitim Platformu').split('Eğitim Platformu').map((part, index) => (
                     <React.Fragment key={index}>
                       {part}
@@ -396,30 +396,30 @@ const MainHome: React.FC = () => {
           ];
 
         return (
-          <section className="py-32 bg-white relative overflow-hidden">
-            <div className="max-w-[1600px] mx-auto px-12">
-              <div className="relative rounded-[20px] overflow-hidden mb-16 h-[400px]">
+          <section className="py-16 lg:py-32 bg-white relative overflow-hidden">
+            <div className="max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12">
+              <div className="relative rounded-[20px] overflow-hidden mb-8 lg:mb-16 h-[250px] md:h-[400px]">
                 <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=1920" alt={getSection('global-title', 'title', 'Hocalara Geldik Yurt Dışı')} className="w-full h-full object-cover" />
                 <div className={`absolute inset-0 bg-gradient-to-r ${isStyle2 ? 'from-brand-warm-orange/90 to-brand-warm-amber/90' : 'from-brand-blue/90 to-purple-600/90'}`}></div>
-                <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center space-y-6 px-12">
-                  <Globe className="w-20 h-20" />
-                  <h2 className="text-6xl font-black tracking-tighter">{getSection('global-title', 'title', 'Hocalara Geldik Yurt Dışı')}</h2>
-                  <p className="text-2xl font-medium max-w-3xl">
+                <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center space-y-4 lg:space-y-6 px-6 md:px-12">
+                  <Globe className="w-12 h-12 md:w-20 md:h-20" />
+                  <h2 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter">{getSection('global-title', 'title', 'Hocalara Geldik Yurt Dışı')}</h2>
+                  <p className="text-lg md:text-2xl font-medium max-w-3xl">
                     {getSection('global-subtitle', 'subtitle', "Dünya'nın en prestijli üniversitelerine yerleşme hayalinizi gerçeğe dönüştürüyoruz")}
                   </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-10">
                 {sectionFeatures.map((item) => {
                   const Icon = IconMap[item.icon] || Target;
                   return (
-                    <div key={item.id} className={`bg-gradient-to-br ${isStyle2 ? 'from-orange-50 to-amber-50' : 'from-blue-50 to-purple-50'} rounded-[20px] p-10 shadow-xl border border-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group`}>
-                      <div className={`w-20 h-20 ${primaryColor} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg`}>
-                        <Icon className="w-10 h-10 text-white" />
+                    <div key={item.id} className={`bg-gradient-to-br ${isStyle2 ? 'from-orange-50 to-amber-50' : 'from-blue-50 to-purple-50'} rounded-[20px] p-6 lg:p-10 shadow-xl border border-white hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 group`}>
+                      <div className={`w-16 h-16 lg:w-20 lg:h-20 ${primaryColor} rounded-xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all shadow-lg`}>
+                        <Icon className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
                       </div>
-                      <h3 className="text-2xl font-black text-brand-dark mb-4">{item.title}</h3>
-                      <p className="text-slate-600 font-medium mb-6 leading-relaxed">{item.description}</p>
+                      <h3 className="text-xl lg:text-2xl font-black text-brand-dark mb-4">{item.title}</h3>
+                      <p className="text-slate-600 font-medium mb-6 leading-relaxed text-sm lg:text-base">{item.description}</p>
                       <div className="space-y-3">
                         {item.features?.map((feature, j) => (
                           <div key={j} className="flex items-center space-x-3">
@@ -438,11 +438,11 @@ const MainHome: React.FC = () => {
       })()}
 
       {/* 6. YouTube Kanalları ve Sosyal Medya */}
-      <section className={`py-32 ${isStyle2 ? 'bg-gradient-to-b from-orange-50/50 to-white' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
-        <div className="max-w-[1600px] mx-auto px-12">
-          <div className="text-center mb-16 space-y-6">
+      <section className={`py-16 lg:py-32 ${isStyle2 ? 'bg-gradient-to-b from-orange-50/50 to-white' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
+        <div className="max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12">
+          <div className="text-center mb-8 lg:mb-16 space-y-4 lg:space-y-6">
             <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px] uppercase`}>{getSection('youtube-top-title', 'title', 'DİJİTAL İÇERİKLERİMİZ')}</span>
-            <h2 className="text-5xl md:text-6xl font-black text-brand-dark tracking-tighter leading-none">
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-brand-dark tracking-tighter leading-none">
               {getSection('youtube-title', 'title', 'YouTube Kanallarımız ve Sosyal Medya').split('Sosyal Medya').map((part, index) => (
                 <React.Fragment key={index}>
                   {part}
@@ -455,7 +455,7 @@ const MainHome: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-10">
+          <div className="grid lg:grid-cols-3 gap-5 lg:gap-10">
             {/* YouTube Kanalları */}
             {(youtubeChannels.length > 0 ? youtubeChannels : [
               { id: 'y1', name: 'Hocalara Geldik', description: 'Ana kanalımızda tüm derslerin konu anlatımları ve soru çözümleri yer alıyor.', thumbnail: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=800', url: 'https://youtube.com/hocalarageldik', subscribers: '1M+', videoCount: '5000+' },
@@ -495,12 +495,12 @@ const MainHome: React.FC = () => {
           </div>
 
           {/* Sosyal Medya */}
-          <div className="mt-16 bg-white rounded-[20px] p-12 shadow-xl border border-slate-100">
-            <div className="text-center mb-10">
-              <h3 className="text-3xl font-black text-brand-dark mb-3">{getSection('youtube-social-title', 'title', 'Sosyal Medyada Bizi Takip Edin')}</h3>
+          <div className="mt-8 lg:mt-16 bg-white rounded-[20px] p-6 lg:p-12 shadow-xl border border-slate-100">
+            <div className="text-center mb-5 lg:mb-10">
+              <h3 className="text-2xl lg:text-3xl font-black text-brand-dark mb-3">{getSection('youtube-social-title', 'title', 'Sosyal Medyada Bizi Takip Edin')}</h3>
               <p className="text-slate-600 font-medium">{getSection('youtube-social-subtitle', 'subtitle', 'Güncel duyurular, motivasyon içerikleri ve daha fazlası için sosyal medya hesaplarımızı takip edin!')}</p>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 lg:gap-6">
               {[
                 { name: 'YouTube', icon: Youtube, url: socialMedia.youtube || 'https://youtube.com', color: 'hover:bg-red-600' },
                 { name: 'Instagram', icon: Instagram, url: socialMedia.instagram || 'https://instagram.com', color: 'hover:bg-gradient-to-br hover:from-purple-600 hover:to-pink-600' },
@@ -515,10 +515,10 @@ const MainHome: React.FC = () => {
                     href={socialCode.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`group flex flex-col items-center space-y-3 p-6 bg-slate-50 rounded-[20px] ${socialCode.color} hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-xl`}
+                    className={`group flex flex-col items-center space-y-3 p-4 lg:p-6 bg-slate-50 rounded-[20px] ${socialCode.color} hover:text-white transition-all duration-300 hover:scale-105 hover:shadow-xl`}
                   >
-                    <Icon className="w-12 h-12" />
-                    <span className="font-black text-sm">{socialCode.name}</span>
+                    <Icon className="w-8 h-8 lg:w-12 lg:h-12" />
+                    <span className="font-black text-xs lg:text-sm">{socialCode.name}</span>
                   </a>
                 );
               })}
@@ -528,11 +528,11 @@ const MainHome: React.FC = () => {
       </section>
 
       {/* 7. Rehberlik ve Blog Notları */}
-      <section className="py-32 bg-white">
-        <div className="max-w-[1600px] mx-auto px-12">
-          <div className="text-center mb-16 space-y-6">
+      <section className="py-16 lg:py-32 bg-white">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12">
+          <div className="text-center mb-8 lg:mb-16 space-y-4 lg:space-y-6">
             <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px] uppercase`}>{getSection('blog-top-title', 'title', 'REHBERLİK VE İÇERİKLER')}</span>
-            <h2 className="text-5xl md:text-6xl font-black text-brand-dark tracking-tighter leading-none">
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-brand-dark tracking-tighter leading-none">
               {getSection('blog-title', 'title', 'Rehberlik ve Blog Notları').split('Blog Notları').map((part, index) => (
                 <React.Fragment key={index}>
                   {part}
@@ -546,7 +546,7 @@ const MainHome: React.FC = () => {
           </div>
 
           {/* Kategori Filtreleme */}
-          <div className="flex flex-wrap items-center justify-center gap-3 mb-12">
+          <div className="flex flex-wrap items-center justify-center gap-3 mb-6 lg:mb-12">
             <button
               onClick={() => setSelectedCategory('Tümü')}
               className={`px-6 py-3 rounded-xl font-black text-sm transition-all duration-300 ${selectedCategory === 'Tümü'
@@ -618,20 +618,20 @@ const MainHome: React.FC = () => {
       </section>
 
       {/* 8. TYT – AYT – LGS Puan Hesaplama Modülü */}
-      <section className={`py-32 ${isStyle2 ? 'bg-gradient-to-br from-brand-warm-orange via-brand-warm-amber to-orange-600' : 'bg-gradient-to-br from-brand-blue via-purple-600 to-indigo-700'} relative overflow-hidden`}>
+      <section className={`py-16 lg:py-32 ${isStyle2 ? 'bg-gradient-to-br from-brand-warm-orange via-brand-warm-amber to-orange-600' : 'bg-gradient-to-br from-brand-blue via-purple-600 to-indigo-700'} relative overflow-hidden`}>
         <div className="absolute inset-0 z-0 opacity-20">
           <div className="absolute top-0 left-0 w-96 h-96 bg-white rounded-full blur-[150px]"></div>
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-[150px]"></div>
         </div>
 
-        <div className="max-w-[1600px] mx-auto px-12 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8 text-white">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12 relative z-10">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+            <div className="space-y-6 lg:space-y-8 text-white">
               <div className="inline-flex items-center space-x-3 bg-white/20 border-white/30 font-black capitalize text-xs tracking-widest backdrop-blur-xl px-6 py-3 rounded-xl border">
                 <TrendingUp className="w-5 h-5" />
                 <span>{getSection('calculator-badge', 'title', 'Puan Hesaplama Araçları')}</span>
               </div>
-              <h2 className="text-5xl md:text-6xl font-black tracking-tighter leading-none">
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-black tracking-tighter leading-none">
                 {getSection('calculator-title', 'title', 'Sınav Puanınızı Hesaplayın').split('Hesaplayın').map((part, index) => (
                   <React.Fragment key={index}>
                     {part}
@@ -639,19 +639,19 @@ const MainHome: React.FC = () => {
                   </React.Fragment>
                 ))}
               </h2>
-              <p className="text-xl font-medium leading-relaxed text-white/90">
+              <p className="text-lg lg:text-xl font-medium leading-relaxed text-white/90">
                 {getSection('calculator-subtitle', 'subtitle', 'Net sayılarınızı girerek yaklaşık sınav puanınızı hesaplayabilir ve hedeflerinize ne kadar yakın olduğunuzu görebilirsiniz.')}
               </p>
               <Link
                 to={getSection('calculator-button', 'buttonLink', '/hesaplama')}
-                className="inline-flex items-center space-x-3 px-10 py-6 bg-white text-brand-dark hover:bg-white/90 font-black rounded-2xl transition-all duration-300 shadow-2xl hover:scale-105 group"
+                className="inline-flex items-center space-x-3 px-6 py-4 lg:px-10 lg:py-6 bg-white text-brand-dark hover:bg-white/90 font-black rounded-2xl transition-all duration-300 shadow-2xl hover:scale-105 group"
               >
                 <span>{getSection('calculator-button', 'buttonText', 'Hesaplama Araçlarına Git')}</span>
                 <ChevronRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
               </Link>
             </div>
 
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-3 gap-3 lg:gap-6">
               {[
                 { type: 'TYT', section: 'calculator-tyt' },
                 { type: 'AYT', section: 'calculator-ayt' },
@@ -660,13 +660,13 @@ const MainHome: React.FC = () => {
                 <Link
                   key={item.type}
                   to="/hesaplama"
-                  className="bg-white/10 backdrop-blur-xl rounded-2xl p-8 border border-white/20 text-center hover:bg-white/20 hover:scale-105 transition-all duration-300 group cursor-pointer"
+                  className="bg-white/10 backdrop-blur-xl rounded-2xl p-4 lg:p-8 border border-white/20 text-center hover:bg-white/20 hover:scale-105 transition-all duration-300 group cursor-pointer"
                 >
-                  <div className="w-16 h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-xl">
-                    <TrendingUp className={`w-8 h-8 ${primaryColorText}`} />
+                  <div className="w-12 h-12 lg:w-16 lg:h-16 bg-white rounded-xl flex items-center justify-center mx-auto mb-3 lg:mb-6 group-hover:scale-110 group-hover:rotate-6 transition-transform shadow-xl">
+                    <TrendingUp className={`w-6 h-6 lg:w-8 lg:h-8 ${primaryColorText}`} />
                   </div>
-                  <p className="text-2xl font-black text-white mb-2">{item.type}</p>
-                  <p className="text-xs font-bold text-white/70 mt-2">{getSection(item.section, 'title', 'Puan Hesapla')}</p>
+                  <p className="text-lg lg:text-2xl font-black text-white mb-2">{item.type}</p>
+                  <p className="text-[10px] lg:text-xs font-bold text-white/70 mt-2">{getSection(item.section, 'title', 'Puan Hesapla')}</p>
                 </Link>
               ))}
             </div>
@@ -675,11 +675,11 @@ const MainHome: React.FC = () => {
       </section>
 
       {/* 9. Sonraki Sınava Kalan Süre ve Pomodoro Modülü */}
-      <section className={`py-32 ${isStyle2 ? 'bg-gradient-to-b from-orange-50/50 to-white' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
-        <div className="max-w-[1600px] mx-auto px-12">
-          <div className="text-center mb-16 space-y-6">
+      <section className={`py-16 lg:py-32 ${isStyle2 ? 'bg-gradient-to-b from-orange-50/50 to-white' : 'bg-gradient-to-b from-slate-50 to-white'}`}>
+        <div className="max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12">
+          <div className="text-center mb-8 lg:mb-16 space-y-4 lg:space-y-6">
             <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px] uppercase`}>{getSection('tools-top-title', 'title', 'ÇALIŞMA ARAÇLARI')}</span>
-            <h2 className="text-5xl md:text-6xl font-black text-brand-dark tracking-tighter leading-none">
+            <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-brand-dark tracking-tighter leading-none">
               {getSection('tools-title', 'title', 'Sınav Geri Sayımı ve Pomodoro').split('Pomodoro').map((part, index) => (
                 <React.Fragment key={index}>
                   {part}
@@ -692,21 +692,21 @@ const MainHome: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-16">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-16">
             {/* Geri Sayım */}
-            <div className="bg-white rounded-[20px] p-12 shadow-2xl border border-slate-100">
+            <div className="bg-white rounded-[20px] p-6 lg:p-12 shadow-2xl border border-slate-100">
               <div className="flex items-center space-x-3 mb-8">
                 <Timer className={`w-8 h-8 ${primaryColorText}`} />
-                <h3 className="text-2xl font-black text-brand-dark">{getSection('tools-countdown-title', 'title', 'Sınava Kalan Süre')}</h3>
+                <h3 className="text-xl lg:text-2xl font-black text-brand-dark">{getSection('tools-countdown-title', 'title', 'Sınava Kalan Süre')}</h3>
               </div>
               <CountdownTimer isStyle2={isStyle2} />
             </div>
 
             {/* Pomodoro */}
-            <div className="bg-white rounded-[20px] p-12 shadow-2xl border border-slate-100">
+            <div className="bg-white rounded-[20px] p-6 lg:p-12 shadow-2xl border border-slate-100">
               <div className="flex items-center space-x-3 mb-8">
                 <Clock className={`w-8 h-8 ${primaryColorText}`} />
-                <h3 className="text-2xl font-black text-brand-dark">{getSection('tools-pomodoro-title', 'title', 'Pomodoro Zamanlayıcı')}</h3>
+                <h3 className="text-xl lg:text-2xl font-black text-brand-dark">{getSection('tools-pomodoro-title', 'title', 'Pomodoro Zamanlayıcı')}</h3>
               </div>
               <PomodoroTimer isStyle2={isStyle2} />
             </div>
@@ -715,12 +715,12 @@ const MainHome: React.FC = () => {
       </section>
 
       {/* 10. Paketlerimiz Modülü */}
-      <section className="py-32 bg-white">
-        <div className="max-w-[1600px] mx-auto px-12">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-16 gap-12">
-            <div className="space-y-6">
+      <section className="py-16 lg:py-32 bg-white">
+        <div className="max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12">
+          <div className="flex flex-col md:flex-row justify-between items-end mb-8 lg:mb-16 gap-6 lg:gap-12">
+            <div className="space-y-4 lg:space-y-6">
               <span className={`${primaryColorText} font-black tracking-[0.4em] text-[12px]`}>{getSection('packages-top-title', 'title', 'EĞİTİM PAKETLERİMİZ')}</span>
-              <h2 className="text-5xl md:text-6xl font-black text-brand-dark tracking-tighter leading-none">
+              <h2 className="text-3xl md:text-5xl lg:text-6xl font-black text-brand-dark tracking-tighter leading-none">
                 {getSection('packages-title', 'title', 'Size Uygun Paketi Seçin').split('Paketi Seçin').map((part, index) => (
                   <React.Fragment key={index}>
                     {part}
@@ -784,20 +784,20 @@ const MainHome: React.FC = () => {
       </section>
 
       {/* 11. CTA Section (Mevcut - Korundu) */}
-      <section className="py-48 px-12 bg-white overflow-hidden relative">
-        <div className="max-w-[1600px] mx-auto grid lg:grid-cols-2 gap-32 items-center">
-          <div className="relative">
-            <div className={`absolute -left-32 -top-32 w-[600px] h-[600px] ${isStyle2 ? 'bg-brand-warm-orange/10' : 'bg-brand-blue/5'} rounded-full blur-[120px]`}></div>
+      <section className="py-24 lg:py-48 px-4 md:px-8 lg:px-12 bg-white overflow-hidden relative">
+        <div className="max-w-[1600px] mx-auto grid lg:grid-cols-2 gap-16 lg:gap-32 items-center">
+          <div className="relative mb-16 lg:mb-0">
+            <div className={`absolute -left-32 -top-32 w-[300px] h-[300px] lg:w-[600px] lg:h-[600px] ${isStyle2 ? 'bg-brand-warm-orange/10' : 'bg-brand-blue/5'} rounded-full blur-[80px] lg:blur-[120px]`}></div>
             {(() => {
               const imageUrl = getSection('cta-image', 'buttonLink', '');
               const finalUrl = imageUrl 
                 ? (imageUrl.startsWith('http') ? imageUrl : `${API_BASE_URL}${imageUrl}`)
                 : "https://images.unsplash.com/photo-1523240795612-9a054b0db644?q=80&w=2070&auto=format&fit=crop";
-              return <img src={finalUrl} className="rounded-[20px] shadow-2xl relative z-10" alt="CTA" />;
+              return <img src={finalUrl} className="rounded-[20px] shadow-2xl relative z-10 w-full" alt="CTA" />;
             })()}
-            <div className={`absolute -bottom-16 -right-16 glass-panel p-12 rounded-[20px] shadow-2xl z-20 border ${isStyle2 ? 'border-orange-200' : 'border-brand-blue/20'}`}>
-              <p className="text-slate-400 text-[11px] font-black tracking-widest mb-6 capitalize">{getSection('cta-badge', 'title', 'Sıradaki Başarı Öyküsü...')}</p>
-              <h4 className="text-4xl font-black text-brand-dark tracking-tighter leading-tight italic">{getSection('cta-question', 'title', 'Neden Sizin Başarı Hikayeniz Olmasın?').split('Başarı Hikayeniz').map((part, index) => (
+            <div className={`lg:absolute -bottom-16 -right-16 glass-panel p-6 lg:p-12 rounded-[20px] shadow-2xl z-20 border ${isStyle2 ? 'border-orange-200' : 'border-brand-blue/20'} mt-6 lg:mt-0 relative`}>
+              <p className="text-slate-400 text-[10px] lg:text-[11px] font-black tracking-widest mb-4 lg:mb-6 capitalize">{getSection('cta-badge', 'title', 'Sıradaki Başarı Öyküsü...')}</p>
+              <h4 className="text-2xl lg:text-4xl font-black text-brand-dark tracking-tighter leading-tight italic">{getSection('cta-question', 'title', 'Neden Sizin Başarı Hikayeniz Olmasın?').split('Başarı Hikayeniz').map((part, index) => (
                 <React.Fragment key={index}>
                   {part}
                   {index === 0 && <><br /> <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>Başarı Hikayeniz</span></>}
@@ -806,37 +806,37 @@ const MainHome: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-16">
-            <div className="space-y-10">
-              <h2 className="text-7xl font-black text-brand-dark tracking-tighter leading-none italic">{getSection('cta-main-title', 'title', 'Geleceği El Birliğiyle İnşa Edelim.').split('İnşa Edelim.').map((part, index) => (
+          <div className="space-y-8 lg:space-y-16">
+            <div className="space-y-5 lg:space-y-10">
+              <h2 className="text-4xl md:text-6xl lg:text-7xl font-black text-brand-dark tracking-tighter leading-none italic">{getSection('cta-main-title', 'title', 'Geleceği El Birliğiyle İnşa Edelim.').split('İnşa Edelim.').map((part, index) => (
                 <React.Fragment key={index}>
                   {part}
                   {index === 0 && <><br /> El Birliğiyle <span className={isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'}>İnşa Edelim.</span></>}
                 </React.Fragment>
               ))}</h2>
-              <p className="text-2xl text-slate-500 font-medium leading-relaxed max-w-2xl">
+              <p className="text-lg lg:text-2xl text-slate-500 font-medium leading-relaxed max-w-2xl">
                 {getSection('cta-description', 'description', 'Akademik Hedeflerinize Ulaşmanız İçin Uzman Kadromuz, Modern Eğitim Materyallerimiz Ve Dijital Çözümlerimizle Yanınızdayız.')}
               </p>
             </div>
-            <div className="flex flex-wrap gap-8 pt-6">
-              <Link to={getSection('cta-button-primary', 'buttonLink', '/subeler')} className={`px-16 py-7 bg-brand-dark text-white font-black rounded-2xl ${isStyle2 ? 'hover:bg-brand-warm-orange hover:shadow-brand-warm-orange/40' : 'hover:bg-brand-blue hover:shadow-brand-blue/40'} transition-all duration-300 shadow-2xl hover:scale-105 hover:-translate-y-1 text-[14px] group`}>
+            <div className="flex flex-wrap gap-4 lg:gap-8 pt-4 lg:pt-6">
+              <Link to={getSection('cta-button-primary', 'buttonLink', '/subeler')} className={`px-10 py-5 lg:px-16 lg:py-7 bg-brand-dark text-white font-black rounded-2xl ${isStyle2 ? 'hover:bg-brand-warm-orange hover:shadow-brand-warm-orange/40' : 'hover:bg-brand-blue hover:shadow-brand-blue/40'} transition-all duration-300 shadow-2xl hover:scale-105 hover:-translate-y-1 text-[13px] lg:text-[14px] group`}>
                 <span className="flex items-center space-x-3">
                   <span>{getSection('cta-button-primary', 'buttonText', 'Hemen Kayıt Başvurusu')}</span>
                   <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </span>
               </Link>
-              <Link to={getSection('cta-button-secondary', 'buttonLink', '/franchise')} className="px-16 py-7 border-2 border-brand-dark text-brand-dark font-black rounded-2xl hover:bg-brand-dark hover:text-white hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 text-[14px] group">
+              <Link to={getSection('cta-button-secondary', 'buttonLink', '/franchise')} className="px-10 py-5 lg:px-16 lg:py-7 border-2 border-brand-dark text-brand-dark font-black rounded-2xl hover:bg-brand-dark hover:text-white hover:shadow-xl hover:scale-105 hover:-translate-y-1 transition-all duration-300 text-[13px] lg:text-[14px] group">
                 <span className="flex items-center space-x-3">
                   <span>{getSection('cta-button-secondary', 'buttonText', 'Akademik Şubemiz Olun')}</span>
                   <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </span>
               </Link>
             </div>
-            <div className="flex items-center space-x-8 pt-12 border-t border-slate-100">
+            <div className="flex items-center space-x-6 lg:space-x-8 pt-8 lg:pt-12 border-t border-slate-100">
               <div className="flex -space-x-4">
-                {[1, 2, 3, 4, 5].map(i => <img key={i} src={`https://i.pravatar.cc/100?u=${i + 30}`} className="w-14 h-14 rounded-full border-4 border-white shadow-lg" alt="Student" />)}
+                {[1, 2, 3, 4, 5].map(i => <img key={i} src={`https://i.pravatar.cc/100?u=${i + 30}`} className="w-10 h-10 lg:w-14 lg:h-14 rounded-full border-4 border-white shadow-lg" alt="Student" />)}
               </div>
-              <p className="text-sm font-bold text-slate-400 italic">{getSection('cta-testimonial', 'description', '81 Şehirde Binlerce Öğrenci Geleceğine Güvenle Hazırlanıyor.')}</p>
+              <p className="text-xs lg:text-sm font-bold text-slate-400 italic">{getSection('cta-testimonial', 'description', '81 Şehirde Binlerce Öğrenci Geleceğine Güvenle Hazırlanıyor.')}</p>
             </div>
           </div>
         </div>

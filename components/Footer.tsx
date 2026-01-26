@@ -70,16 +70,16 @@ const Footer: React.FC = () => {
     fetchData();
   }, []);
   return (
-    <footer className="bg-brand-indigo text-white pt-40 pb-20 relative overflow-hidden">
+    <footer className="bg-brand-indigo text-white pt-20 pb-10 lg:pt-40 lg:pb-20 relative overflow-hidden">
       {/* Decorative BG element */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-[1920px] h-full opacity-5 pointer-events-none">
         <div className="absolute top-40 left-20 w-96 h-96 bg-brand-blue rounded-full blur-[150px]"></div>
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-brand-secondary rounded-full blur-[150px]"></div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-12 relative z-10">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-24 mb-32">
-          <div className="space-y-12">
+      <div className="max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12 relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-24 mb-16 lg:mb-32">
+          <div className="space-y-8 lg:space-y-12">
             <Link to="/" className="flex items-center group">
               <img 
                 src={getLogoUrl()} 

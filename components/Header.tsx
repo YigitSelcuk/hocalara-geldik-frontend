@@ -127,9 +127,9 @@ const Header: React.FC = () => {
     <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       {/* Top Bar */}
       <div className={`bg-brand-dark text-white/70 transition-all duration-500 ${isScrolled ? 'py-1.5' : 'py-2'}`}>
-        <div className="max-w-[1600px] mx-auto px-12 flex justify-between items-center text-[11px] font-bold tracking-wider">
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-12 flex flex-wrap justify-between items-center text-[9px] md:text-[11px] font-bold tracking-wider gap-y-2">
           {/* Left: Quick Links */}
-          <div className="flex items-center space-x-6">
+          <div className="flex items-center space-x-3 md:space-x-6 flex-wrap">
             {getTopbarLinks().length > 0 ? (
               getTopbarLinks().map((link, idx, arr) => (
                 <React.Fragment key={link.id}>
@@ -176,7 +176,7 @@ const Header: React.FC = () => {
 
       {/* Main Nav */}
       <div className={`transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-2xl py-1.5' : 'bg-white/90 backdrop-blur-md py-3 border-b border-black/5'}`}>
-        <div className="max-w-[1600px] mx-auto px-12 flex justify-between items-center h-14">
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-12 flex justify-between items-center h-14">
 
           <Link to="/" className="flex items-center shrink-0 group">
             <div className="flex flex-col">
@@ -236,6 +236,50 @@ const Header: React.FC = () => {
             >
               {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
+          </div>
+        </div>
+      </div>
+      {/* Mobile Menu */}
+      <div className={`fixed inset-0 bg-brand-dark/95 backdrop-blur-xl z-50 transition-all duration-500 xl:hidden ${isMenuOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}`}>
+        <div className="flex flex-col h-full p-8 relative">
+          <button 
+            onClick={() => setIsMenuOpen(false)}
+            className="absolute top-6 right-6 p-2 text-white/50 hover:text-white transition-colors"
+          >
+            <X className="w-8 h-8" />
+          </button>
+
+          <div className="flex flex-col items-center justify-center flex-1 space-y-6">
+            {currentBranch ? (
+              <>
+                <Link to="/" className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>Ana Sayfa</Link>
+                <Link to={`/subeler/${currentBranch.slug}`} className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>Genel Bakış</Link>
+                <Link to="/haberler" className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>Haberler</Link>
+                <Link to={`/subeler/${currentBranch.slug}/basarilar`} className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>Başarılar</Link>
+                <Link to="/iletisim" className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>İletişim</Link>
+              </>
+            ) : (
+              <>
+                {getMenuLinks().length > 0 ? (
+                  getMenuLinks().map(link => (
+                    <Link key={link.id} to={link.buttonLink} className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>{link.title}</Link>
+                  ))
+                ) : (
+                  <>
+                    <Link to="/" className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>Ana Sayfa</Link>
+                    <Link to="/videolar" className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>Videolar</Link>
+                    <Link to="/paketler" className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>Paketler</Link>
+                    <Link to="/subeler" className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>Şubeler</Link>
+                    <Link to="/basarilarimiz" className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>Başarılar</Link>
+                    <Link to="/haberler" className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>Haberler</Link>
+                    <Link to="/franchise" className="text-2xl font-black text-white hover:text-brand-blue transition-colors" onClick={() => setIsMenuOpen(false)}>Franchise</Link>
+                  </>
+                )}
+              </>
+            )}
+            <Link to="/admin" className="px-8 py-3 bg-brand-blue text-white rounded-xl font-black tracking-wide hover:bg-white hover:text-brand-blue transition-all mt-8" onClick={() => setIsMenuOpen(false)}>
+              ÜYE GİRİŞİ
+            </Link>
           </div>
         </div>
       </div>
