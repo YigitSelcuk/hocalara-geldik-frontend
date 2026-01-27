@@ -121,8 +121,8 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
               </button>
             </div>
 
-            <div className="p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-6">
+            <div className="p-6 sm:p-8 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <p className="text-xs font-black text-slate-400 uppercase mb-2">Ad Soyad</p>
                   <p className="text-lg font-bold text-brand-dark">{selectedLead.name} {selectedLead.surname}</p>
@@ -133,7 +133,7 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <p className="text-xs font-black text-slate-400 uppercase mb-2">Telefon</p>
                   <a href={`tel:${selectedLead.phone}`} className="text-brand-blue font-bold hover:underline flex items-center space-x-2">
@@ -209,7 +209,7 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
           <h2 className="text-2xl font-black text-brand-dark">Ön Kayıtlar</h2>
           <p className="text-slate-500 text-sm mt-1">
@@ -225,7 +225,7 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-blue-50 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -277,35 +277,35 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
               key={lead.id}
               className="bg-slate-50 rounded-xl p-4 hover:bg-slate-100 transition-all group"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4 flex-1">
-                  <div className="w-12 h-12 bg-brand-blue/10 rounded-full flex items-center justify-center">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex items-start md:items-center space-x-4 flex-1 w-full">
+                  <div className="w-12 h-12 bg-brand-blue/10 rounded-full flex items-center justify-center flex-shrink-0">
                     {getStatusIcon(lead.status)}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-1">
-                      <h3 className="text-lg font-bold text-brand-dark">{lead.name} {lead.surname}</h3>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h3 className="text-lg font-bold text-brand-dark truncate">{lead.name} {lead.surname}</h3>
                       {getStatusBadge(lead.status)}
                       {!branchId && lead.branch && (
-                        <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-black">
+                        <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-black whitespace-nowrap">
                           {lead.branch.name}
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center space-x-4 text-sm text-slate-600">
+                    <div className="flex flex-wrap items-center gap-4 text-sm text-slate-600">
                       <span className="flex items-center space-x-1">
-                        <Phone className="w-3 h-3" />
-                        <span>{lead.phone}</span>
+                        <Phone className="w-3 h-3 flex-shrink-0" />
+                        <span className="truncate">{lead.phone}</span>
                       </span>
                       {lead.email && (
                         <span className="flex items-center space-x-1">
-                          <Mail className="w-3 h-3" />
-                          <span>{lead.email}</span>
+                          <Mail className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{lead.email}</span>
                         </span>
                       )}
                       <span className="flex items-center space-x-1">
-                        <Calendar className="w-3 h-3" />
-                        <span>{new Date(lead.createdAt).toLocaleDateString('tr-TR')}</span>
+                        <Calendar className="w-3 h-3 flex-shrink-0" />
+                        <span className="whitespace-nowrap">{new Date(lead.createdAt).toLocaleDateString('tr-TR')}</span>
                       </span>
                     </div>
                   </div>
@@ -315,7 +315,7 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
                     setSelectedLead(lead);
                     setShowDetailModal(true);
                   }}
-                  className="px-4 py-2 bg-brand-blue text-white font-bold rounded-lg hover:bg-brand-dark transition-all flex items-center space-x-2"
+                  className="w-full md:w-auto px-4 py-2 bg-brand-blue text-white font-bold rounded-lg hover:bg-brand-dark transition-all flex items-center justify-center space-x-2"
                 >
                   <Eye className="w-4 h-4" />
                   <span>Detay</span>

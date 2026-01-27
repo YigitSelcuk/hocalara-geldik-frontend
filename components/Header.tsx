@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Search, User, Phone, Facebook, Instagram, Twitter } from 'lucide-react';
+import { Menu, X, Search, User, Phone, Facebook, Instagram, Twitter, Youtube, Linkedin } from 'lucide-react';
 
 import { branchService, settingsService } from '../services/cms.service';
-import { homeSectionService } from '../services/homepage.service';
-import { Branch } from '../types';
+import { homeSectionService, socialMediaService } from '../services/homepage.service';
+import { Branch, SocialMedia } from '../types';
 import { API_BASE_URL } from '../services/api';
 
 const NavLink: React.FC<{ to: string; children: React.ReactNode }> = ({ to, children }) => {
@@ -29,6 +29,7 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [homeSections, setHomeSections] = useState<any[]>([]);
+  const [socialMedia, setSocialMedia] = useState<SocialMedia[]>([]);
   const [settings, setSettings] = useState<any>({});
 
   const getSection = (section: string, field: 'title' | 'buttonLink', defaultValue: string = '') => {
@@ -66,16 +67,24 @@ const Header: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [branchesRes, sectionsRes, settingsRes] = await Promise.all([
+        const [branchesRes, sectionsRes, settingsRes, socialMediaRes] = await Promise.all([
           branchService.getAll(),
           homeSectionService.getAll(),
-          settingsService.get()
+          settingsService.get(),
+          socialMediaService.getAll()
         ]);
         
         setBranches(branchesRes.data.branches);
         
         if (sectionsRes.data?.data) {
           setHomeSections(sectionsRes.data.data.filter((s: any) => s.page === 'home'));
+        }
+
+        if (socialMediaRes.data) {
+           const data = (socialMediaRes.data as any).data || socialMediaRes.data;
+           if (Array.isArray(data)) {
+             setSocialMedia(data);
+           }
         }
 
         if (settingsRes.data) {
@@ -162,20 +171,62 @@ const Header: React.FC = () => {
 
           {/* Right: Social Media Icons */}
           <div className="flex items-center space-x-4">
-            {settings.facebook && (
-              <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-brand-blue transition-colors" aria-label="Facebook">
-                <Facebook className="w-4 h-4" />
-              </a>
-            )}
-            {settings.instagram && (
-              <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-brand-blue transition-colors" aria-label="Instagram">
-                <Instagram className="w-4 h-4" />
-              </a>
-            )}
-            {settings.twitter && (
-              <a href={settings.twitter} target="_blank" rel="noopener noreferrer" className="hover:text-brand-blue transition-colors" aria-label="Twitter">
-                <Twitter className="w-4 h-4" />
-              </a>
+            {socialMedia.length > 0 ? (
+              (() => {
+                const uniquePlatforms = new Set();
+                return socialMedia
+                  .filter(s => s.isActive)
+                  .sort((a, b) => a.order - b.order)
+                  .filter(item => {
+                    const platform = item.platform.toLowerCase();
+                    if (uniquePlatforms.has(platform)) return false;
+                    uniquePlatforms.add(platform);
+                    return true;
+                  })
+                  .map(item => {
+                    const platform = item.platform.toLowerCase();
+                    let Icon = null;
+                    
+                    if (platform === 'youtube') Icon = Youtube;
+                    else if (platform === 'instagram') Icon = Instagram;
+                    else if (platform === 'twitter') Icon = Twitter;
+                    else if (platform === 'facebook') Icon = Facebook;
+                    else if (platform === 'linkedin') Icon = Linkedin;
+
+                    if (!Icon) return null;
+
+                    return (
+                      <a 
+                        key={item.id}
+                        href={item.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="hover:text-brand-blue transition-colors" 
+                        aria-label={item.platform}
+                      >
+                        <Icon className="w-4 h-4" />
+                      </a>
+                    );
+                  });
+              })()
+            ) : (
+              <>
+                {settings.facebook && (
+                  <a href={settings.facebook} target="_blank" rel="noopener noreferrer" className="hover:text-brand-blue transition-colors" aria-label="Facebook">
+                    <Facebook className="w-4 h-4" />
+                  </a>
+                )}
+                {settings.instagram && (
+                  <a href={settings.instagram} target="_blank" rel="noopener noreferrer" className="hover:text-brand-blue transition-colors" aria-label="Instagram">
+                    <Instagram className="w-4 h-4" />
+                  </a>
+                )}
+                {settings.twitter && (
+                  <a href={settings.twitter} target="_blank" rel="noopener noreferrer" className="hover:text-brand-blue transition-colors" aria-label="Twitter">
+                    <Twitter className="w-4 h-4" />
+                  </a>
+                )}
+              </>
             )}
           </div>
         </div>

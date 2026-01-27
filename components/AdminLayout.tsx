@@ -104,8 +104,17 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
 
     const hasAccess = (requiredRoles: UserRole[]) => !!user && requiredRoles.includes(user.role);
 
+    interface MenuItem {
+        label: string;
+        icon: any;
+        path: string;
+        roles: UserRole[];
+        condition?: boolean;
+        badge?: number;
+    }
+
     // Branch admin için özel menü
-    const branchAdminMenuItems = [
+    const branchAdminMenuItems: MenuItem[] = [
         { label: 'Şubem', icon: Building2, path: `/admin/branch/${user?.branchId || ''}`, roles: [UserRole.BRANCH_ADMIN], condition: !!user?.branchId },
         { label: 'Paketler', icon: Package, path: '/admin/branch-packages', roles: [UserRole.BRANCH_ADMIN] },
         { label: 'Haberler', icon: Newspaper, path: '/admin/branch-news', roles: [UserRole.BRANCH_ADMIN] },
@@ -114,7 +123,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
     ];
 
     // Genel admin menüsü
-    const generalMenuItems = [
+    const generalMenuItems: MenuItem[] = [
         { label: 'Dashboard', icon: LayoutDashboard, path: '/admin', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
         { label: 'Onaylar', icon: Bell, path: '/admin/approvals', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN], badge: pendingRequests.length },
         { label: 'Sayfa İçerikleri', icon: Layers, path: '/admin/content-sections', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
@@ -135,7 +144,15 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
         .filter(item => hasAccess(item.roles) && (item.condition === undefined || item.condition));
 
     return (
-        <div className="flex min-h-screen bg-slate-50 font-outfit">
+        <div className="flex min-h-screen bg-slate-50 font-outfit relative w-full max-w-[100vw] overflow-x-hidden">
+            {/* Mobile Backdrop */}
+            {isSidebarOpen && (
+                <div 
+                    className="fixed inset-0 bg-black/50 z-40 lg:hidden backdrop-blur-sm"
+                    onClick={() => setIsSidebarOpen(false)}
+                />
+            )}
+            
             {/* Sidebar */}
             <div className={`fixed inset-y-0 left-0 z-50 w-72 bg-brand-dark/95 backdrop-blur-xl border-r border-white/5 transition-transform duration-300 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:relative lg:translate-x-0`}>
                 <div className="flex flex-col h-full p-6">
@@ -149,7 +166,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
                         </div>
                     </div>
 
-                    <nav className="flex-grow space-y-1.5 overflow-y-auto">
+                    <nav className="flex-grow space-y-1.5 overflow-y-auto min-h-0">
                         {menuItems.map((item) => (
                             <Link
                                 key={item.label}
@@ -175,14 +192,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
                         ))}
                     </nav>
 
-                    <div className="mt-auto pt-6 border-t border-white/5">
-                        <button
-                            onClick={handleLogout}
-                            className="flex items-center space-x-3 w-full px-4 py-3.5 text-slate-400 hover:text-white hover:bg-white/5 rounded-2xl transition-all group"
-                        >
-                            <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                            <span className="text-[13px] font-bold">Çıkış Yap</span>
-                        </button>
+                    <div className="pt-6 border-t border-white/5 mt-auto flex-shrink-0">
+                        {/* Logout moved to header */}
                     </div>
                 </div>
             </div>
@@ -427,11 +438,13 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
                         )}
 
                         <div className="flex items-center space-x-3 pl-6 border-l border-slate-100">
-                            <div className="text-right hidden sm:block">
-                                <p className="text-[13px] font-black text-brand-dark leading-none">{user?.name || 'Admin'}</p>
-                                <p className="text-[10px] font-bold text-brand-blue capitalize tracking-widest mt-1">{user?.role?.replace('_', ' ') || 'User'}</p>
-                            </div>
-                            <img src={user?.avatar || 'https://via.placeholder.com/100'} className="w-10 h-10 rounded-xl object-cover shadow-lg border-2 border-white" alt="profile" />
+                            <button
+                                onClick={handleLogout}
+                                className="p-2 ml-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all"
+                                title="Çıkış Yap"
+                            >
+                                <LogOut className="w-5 h-5" />
+                            </button>
                         </div>
                     </div>
                 </div>

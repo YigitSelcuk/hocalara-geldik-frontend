@@ -129,8 +129,8 @@ const FranchiseManager: React.FC = () => {
               </button>
             </div>
 
-            <div className="p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-6">
+            <div className="p-6 sm:p-8 space-y-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <p className="text-xs font-black text-slate-400 uppercase mb-2">Ad Soyad</p>
                   <p className="text-lg font-bold text-brand-dark">{selectedApplication.name} {selectedApplication.surname}</p>
@@ -141,7 +141,7 @@ const FranchiseManager: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                   <p className="text-xs font-black text-slate-400 uppercase mb-2">Telefon</p>
                   <a href={`tel:${selectedApplication.phone}`} className="text-brand-blue font-bold hover:underline flex items-center space-x-2">
@@ -192,7 +192,7 @@ const FranchiseManager: React.FC = () => {
 
               <div className="border-t border-slate-200 pt-6">
                 <p className="text-xs font-black text-slate-400 uppercase mb-3">Durum Güncelle</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <button
                     onClick={() => handleUpdateStatus(selectedApplication.id, 'CONTACTED')}
                     disabled={updatingStatus || selectedApplication.status === 'CONTACTED'}
@@ -232,7 +232,7 @@ const FranchiseManager: React.FC = () => {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 gap-4">
         <div>
           <h2 className="text-2xl font-black text-brand-dark">Franchise Başvuruları</h2>
           <p className="text-slate-500 text-sm mt-1">Franchise olmak isteyen başvurular</p>
@@ -246,7 +246,7 @@ const FranchiseManager: React.FC = () => {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <div className="bg-blue-50 rounded-xl p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -298,14 +298,14 @@ const FranchiseManager: React.FC = () => {
               key={application.id}
               className="bg-slate-50 rounded-xl p-4 hover:bg-slate-100 transition-all group"
             >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4 flex-1">
-                  <div className="w-12 h-12 bg-brand-blue/10 rounded-full flex items-center justify-center">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
+                  <div className="w-12 h-12 bg-brand-blue/10 rounded-full flex items-center justify-center shrink-0">
                     {getStatusIcon(application.status)}
                   </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-1">
-                      <h3 className="text-lg font-bold text-brand-dark">{application.name} {application.surname}</h3>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1">
+                      <h3 className="text-lg font-bold text-brand-dark truncate">{application.name} {application.surname}</h3>
                       {getStatusBadge(application.status)}
                       {application.city && (
                         <span className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-black flex items-center space-x-1">
@@ -314,23 +314,23 @@ const FranchiseManager: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <div className="flex items-center space-x-4 text-sm text-slate-600">
-                      <span className="flex items-center space-x-1">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-600">
+                      <span className="flex items-center space-x-1 whitespace-nowrap">
                         <Phone className="w-3 h-3" />
                         <span>{application.phone}</span>
                       </span>
-                      <span className="flex items-center space-x-1">
+                      <span className="flex items-center space-x-1 truncate max-w-[200px]">
                         <Mail className="w-3 h-3" />
-                        <span>{application.email}</span>
+                        <span className="truncate">{application.email}</span>
                       </span>
-                      <span className="flex items-center space-x-1">
+                      <span className="flex items-center space-x-1 whitespace-nowrap">
                         <Calendar className="w-3 h-3" />
                         <span>{new Date(application.createdAt).toLocaleDateString('tr-TR')}</span>
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="flex items-center space-x-2 shrink-0 self-end md:self-auto">
                   <button
                     onClick={() => {
                       setSelectedApplication(application);

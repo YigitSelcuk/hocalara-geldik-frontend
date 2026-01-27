@@ -24,8 +24,9 @@ import DigitalPlatformPage from './pages/DigitalPlatformPage';
 import InternationalPage from './pages/InternationalPage';
 import VideoLibraryPage from './pages/VideoLibraryPage';
 import GuidancePage from './pages/GuidancePage';
+import MaintenancePage from './pages/MaintenancePage';
 import AdminLayout from './components/AdminLayout';
-import { branchService } from './services/cms.service';
+import { branchService, settingsService } from './services/cms.service';
 import { AdminUser, UserRole, Branch } from './types';
 
 // ScrollToTop component - scrolls to top on route change
@@ -135,8 +136,32 @@ const SiteLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 
 const App: React.FC = () => {
   const [user, setUser] = React.useState<AdminUser | null>(null);
+  const [maintenanceMode, setMaintenanceMode] = React.useState(false);
+  const [checkingMaintenance, setCheckingMaintenance] = React.useState(true);
 
   React.useEffect(() => {
+    // Check maintenance mode
+    const checkMaintenance = async () => {
+      try {
+        const response = await settingsService.get();
+        // Backend returns { settings: { key: value, ... } }
+        const settingsData = response.data?.settings || response.data;
+        
+        if (settingsData) {
+          const maintenanceValue = settingsData.maintenanceMode;
+          // Check for both boolean true and string "true"
+          if (maintenanceValue === true || maintenanceValue === 'true') {
+            setMaintenanceMode(true);
+          }
+        }
+      } catch (error) {
+        console.error('Error checking maintenance mode:', error);
+      } finally {
+        setCheckingMaintenance(false);
+      }
+    };
+    checkMaintenance();
+
     // Get user from localStorage
     const userStr = localStorage.getItem('user');
     if (userStr) {
@@ -156,6 +181,14 @@ const App: React.FC = () => {
     }
   }, []);
 
+  if (checkingMaintenance) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-brand-blue"></div>
+      </div>
+    );
+  }
+
   return (
     <HashRouter>
       <ScrollToTop />
@@ -168,8 +201,11 @@ const App: React.FC = () => {
         <Route
           path="*"
           element={
-            <SiteLayout>
-              <Routes>
+            maintenanceMode ? (
+              <MaintenancePage />
+            ) : (
+              <SiteLayout>
+                <Routes>
                 <Route path="/" element={<MainHome />} />
                 <Route path="/hakkimizda" element={<AboutPage />} />
                 <Route path="/egitmenler" element={<TeachersPage />} />
@@ -192,6 +228,7 @@ const App: React.FC = () => {
                 <Route path="/:slug" element={<BranchWrapper />} />
               </Routes>
             </SiteLayout>
+            )
           }
         />
       </Routes>

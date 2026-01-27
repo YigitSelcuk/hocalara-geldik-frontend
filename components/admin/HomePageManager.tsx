@@ -2026,15 +2026,74 @@ export const HomePageManager = () => {
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
-              <FileText className="w-12 h-12 text-blue-600 mb-3" />
-              <h3 className="text-lg font-bold text-brand-dark mb-2">Sosyal Medya ve Menü</h3>
-              <p className="text-sm text-slate-600 mb-4">
-                Header'daki sosyal medya linkleri <strong>Ayarlar</strong> bölümünden yönetilir.
-              </p>
-              <p className="text-xs text-slate-500">
-                Ana menü linkleri (Videolar, Paketler, Şubeler vb.) kod tarafında yönetilmektedir.
-              </p>
+            {/* Social Media Links */}
+            <div>
+              <h3 className="text-sm font-bold text-slate-700 mb-3">Sosyal Medya Linkleri</h3>
+              <p className="text-xs text-slate-600 mb-4">Header'da görünecek sosyal medya ikonlarını yönetin.</p>
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                {['youtube', 'instagram', 'twitter', 'facebook', 'linkedin'].map(platform => {
+                  const existing = socialMedia.find(s => s.platform === platform);
+                  const platformIcons: any = {
+                    youtube: '🎥',
+                    instagram: '📷',
+                    twitter: '🐦',
+                    facebook: '👥',
+                    linkedin: '💼'
+                  };
+                  const platformColors: any = {
+                    youtube: 'bg-red-50 border-red-200',
+                    instagram: 'bg-pink-50 border-pink-200',
+                    twitter: 'bg-blue-50 border-blue-200',
+                    facebook: 'bg-blue-50 border-blue-300',
+                    linkedin: 'bg-blue-50 border-blue-400'
+                  };
+                  const platformNames: any = {
+                    youtube: 'YouTube',
+                    instagram: 'Instagram',
+                    twitter: 'Twitter',
+                    facebook: 'Facebook',
+                    linkedin: 'LinkedIn'
+                  };
+                  
+                  return (
+                    <div 
+                      key={platform} 
+                      className={`${platformColors[platform]} rounded-xl border-2 p-4 text-center`}
+                    >
+                      <div className="text-3xl mb-2">{platformIcons[platform]}</div>
+                      <h4 className="font-bold text-sm mb-3">{platformNames[platform]}</h4>
+                      {existing ? (
+                        <>
+                          <p className="text-xs text-slate-600 mb-3 truncate" title={existing.url}>
+                            {existing.url.replace('https://', '').substring(0, 20)}...
+                          </p>
+                          <button 
+                            onClick={() => {
+                              setEditingItem({ ...existing, type: 'social-media' });
+                              setFormData(existing);
+                              setShowModal(true);
+                            }} 
+                            className="w-full px-3 py-2 bg-white hover:bg-slate-50 rounded-lg text-blue-600 font-bold text-xs transition-colors"
+                          >
+                            Düzenle
+                          </button>
+                        </>
+                      ) : (
+                        <button 
+                          onClick={() => {
+                            setEditingItem({ type: 'social-media' });
+                            setFormData({ platform, url: '', order: socialMedia.length, isActive: true });
+                            setShowModal(true);
+                          }} 
+                          className="w-full px-3 py-2 bg-white hover:bg-slate-50 rounded-lg text-green-600 font-bold text-xs transition-colors"
+                        >
+                          + Ekle
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         );

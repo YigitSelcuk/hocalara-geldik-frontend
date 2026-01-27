@@ -35,19 +35,19 @@ export const UserManager: React.FC<UserManagerProps> = ({
 
         <div className="grid grid-cols-1 gap-4">
             {adminUsers.map((admin) => (
-                <div key={admin.id} className="bg-white p-6 rounded-[24px] border border-slate-100 flex items-center justify-between hover:shadow-lg transition-all">
-                    <div className="flex items-center space-x-5">
-                        <img src={admin.avatar?.startsWith('http') ? admin.avatar : (admin.avatar?.startsWith('/assets') ? admin.avatar : `${API_BASE_URL}${admin.avatar}`)} className="w-14 h-14 rounded-2xl object-cover shadow-sm" alt="" />
-                        <div>
-                            <h3 className="font-black text-brand-dark capitalize tracking-tight">{admin.name}</h3>
-                            <p className="text-xs text-slate-400 font-bold">{admin.email}</p>
+                <div key={admin.id} className="bg-white p-6 rounded-[24px] border border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:shadow-lg transition-all">
+                    <div className="flex items-center space-x-4 w-full md:w-auto">
+                        <img src={admin.avatar?.startsWith('http') ? admin.avatar : (admin.avatar?.startsWith('/assets') ? admin.avatar : `${API_BASE_URL}${admin.avatar}`)} className="w-14 h-14 rounded-2xl object-cover shadow-sm shrink-0" alt="" />
+                        <div className="min-w-0">
+                            <h3 className="font-black text-brand-dark capitalize tracking-tight truncate">{admin.name}</h3>
+                            <p className="text-xs text-slate-400 font-bold truncate">{admin.email}</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center space-x-12">
-                        <div className="text-center">
+                    <div className="flex flex-wrap items-center gap-4 sm:gap-8 w-full md:w-auto justify-between md:justify-end">
+                        <div className="text-left sm:text-center">
                             <p className="text-[10px] font-black text-slate-400 capitalize tracking-widest mb-1">Rol</p>
-                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black capitalize tracking-widest ${admin.role === UserRole.SUPER_ADMIN ? 'bg-red-50 text-red-600' :
+                            <span className={`px-4 py-1.5 rounded-full text-[10px] font-black capitalize tracking-widest inline-block ${admin.role === UserRole.SUPER_ADMIN ? 'bg-red-50 text-red-600' :
                                 admin.role === UserRole.BRANCH_ADMIN ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'
                                 }`}>
                                 {admin.role.replace('_', ' ')}
@@ -55,13 +55,13 @@ export const UserManager: React.FC<UserManagerProps> = ({
                         </div>
 
                         {admin.branchId && (
-                            <div className="text-center min-w-[120px]">
+                            <div className="text-left sm:text-center min-w-[120px]">
                                 <p className="text-[10px] font-black text-slate-400 capitalize tracking-widest mb-1">Atanan Şube</p>
                                 <p className="text-xs font-black text-brand-dark capitalize">{branches.find(b => b.id === admin.branchId)?.name.split(' ')[1] || 'Bilinmiyor'}</p>
                             </div>
                         )}
 
-                        <div className="flex space-x-2">
+                        <div className="flex space-x-2 shrink-0 ml-auto sm:ml-0">
                             <button
                                 onClick={() => handleEdit('user', admin)}
                                 className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-brand-blue hover:text-white transition-all"

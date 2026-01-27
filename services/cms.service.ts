@@ -68,7 +68,7 @@ export const branchService = {
 // Settings Service
 export const settingsService = {
     get: () => api.get('/settings'),
-    update: (data: any) => api.put('/settings', data),
+    update: (data: any) => api.post('/settings/bulk', { settings: data }),
 };
 
 // Lead Service

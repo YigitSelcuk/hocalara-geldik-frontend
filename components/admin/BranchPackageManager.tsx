@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit2, Trash2, Clock, X, Save, Upload, Image as ImageIcon } from 'lucide-react';
-import api from '../../services/api';
+import api, { API_BASE_URL } from '../../services/api';
 import axios from 'axios';
 import Alert from '../Alert';
 import { useAlert } from '../../hooks/useAlert';

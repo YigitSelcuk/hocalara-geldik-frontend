@@ -314,17 +314,22 @@ export interface YouTubeChannel {
 }
 
 export interface HomeSection {
-  id: string;
-  key: string;
-  title: string;
+  id?: string;
+  page?: string;
+  section?: string;
+  key?: string;
+  title?: string;
   subtitle?: string;
   topTitle?: string;
+  description?: string;
+  buttonText?: string;
+  buttonLink?: string;
   image?: string;
   bgImage?: string;
   link?: string;
   linkText?: string;
-  order: number;
-  isActive: boolean;
+  order?: number;
+  isActive?: boolean;
   seoTitle?: string;
   seoDescription?: string;
   seoKeywords?: string;
