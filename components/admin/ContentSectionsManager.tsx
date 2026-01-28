@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { PageContentManager } from './PageContentManager';
 import { HomePageManager } from './HomePageManager';
 import { 
@@ -446,57 +448,182 @@ const PAGE_CONFIGS = {
   },
 };
 
+interface DraggableTabProps {
+  page: any;
+  index: number;
+  activeTab: string;
+  moveTab: (dragIndex: number, hoverIndex: number) => void;
+  setActiveTab: (name: string) => void;
+}
+
+const DraggableTab: React.FC<DraggableTabProps> = ({ page, index, activeTab, moveTab, setActiveTab }) => {
+  const ref = useRef<HTMLButtonElement>(null);
+
+  const [{ handlerId }, drop] = useDrop({
+    accept: 'tab',
+    collect(monitor) {
+      return {
+        handlerId: monitor.getHandlerId(),
+      };
+    },
+    hover(item: { index: number }, monitor) {
+      if (!ref.current) {
+        return;
+      }
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      // Don't replace items with themselves
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      // Determine rectangle on screen
+      const hoverBoundingRect = ref.current?.getBoundingClientRect();
+
+      // Get vertical middle
+      const hoverMiddleX = (hoverBoundingRect.right - hoverBoundingRect.left) / 2;
+
+      // Determine mouse position
+      const clientOffset = monitor.getClientOffset();
+
+      // Get pixels to the top
+      const hoverClientX = (clientOffset as any).x - hoverBoundingRect.left;
+
+      // Only perform the move when the mouse has crossed half of the items height
+      // When dragging downwards, only move when the cursor is below 50%
+      // When dragging upwards, only move when the cursor is above 50%
+
+      // Dragging right
+      if (dragIndex < hoverIndex && hoverClientX < hoverMiddleX) {
+        return;
+      }
+
+      // Dragging left
+      if (dragIndex > hoverIndex && hoverClientX > hoverMiddleX) {
+        return;
+      }
+
+      // Time to actually perform the action
+      moveTab(dragIndex, hoverIndex);
+
+      // Note: we're mutating the monitor item here!
+      // Generally it's better to avoid mutations,
+      // but it's good here for the sake of performance
+      // to avoid expensive index searches.
+      item.index = hoverIndex;
+    },
+  });
+
+  const [{ isDragging }, drag] = useDrag({
+    type: 'tab',
+    item: () => {
+      return { id: page.name, index };
+    },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  drag(drop(ref));
+
+  return (
+    <button
+      ref={ref}
+      onClick={() => setActiveTab(page.name)}
+      data-handler-id={handlerId}
+      className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all cursor-move ${
+        activeTab === page.name
+          ? 'bg-brand-blue text-white shadow-lg'
+          : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+      } ${isDragging ? 'opacity-0' : 'opacity-100'}`}
+    >
+      <page.icon className="w-4 h-4" />
+      <span>{page.title}</span>
+    </button>
+  );
+};
+
 export const ContentSectionsManager: React.FC = () => {
   const [activeTab, setActiveTab] = useState('home');
 
-  const pages = Object.values(PAGE_CONFIGS);
+  // Load initial order from localStorage or default
+  const [pageOrder, setPageOrder] = useState<string[]>(() => {
+      try {
+          const saved = localStorage.getItem('contentSectionsOrder');
+          const defaultOrder = Object.keys(PAGE_CONFIGS);
+          if (saved) {
+              const parsed = JSON.parse(saved);
+              // validation: filter valid keys, add missing keys
+              const validKeys = parsed.filter((k: string) => defaultOrder.includes(k));
+              const missingKeys = defaultOrder.filter(k => !validKeys.includes(k));
+              return [...validKeys, ...missingKeys];
+          }
+          return defaultOrder;
+      } catch (e) {
+          return Object.keys(PAGE_CONFIGS);
+      }
+  });
+
+  const moveTab = useCallback((dragIndex: number, hoverIndex: number) => {
+    setPageOrder((prevOrder) => {
+      const newOrder = [...prevOrder];
+      const [draggedItem] = newOrder.splice(dragIndex, 1);
+      newOrder.splice(hoverIndex, 0, draggedItem);
+      localStorage.setItem('contentSectionsOrder', JSON.stringify(newOrder));
+      return newOrder;
+    });
+  }, []);
+
   const activePage = PAGE_CONFIGS[activeTab as keyof typeof PAGE_CONFIGS];
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
-        <div className="flex items-center space-x-4 mb-6">
-          <div className="p-3 bg-gradient-to-br from-brand-blue to-blue-400 rounded-2xl shadow-xl">
-            <activePage.icon className="w-6 h-6 text-white" />
+    <DndProvider backend={HTML5Backend}>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+          <div className="flex items-center space-x-4 mb-6">
+            <div className="p-3 bg-gradient-to-br from-brand-blue to-blue-400 rounded-2xl shadow-xl">
+              <activePage.icon className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-black text-brand-dark capitalize tracking-tight">Sayfa İçerikleri</h1>
+              <p className="text-sm text-slate-500 font-medium mt-1">Tüm sayfa içeriklerini tek yerden yönetin</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-3xl font-black text-brand-dark capitalize tracking-tight">Sayfa İçerikleri</h1>
-            <p className="text-sm text-slate-500 font-medium mt-1">Tüm sayfa içeriklerini tek yerden yönetin</p>
+
+          {/* Tabs */}
+          <div className="flex flex-wrap gap-2">
+            {pageOrder.map((pageKey, index) => {
+              const page = PAGE_CONFIGS[pageKey as keyof typeof PAGE_CONFIGS];
+              if (!page) return null;
+              return (
+                <DraggableTab
+                  key={page.name}
+                  page={page}
+                  index={index}
+                  activeTab={activeTab}
+                  moveTab={moveTab}
+                  setActiveTab={setActiveTab}
+                />
+              );
+            })}
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-2">
-          {pages.map((page) => (
-            <button
-              key={page.name}
-              onClick={() => setActiveTab(page.name)}
-              className={`flex items-center space-x-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
-                activeTab === page.name
-                  ? 'bg-brand-blue text-white shadow-lg'
-                  : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <page.icon className="w-4 h-4" />
-              <span>{page.title}</span>
-            </button>
-          ))}
+        {/* Content */}
+        <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
+          {activeTab === 'home' ? (
+            <HomePageManager />
+          ) : (
+            <PageContentManager
+              pageName={activePage.name}
+              pageTitle={activePage.title}
+              sections={activePage.sections}
+            />
+          )}
         </div>
       </div>
-
-      {/* Content */}
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 shadow-sm">
-        {activeTab === 'home' ? (
-          <HomePageManager />
-        ) : (
-          <PageContentManager
-            pageName={activePage.name}
-            pageTitle={activePage.title}
-            sections={activePage.sections}
-          />
-        )}
-      </div>
-    </div>
+    </DndProvider>
   );
 };
