@@ -5,7 +5,7 @@ import Alert from '../Alert';
 import { useAlert } from '../../hooks/useAlert';
 import { API_BASE_URL } from '../../services/api';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = API_BASE_URL || '/api';
 
 interface ChangeRequest {
   id: string;

@@ -9,8 +9,9 @@ import {
 } from 'lucide-react';
 import { AdminUser, UserRole } from '../types';
 import axios from 'axios';
+import { API_BASE_URL } from '../services/api';
 
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = API_BASE_URL || '/api';
 
 interface AdminLayoutProps {
     user: AdminUser | null;
