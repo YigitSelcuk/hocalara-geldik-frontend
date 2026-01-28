@@ -1,9 +1,13 @@
 import React from 'react';
 import BranchNewsManager from '../components/admin/BranchNewsManager';
 
-const BranchNews: React.FC = () => {
+interface BranchNewsProps {
+  branchId?: string;
+}
+
+const BranchNews: React.FC<BranchNewsProps> = ({ branchId: propBranchId }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const branchId = user.branchId;
+  const branchId = propBranchId || user.branchId;
 
   if (!branchId) {
     return (

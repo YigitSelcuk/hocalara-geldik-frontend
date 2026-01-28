@@ -5,7 +5,7 @@ import {
     LayoutDashboard, ImageIcon, FileText, Building2,
     Video, Package, Users, Settings, LogOut,
     ChevronRight, Search, Map, List, HardDrive,
-    MessageSquare, Menu, Layers, Trophy, Bell, X, Newspaper, Award, UserPlus
+    MessageSquare, Menu, Layers, Trophy, Bell, X, Newspaper, Award, UserPlus, ArrowLeft
 } from 'lucide-react';
 import { AdminUser, UserRole } from '../types';
 import axios from 'axios';
@@ -113,13 +113,55 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
         badge?: number;
     }
 
-    // Branch admin için özel menü
-    const branchAdminMenuItems: MenuItem[] = [
-        { label: 'Şubem', icon: Building2, path: `/admin/branch/${user?.branchId || ''}`, roles: [UserRole.BRANCH_ADMIN], condition: !!user?.branchId },
-        { label: 'Paketler', icon: Package, path: '/admin/branch-packages', roles: [UserRole.BRANCH_ADMIN] },
-        { label: 'Haberler', icon: Newspaper, path: '/admin/branch-news', roles: [UserRole.BRANCH_ADMIN] },
-        { label: 'Başarılar', icon: Award, path: '/admin/branch-successes', roles: [UserRole.BRANCH_ADMIN] },
-        { label: 'Ön Kayıtlar', icon: UserPlus, path: '/admin/branch-leads', roles: [UserRole.BRANCH_ADMIN] },
+    // Helper to get branch ID from URL if present (for Super Admin viewing branch)
+    const getBranchIdFromUrl = () => {
+        const match = location.pathname.match(/\/admin\/branch\/([^\/]+)/);
+        return match ? match[1] : null;
+    };
+
+    const viewedBranchId = user?.role === UserRole.BRANCH_ADMIN ? user.branchId : getBranchIdFromUrl();
+    const isBranchView = !!viewedBranchId && (user?.role === UserRole.BRANCH_ADMIN || (user?.role === UserRole.SUPER_ADMIN && location.pathname.includes('/admin/branch/')));
+
+    // Branch admin menu items (Dynamic based on viewedBranchId)
+    const getBranchMenuItems = (branchId: string): MenuItem[] => [
+        { 
+            label: 'Şubem', 
+            icon: Building2, 
+            path: `/admin/branch/${branchId}`, 
+            roles: [UserRole.BRANCH_ADMIN, UserRole.SUPER_ADMIN], 
+            condition: !!branchId 
+        },
+        { 
+            label: 'Paketler', 
+            icon: Package, 
+            path: user?.role === UserRole.SUPER_ADMIN ? `/admin/branch/${branchId}/packages` : '/admin/branch-packages', 
+            roles: [UserRole.BRANCH_ADMIN, UserRole.SUPER_ADMIN] 
+        },
+        { 
+            label: 'Haberler', 
+            icon: Newspaper, 
+            path: user?.role === UserRole.SUPER_ADMIN ? `/admin/branch/${branchId}/news` : '/admin/branch-news', 
+            roles: [UserRole.BRANCH_ADMIN, UserRole.SUPER_ADMIN] 
+        },
+        { 
+            label: 'Başarılar', 
+            icon: Award, 
+            path: user?.role === UserRole.SUPER_ADMIN ? `/admin/branch/${branchId}/successes` : '/admin/branch-successes', 
+            roles: [UserRole.BRANCH_ADMIN, UserRole.SUPER_ADMIN] 
+        },
+        { 
+            label: 'Ön Kayıtlar', 
+            icon: UserPlus, 
+            path: user?.role === UserRole.SUPER_ADMIN ? `/admin/branch/${branchId}/leads` : '/admin/branch-leads', 
+            roles: [UserRole.BRANCH_ADMIN, UserRole.SUPER_ADMIN] 
+        },
+        // Add a "Back to Dashboard" for SUPER_ADMIN
+        ...(user?.role === UserRole.SUPER_ADMIN ? [{
+            label: 'Şubeler Listesi',
+            icon: LayoutDashboard,
+            path: '/admin/branches',
+            roles: [UserRole.SUPER_ADMIN]
+        }] : [])
     ];
 
     // Genel admin menüsü
@@ -140,7 +182,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
     ];
 
     // Kullanıcı rolüne göre menü seç
-    const menuItems = (user?.role === UserRole.BRANCH_ADMIN ? branchAdminMenuItems : generalMenuItems)
+    const menuItems = (isBranchView && viewedBranchId ? getBranchMenuItems(viewedBranchId) : generalMenuItems)
         .filter(item => hasAccess(item.roles) && (item.condition === undefined || item.condition));
 
     return (
@@ -206,6 +248,18 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
                         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="lg:hidden p-2 text-slate-500 hover:bg-slate-50 rounded-lg">
                             <Menu className="w-6 h-6" />
                         </button>
+                        
+                        {/* Super Admin Back to Dashboard Button */}
+                        {user?.role === UserRole.SUPER_ADMIN && isBranchView && (
+                             <button 
+                                onClick={() => navigate('/admin/branches')}
+                                className="flex items-center space-x-2 px-4 py-2 bg-brand-dark text-white rounded-xl hover:bg-brand-blue transition-all shadow-lg shadow-brand-dark/20 mr-4"
+                            >
+                                <ArrowLeft className="w-4 h-4" />
+                                <span className="text-xs font-bold">Admin Paneline Dön</span>
+                            </button>
+                        )}
+
                         <div className="hidden sm:flex items-center text-xs font-bold text-slate-400 space-x-2">
                             <span>HG</span>
                             <ChevronRight className="w-3 h-3" />

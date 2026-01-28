@@ -3,11 +3,14 @@ import { AdminUser } from '../types';
 import BranchPackageManager from '../components/admin/BranchPackageManager';
 
 interface BranchPackagesProps {
-  user: AdminUser;
+  user?: AdminUser;
+  branchId?: string;
 }
 
-const BranchPackages: React.FC<BranchPackagesProps> = ({ user }) => {
-  if (!user.branchId) {
+const BranchPackages: React.FC<BranchPackagesProps> = ({ user, branchId: propBranchId }) => {
+  const branchId = propBranchId || user?.branchId;
+
+  if (!branchId) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center bg-white p-12 rounded-3xl shadow-xl">
@@ -18,7 +21,7 @@ const BranchPackages: React.FC<BranchPackagesProps> = ({ user }) => {
     );
   }
 
-  return <BranchPackageManager branchId={user.branchId} />;
+  return <BranchPackageManager branchId={branchId} />;
 };
 
 export default BranchPackages;

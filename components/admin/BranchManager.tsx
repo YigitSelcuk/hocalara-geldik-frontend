@@ -1,5 +1,6 @@
 import React from 'react';
-import { Plus, Settings2, Trash, Building2, MapPin } from 'lucide-react';
+import { Plus, Settings2, Trash, Building2, MapPin, LogIn } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Branch } from '../../types';
 import { API_BASE_URL } from '../../services/api';
 
@@ -15,7 +16,10 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
     handleAdd,
     handleEdit,
     handleDelete
-}) => (
+}) => {
+    const navigate = useNavigate();
+
+    return (
     <div className="space-y-8 animate-in fade-in duration-500">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm">
             <div>
@@ -49,6 +53,13 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
                         </div>
                         <div className="flex space-x-2">
                             <button
+                                onClick={() => navigate(`/admin/branch/${branch.id}`)}
+                                className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-brand-blue hover:text-white transition-all"
+                                title="Şube Paneline Git"
+                            >
+                                <LogIn className="w-4 h-4" />
+                            </button>
+                            <button
                                 onClick={() => handleEdit('branch', branch)}
                                 className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-brand-dark hover:text-white transition-all"
                             >
@@ -80,4 +91,5 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
             ))}
         </div>
     </div>
-);
+    );
+};

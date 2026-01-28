@@ -366,7 +366,7 @@ export const HomePageManager = () => {
         let logoUrl = formData.logo;
         if (selectedFile) {
           const uploadRes = await mediaService.upload(selectedFile);
-          logoUrl = uploadRes.data.media.url;
+          logoUrl = uploadRes.data.url || uploadRes.data.data?.url || uploadRes.data.media?.url;
         }
 
         // Update header logo
@@ -469,7 +469,7 @@ export const HomePageManager = () => {
         let logoUrl = formData.logo;
         if (selectedFile) {
           const uploadRes = await mediaService.upload(selectedFile);
-          logoUrl = uploadRes.data.media.url;
+          logoUrl = uploadRes.data.url || uploadRes.data.data?.url || uploadRes.data.media?.url;
         }
 
         // Update footer logo
@@ -604,7 +604,7 @@ export const HomePageManager = () => {
         let imageUrl = formData.image;
         if (selectedFile) {
           const uploadRes = await mediaService.upload(selectedFile);
-          imageUrl = uploadRes.data.media.url;
+          imageUrl = uploadRes.data.url || uploadRes.data.data?.url || uploadRes.data.media?.url;
         }
 
         // Update CTA section
@@ -779,7 +779,8 @@ export const HomePageManager = () => {
         console.log('📤 Uploading file:', selectedFile.name);
         const uploadRes = await mediaService.upload(selectedFile);
         console.log('✅ Upload response:', uploadRes);
-        imageUrl = uploadRes.data.media.url;
+        // Backend returns { success: true, url: '...', data: { ... } }
+        imageUrl = uploadRes.data.url || uploadRes.data.data?.url || uploadRes.data.media?.url;
         console.log('🖼️ Image URL:', imageUrl);
       }
 

@@ -55,9 +55,10 @@ const useAlert = () => {
 
 interface BranchAdminPanelProps {
   user: AdminUser;
+  branchId?: string;
 }
 
-export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
+export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user, branchId }) => {
   const { alert, showAlert, hideAlert } = useAlert();
   const [branch, setBranch] = useState<Branch | null>(null);
   const [teachers, setTeachers] = useState<Teacher[]>([]);
@@ -98,20 +99,22 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
 
   useEffect(() => {
     fetchBranchData();
-  }, [user.branchId]);
+  }, [user.branchId, branchId]);
 
   const fetchBranchData = async () => {
     try {
       setLoading(true);
       
-      if (!user.branchId) {
+      const targetBranchId = branchId || user.branchId;
+
+      if (!targetBranchId) {
         showAlert('error', 'Size atanmış bir şube bulunamadı. Lütfen sistem yöneticisi ile iletişime geçin.');
         setLoading(false);
         return;
       }
       
       const [branchRes, teachersRes] = await Promise.all([
-        branchService.getById(user.branchId),
+        branchService.getById(targetBranchId),
         teacherService.getAll()
       ]);
       
@@ -134,7 +137,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user }) => {
       
       // Filter teachers for this branch
       const branchTeachers = teachersRes.data?.data || teachersRes.data?.teachers || [];
-      setTeachers(branchTeachers.filter((t: Teacher) => t.branchId === user.branchId));
+      setTeachers(branchTeachers.filter((t: Teacher) => t.branchId === targetBranchId));
       
       // Check for pending branch update
       try {

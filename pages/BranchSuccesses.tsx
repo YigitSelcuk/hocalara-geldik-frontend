@@ -4,10 +4,11 @@ import BranchSuccessManager from '../components/admin/BranchSuccessManager';
 
 interface BranchSuccessesProps {
   user?: AdminUser;
+  branchId?: string;
 }
 
-const BranchSuccesses: React.FC<BranchSuccessesProps> = ({ user }) => {
-  const branchId = user?.branchId;
+const BranchSuccesses: React.FC<BranchSuccessesProps> = ({ user, branchId: propBranchId }) => {
+  const branchId = propBranchId || user?.branchId;
 
   if (!branchId) {
     return (

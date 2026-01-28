@@ -3,11 +3,14 @@ import { AdminUser } from '../types';
 import LeadManager from '../components/admin/LeadManager';
 
 interface BranchLeadsProps {
-  user: AdminUser;
+  user?: AdminUser;
+  branchId?: string;
 }
 
-const BranchLeads: React.FC<BranchLeadsProps> = ({ user }) => {
-  if (!user.branchId) {
+const BranchLeads: React.FC<BranchLeadsProps> = ({ user, branchId: propBranchId }) => {
+  const branchId = propBranchId || user?.branchId;
+
+  if (!branchId) {
     return (
       <div className="text-center py-12">
         <p className="text-slate-500 font-medium">Size atanmış bir şube bulunamadı.</p>
@@ -15,7 +18,7 @@ const BranchLeads: React.FC<BranchLeadsProps> = ({ user }) => {
     );
   }
 
-  return <LeadManager branchId={user.branchId} />;
+  return <LeadManager branchId={branchId} />;
 };
 
 export default BranchLeads;

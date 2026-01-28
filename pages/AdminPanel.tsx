@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import {
-  Building2, FileText, Video, Package, Settings, Sparkles, X, Play
+  Building2, FileText, Video, Package, Settings, Sparkles, X, Play, Upload
 } from 'lucide-react';
 import {
   sliderService, newsService, branchService,
@@ -60,6 +60,33 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
   console.log('👤 AdminPanel User:', user);
   console.log('👤 User Role:', user?.role);
   console.log('👤 Is BRANCH_ADMIN?', user?.role === UserRole.BRANCH_ADMIN);
+
+  // Helper component to extract branchId from params
+  const BranchAdminPanelWrapper = () => {
+    const { id } = useParams();
+    if (!user) return null;
+    return <BranchAdminPanel user={user} branchId={id} />;
+  };
+
+  const BranchPackagesWrapper = () => {
+    const { branchId } = useParams();
+    return <BranchPackages user={user || undefined} branchId={branchId} />;
+  };
+
+  const BranchNewsWrapper = () => {
+    const { branchId } = useParams();
+    return <BranchNews branchId={branchId} />;
+  };
+
+  const BranchSuccessesWrapper = () => {
+    const { branchId } = useParams();
+    return <BranchSuccesses user={user || undefined} branchId={branchId} />;
+  };
+
+  const BranchLeadsWrapper = () => {
+    const { branchId } = useParams();
+    return <BranchLeads user={user || undefined} branchId={branchId} />;
+  };
 
   // If user is BRANCH_ADMIN, show branch-specific routes
   if (user?.role === UserRole.BRANCH_ADMIN) {
@@ -475,7 +502,8 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         switch (type) {
           case 'slider':
             newItem = await sliderService.create(data);
-            setSliders((prev: SliderItem[]) => [newItem.data, ...prev]);
+            const createdSlider = newItem.data.slider || newItem.data;
+            setSliders((prev: SliderItem[]) => [createdSlider, ...prev]);
             break;
           case 'news':
             newItem = await pageService.create({ ...data, type: 'NEWS' });
@@ -635,6 +663,22 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
       return data;
     });
 
+    // Add state for file upload
+    const [previewUrl, setPreviewUrl] = useState<string>(editingItem?.image || '');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+    const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (file) {
+        setSelectedFile(file);
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviewUrl(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
+    };
+
     const renderForm = () => {
       switch (modalType) {
         case 'slider':
@@ -650,21 +694,122 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                   <input type="text" value={formData.subtitle || ''} onChange={e => setFormData({ ...formData, subtitle: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
               </div>
+              
+              {/* File Upload */}
               <div className="space-y-2">
-                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Görsel URL</label>
-                <input type="text" value={formData.image || ''} onChange={e => setFormData({ ...formData, image: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Yönlendirme Linki</label>
-                  <input type="text" value={formData.link || ''} onChange={e => setFormData({ ...formData, link: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Görsel</label>
+                <div className="space-y-3">
+                  {previewUrl && (
+                    <div className="relative w-full h-48 rounded-lg overflow-hidden border border-slate-200">
+                      <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+                    </div>
+                  )}
+                  <div className="flex items-center space-x-3">
+                    <label className="flex-1 flex items-center justify-center space-x-2 px-4 py-3 bg-slate-50 hover:bg-slate-100 rounded-xl cursor-pointer transition-colors border-2 border-dashed border-slate-300">
+                      <Upload className="w-5 h-5 text-slate-600" />
+                      <span className="text-sm font-bold text-slate-600">
+                        {selectedFile ? selectedFile.name : 'Dosya Seç'}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </label>
+                    {previewUrl && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedFile(null);
+                          setPreviewUrl('');
+                          setFormData({ ...formData, image: '' });
+                        }}
+                        className="px-4 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold transition-colors"
+                      >
+                        Temizle
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-500">veya URL girin:</p>
+                  <input
+                    type="text"
+                    value={formData.image || ''}
+                    onChange={e => {
+                      setFormData({ ...formData, image: e.target.value });
+                      setPreviewUrl(e.target.value);
+                    }}
+                    placeholder="https://example.com/image.jpg"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                  />
                 </div>
+              </div>
+
+              {/* Primary Button */}
+              <div className="border-t border-slate-100 pt-4">
+                <h3 className="text-xs font-black text-slate-600 mb-3 uppercase tracking-widest">Birinci Buton</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Buton Metni</label>
+                    <input
+                      type="text"
+                      value={formData.primaryButtonText || ''}
+                      onChange={e => setFormData({ ...formData, primaryButtonText: e.target.value })}
+                      placeholder="Hemen Eğitime Başla"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Buton Linki</label>
+                    <input
+                      type="text"
+                      value={formData.primaryButtonLink || ''}
+                      onChange={e => setFormData({ ...formData, primaryButtonLink: e.target.value })}
+                      placeholder="/hakkimizda"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Secondary Button */}
+              <div className="border-t border-slate-100 pt-4">
+                <h3 className="text-xs font-black text-slate-600 mb-3 uppercase tracking-widest">İkinci Buton</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Buton Metni</label>
+                    <input
+                      type="text"
+                      value={formData.secondaryButtonText || ''}
+                      onChange={e => setFormData({ ...formData, secondaryButtonText: e.target.value })}
+                      placeholder="Yeni Şubemiz Olun"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Buton Linki</label>
+                    <input
+                      type="text"
+                      value={formData.secondaryButtonLink || ''}
+                      onChange={e => setFormData({ ...formData, secondaryButtonLink: e.target.value })}
+                      placeholder="/franchise"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
                 <div className="space-y-2">
                   <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Hedef</label>
                   <select value={formData.target || 'main'} onChange={e => setFormData({ ...formData, target: e.target.value })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold">
                     <option value="main">Ana Sayfa</option>
                     {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Sıra</label>
+                  <input type="number" value={formData.order || 0} onChange={e => setFormData({ ...formData, order: parseInt(e.target.value) })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold" />
                 </div>
               </div>
             </div>
@@ -1833,7 +1978,36 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
 
           <div className="px-10 py-8 bg-slate-50/50 border-t border-slate-50 flex items-center justify-end space-x-3">
             <button onClick={() => setIsModalOpen(false)} className="px-6 py-4 text-slate-400 font-black text-sm capitalize tracking-widest hover:text-brand-dark transition-colors">İptal</button>
-            <button onClick={() => handleSave(formData)} className="px-10 py-4 bg-brand-blue text-white font-black text-sm capitalize tracking-widest rounded-2xl shadow-xl shadow-brand-blue/20 hover:bg-brand-dark transition-all">Değişiklikleri Kaydet</button>
+            <button onClick={async () => {
+              let finalData = { ...formData };
+              if (modalType === 'slider' && selectedFile) {
+                try {
+                  const url = await handleImageUpload(selectedFile);
+                  finalData.image = url;
+                } catch (e) {
+                  return;
+                }
+              }
+              
+              // Validate slider fields
+              if (modalType === 'slider') {
+                if (!finalData.title) {
+                  showAlert('error', 'Lütfen başlık giriniz');
+                  return;
+                }
+                if (!finalData.image) {
+                  showAlert('error', 'Lütfen görsel yükleyiniz veya URL giriniz');
+                  return;
+                }
+                
+                // Set default values for slider
+                finalData.target = finalData.target || 'main';
+                finalData.link = finalData.primaryButtonLink || finalData.link || '#';
+                finalData.subtitle = finalData.subtitle || '';
+              }
+
+              handleSave(finalData);
+            }} className="px-10 py-4 bg-brand-blue text-white font-black text-sm capitalize tracking-widest rounded-2xl shadow-xl shadow-brand-blue/20 hover:bg-brand-dark transition-all">Değişiklikleri Kaydet</button>
           </div>
         </div>
       </div>
@@ -1944,6 +2118,11 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         <Route path="/sliders" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <SliderManager sliders={sliders} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/news" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN, UserRole.BRANCH_ADMIN]) ? <BlogManager blogPosts={blogPosts} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/branches" element={hasAccess([UserRole.SUPER_ADMIN]) ? <BranchManager branches={branches} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
+        <Route path="/branch/:id" element={hasAccess([UserRole.SUPER_ADMIN]) ? <BranchAdminPanelWrapper /> : <Navigate to="/admin" />} />
+        <Route path="/branch/:branchId/packages" element={hasAccess([UserRole.SUPER_ADMIN]) ? <BranchPackagesWrapper /> : <Navigate to="/admin" />} />
+        <Route path="/branch/:branchId/news" element={hasAccess([UserRole.SUPER_ADMIN]) ? <BranchNewsWrapper /> : <Navigate to="/admin" />} />
+        <Route path="/branch/:branchId/successes" element={hasAccess([UserRole.SUPER_ADMIN]) ? <BranchSuccessesWrapper /> : <Navigate to="/admin" />} />
+        <Route path="/branch/:branchId/leads" element={hasAccess([UserRole.SUPER_ADMIN]) ? <BranchLeadsWrapper /> : <Navigate to="/admin" />} />
         <Route path="/videos" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <VideoManager videos={videos} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} /> : <Navigate to="/admin" />} />
         <Route path="/packages" element={hasAccess([UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN]) ? <PackageManager packages={packages} handleAdd={handleAdd} handleEdit={handleEdit} handleDelete={handleDelete} onReorder={async () => {
           const packagesRes = await packageService.getAll();
