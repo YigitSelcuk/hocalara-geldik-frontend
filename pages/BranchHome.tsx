@@ -189,13 +189,18 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
 
       {/* Hero Slider - Enhanced */}
       <section className="relative h-[700px] bg-brand-dark overflow-hidden">
-        {slidersToDisplay.map((slide, index) => (
-          <div
-            key={slide.id}
+        {slidersToDisplay.map((slide, index) => {
+          const imageUrl = slide.image?.startsWith('http') || slide.image?.startsWith('/assets') 
+            ? slide.image 
+            : `${API_BASE_URL}${slide.image}`;
+
+          return (
+            <div
+              key={slide.id}
             className={`absolute inset-0 transition-all duration-[2000ms] ease-out ${index === activeSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
           >
             <img
-              src={slide.image}
+              src={imageUrl}
               alt={slide.title}
               className="w-full h-full object-cover"
             />
@@ -212,8 +217,8 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
 
                   <h1 className={`text-6xl md:text-8xl font-black text-white tracking-tighter leading-[0.9] transition-all duration-1000 delay-500 ${index === activeSlide ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
                     {slide.title.split(' ').map((word, i) => (
-                      <span key={i} className={i >= 1 ? 'text-brand-blue italic' : ''}>{word} </span>
-                    ))}
+                        <span key={i} className={i >= 1 ? 'text-brand-blue italic' : ''}>{word} </span>
+                      ))}
                   </h1>
 
                   <p className={`text-2xl text-slate-300 font-medium max-w-2xl leading-relaxed transition-all duration-1000 delay-700 ${index === activeSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
@@ -241,7 +246,8 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
               </div>
             </div>
           </div>
-        ))}
+          );
+        })}
 
         {/* Slider Navigation */}
         {

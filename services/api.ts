@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Backend API base URL
-export const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
+export const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || '';
 
 const api = axios.create({
     baseURL: '/api',
