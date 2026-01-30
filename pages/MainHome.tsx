@@ -46,7 +46,7 @@ import {
 } from 'lucide-react';
 
 import {
-  sliderService, packageService
+  sliderService, packageService, videoService
 } from '../services/cms.service';
 import {
   bannerCardService, statisticService, featureService,
@@ -78,6 +78,8 @@ const MainHome: React.FC = () => {
   const [features, setFeatures] = useState<Feature[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
   const [youtubeChannels, setYoutubeChannels] = useState<YouTubeChannel[]>([]);
+  const [latestVideos, setLatestVideos] = useState<any[]>([]);
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [socialMedia, setSocialMedia] = useState<Record<string, string>>({});
   const [packages, setPackages] = useState<EducationPackage[]>([]);
 
@@ -103,13 +105,22 @@ const MainHome: React.FC = () => {
     return content?.[field] || defaultValue;
   };
 
+  const getVideoEmbedUrl = (url: string) => {
+    if (url.includes('youtube.com/embed')) return url;
+    if (url.includes('youtube.com/watch?v=')) {
+      const videoId = url.split('v=')[1]?.split('&')[0];
+      return `https://www.youtube.com/embed/${videoId}`;
+    }
+    return url;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
         const [
           slidersRes, bannerCardsRes, homeSectionsRes,
           statisticsRes, featuresRes, blogPostsRes,
-          youtubeRes, socialRes, packagesRes
+          youtubeRes, socialRes, packagesRes, videosRes
         ] = await Promise.allSettled([
           sliderService.getAll(),
           bannerCardService.getAll(),
@@ -119,7 +130,8 @@ const MainHome: React.FC = () => {
           blogPostService.getAll(),
           youtubeChannelService.getAll(),
           socialMediaService.getAll(),
-          packageService.getAll()
+          packageService.getAll(),
+          videoService.getAll()
         ]);
 
         setSliders(slidersRes.status === 'fulfilled' ? (slidersRes.value.data.sliders || []) : []);
@@ -129,6 +141,7 @@ const MainHome: React.FC = () => {
         setFeatures(featuresRes.status === 'fulfilled' ? (featuresRes.value.data.data || []) : []);
         setBlogPosts(blogPostsRes.status === 'fulfilled' ? (blogPostsRes.value.data.data || []) : []);
         setYoutubeChannels(youtubeRes.status === 'fulfilled' ? (youtubeRes.value.data.data || []) : []);
+        setLatestVideos(videosRes.status === 'fulfilled' ? (videosRes.value.data.data || videosRes.value.data.videos || []) : []);
 
         // Convert social media array to object for easier access
         if (socialRes.status === 'fulfilled' && socialRes.value.data.data) {
@@ -475,41 +488,57 @@ const MainHome: React.FC = () => {
           </div>
 
           <div className="grid lg:grid-cols-3 gap-5 lg:gap-10">
-            {/* YouTube Kanalları */}
-            {(youtubeChannels.length > 0 ? youtubeChannels : [
-              { id: 'y1', name: 'Hocalara Geldik', description: 'Ana kanalımızda tüm derslerin konu anlatımları ve soru çözümleri yer alıyor.', thumbnail: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?auto=format&fit=crop&q=80&w=800', url: 'https://youtube.com/hocalarageldik', subscribers: '1M+', videoCount: '5000+' },
-              { id: 'y2', name: 'Hocalara Geldik Rehberlik', description: 'Sınav stratejileri, motivasyon ve rehberlik videoları ile yanınızdayız.', thumbnail: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&q=80&w=800', url: 'https://youtube.com/hocalarageldikrehberlik', subscribers: '200K+', videoCount: '500+' },
-              { id: 'y3', name: 'Hocalara Geldik Ortaokul', description: 'LGS hazırlık ve ortaokul ders içerikleri için özel kanalımız.', thumbnail: 'https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&q=80&w=800', url: 'https://youtube.com/hocalarageldikortaokul', subscribers: '300K+', videoCount: '1000+' }
-            ]).map((channel) => (
-              <a
-                key={channel.id}
-                href={channel.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group bg-white rounded-[20px] overflow-hidden shadow-xl border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500"
+            {/* Son Videolar */}
+            {latestVideos.slice(0, 3).map((video) => (
+              <div
+                key={video.id}
+                className="group bg-white rounded-[20px] overflow-hidden shadow-xl border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 cursor-pointer"
+                onClick={() => setSelectedVideo(video.id)}
               >
-                <div className="relative aspect-video overflow-hidden">
+                <div className="relative aspect-video overflow-hidden bg-brand-dark">
                   <img
-                    src={channel.thumbnail ? (channel.thumbnail.startsWith('http') ? channel.thumbnail : (channel.thumbnail.startsWith('/assets') ? channel.thumbnail : `${API_BASE_URL}${channel.thumbnail}`)) : ''}
-                    alt={channel.name}
+                    src={video.thumbnail?.startsWith('http') ? video.thumbnail : (video.thumbnail?.startsWith('/assets') ? video.thumbnail : `${API_BASE_URL}${video.thumbnail}`)}
+                    alt={video.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/80 via-transparent to-transparent"></div>
+                  
+                  {/* Play Button */}
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
                       <Youtube className="w-8 h-8 text-white" />
                     </div>
                   </div>
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-black text-brand-dark mb-2 group-hover:text-red-600 transition-colors">{channel.name}</h3>
-                  <p className="text-sm text-slate-600 font-medium mb-4">{channel.description}</p>
-                  <div className="flex items-center justify-between text-sm font-bold text-slate-500">
-                    <span>{channel.subscribers} Abone</span>
-                    <span>{channel.videoCount} Video</span>
+
+                  {/* Duration Badge */}
+                  {video.duration && (
+                    <div className="absolute bottom-4 right-4 px-3 py-1.5 bg-black/60 backdrop-blur-md text-white rounded-lg text-xs font-bold flex items-center space-x-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>{video.duration}</span>
+                    </div>
+                  )}
+
+                  {/* Category Badge */}
+                  <div className="absolute top-4 left-4 px-3 py-1.5 bg-brand-blue text-white rounded-lg text-[10px] font-black capitalize tracking-widest shadow-lg">
+                    {video.category?.replace('_', ' ')}
                   </div>
                 </div>
-              </a>
+                <div className="p-6">
+                  <div className="flex items-center space-x-2 text-xs font-bold text-slate-400 mb-2">
+                    <BookOpen className="w-4 h-4 text-brand-blue" />
+                    <span>{video.subject}</span>
+                  </div>
+                  <h3 className="text-lg font-black text-brand-dark mb-2 line-clamp-2 group-hover:text-red-600 transition-colors">
+                    {video.title}
+                  </h3>
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                    <span className="text-xs font-bold text-slate-500">{video.teacher}</span>
+                    {!!video.views && (
+                      <span className="text-xs font-bold text-slate-400">{video.views.toLocaleString()} izlenme</span>
+                    )}
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
 
@@ -592,7 +621,7 @@ const MainHome: React.FC = () => {
           {/* Blog Kartları */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {(selectedCategory === 'Tümü' ? blogPosts : blogPosts.filter(p => p.category === selectedCategory)).slice(0, 3).map((post) => (
-              <div key={post.id} className="group bg-white rounded-[20px] overflow-hidden shadow-xl border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500">
+              <Link to={`/haberler/${post.id}`} key={post.id} className="group bg-white rounded-[20px] overflow-hidden shadow-xl border border-slate-100 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 block">
                 <div className="relative aspect-[16/10] overflow-hidden">
                   <img
                     src={post.image}
@@ -624,22 +653,22 @@ const MainHome: React.FC = () => {
                   </p>
                   <div className="flex items-center justify-between pt-4 border-t border-slate-100">
                     <span className="text-xs font-bold text-slate-500">{post.author}</span>
-                    <button className={`flex items-center space-x-2 text-xs font-black ${primaryColorText} group-hover:translate-x-2 transition-transform`}>
+                    <div className={`flex items-center space-x-2 text-xs font-black ${primaryColorText} group-hover:translate-x-2 transition-transform`}>
                       <span>Devamını Oku</span>
                       <ChevronRight className="w-4 h-4" />
-                    </button>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
           <div className="flex justify-center mt-12">
             <Link 
-              to="/rehberlik" 
+              to={getSection('blog-button-link', 'buttonLink', '/haberler')} 
               className={`group flex items-center space-x-3 px-8 py-4 ${primaryColor} text-white font-black rounded-2xl hover:shadow-xl hover:scale-105 transition-all duration-300`}
             >
-              <span>Daha Fazlası İçin Tıkla</span>
+              <span>{getSection('blog-button-text', 'buttonText', 'Daha Fazlası İçin Tıkla')}</span>
               <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -870,6 +899,35 @@ const MainHome: React.FC = () => {
           </div>
         </div>
       </section>
+      {/* Video Modal - Added manually since we added video playback feature */}
+      {selectedVideo && (
+        <div
+          className="fixed inset-0 bg-brand-dark/95 backdrop-blur-xl z-[200] flex items-center justify-center p-6"
+          onClick={() => setSelectedVideo(null)}
+        >
+          <div
+            className="relative w-full max-w-6xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button - Outside */}
+            <button
+              onClick={() => setSelectedVideo(null)}
+              className="absolute -top-14 right-0 z-10 w-12 h-12 bg-white/10 backdrop-blur-xl text-white rounded-full flex items-center justify-center hover:bg-white/20 transition-all"
+            >
+              <CheckCircle className="w-6 h-6 rotate-45" /> {/* Using CheckCircle rotated as X icon if X is not imported, or replace with X icon */}
+            </button>
+
+            <div className="aspect-video bg-brand-dark rounded-[20px] overflow-hidden shadow-2xl">
+              <iframe
+                src={getVideoEmbedUrl(latestVideos.find(v => v.id === selectedVideo)?.videoUrl || '')}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              ></iframe>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
