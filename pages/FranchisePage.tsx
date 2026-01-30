@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Target, CheckCircle2, ShieldCheck, Zap, ArrowRight, Phone, Mail } from 'lucide-react';
 import { homeSectionService } from '../services/homepage.service';
-import axios from 'axios';
+import api from '../services/api';
 import Alert from '../components/Alert';
 import { useAlert } from '../hooks/useAlert';
 import { useSEO } from '../hooks/useSEO';
@@ -59,7 +59,7 @@ const FranchisePage: React.FC = () => {
     
     try {
       const nameParts = formData.name.trim().split(' ');
-      const response = await axios.post('/api/franchise', {
+      const response = await api.post('/franchise', {
         name: nameParts[0],
         surname: nameParts.slice(1).join(' ') || nameParts[0],
         phone: formData.phone,
@@ -84,7 +84,7 @@ const FranchisePage: React.FC = () => {
   useEffect(() => {
     const fetchContent = async () => {
       try {
-        const contentRes = await homeSectionService.getAll();
+        const contentRes: any = await homeSectionService.getAll();
         const contentData = contentRes.data?.data || contentRes.data;
         
         if (Array.isArray(contentData)) {

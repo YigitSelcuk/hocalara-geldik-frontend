@@ -7,7 +7,7 @@ import {
 import { Branch, AdminUser, Teacher } from '../../types';
 import { branchService, mediaService } from '../../services/cms.service';
 import { teacherService } from '../../services/homepage.service';
-import { API_BASE_URL } from '../../services/api';
+import api, { API_BASE_URL } from '../../services/api';
 import BranchPackageManager from './BranchPackageManager';
 import BranchSuccessManager from './BranchSuccessManager';
 import LeadManager from './LeadManager';
@@ -141,11 +141,8 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user, branch
       
       // Check for pending branch update
       try {
-        const token = localStorage.getItem('accessToken');
-        const pendingRes = await fetch('/api/change-requests?status=PENDING', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const pendingData = await pendingRes.json();
+        const pendingRes = await api.get('/change-requests?status=PENDING');
+        const pendingData = pendingRes.data;
         const hasPending = pendingData.data?.some((req: any) => 
           req.changeType === 'BRANCH_UPDATE' && req.branchId === user.branchId
         );
@@ -290,7 +287,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user, branch
         // Update existing teacher
         const response = await teacherService.update(editingTeacher.id, {
           ...teacherForm,
-          branchId: user.branchId,
+          branchId: branchId || user.branchId,
         });
         
         if (response.data.isPending) {
@@ -302,7 +299,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user, branch
         // Create new teacher
         const response = await teacherService.create({
           ...teacherForm,
-          branchId: user.branchId,
+          branchId: branchId || user.branchId,
         });
         
         if (response.data.isPending) {

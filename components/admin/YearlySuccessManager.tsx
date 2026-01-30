@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, Settings2, Trash, Trophy, Users, Layout, ChevronRight, GraduationCap } from 'lucide-react';
 import { YearlySuccess, TopStudent } from '../../types';
 import { API_BASE_URL } from '../../services/api';
@@ -10,6 +10,7 @@ interface YearlySuccessManagerProps {
     handleDelete: (type: 'yearlySuccess', id: string) => void;
     handleAddStudent: (successId: string) => void;
     handleDeleteStudent: (successId: string, studentId: string) => void;
+    handleToggleStatus: (type: 'yearlySuccess', item: YearlySuccess) => void;
 }
 
 export const YearlySuccessManager: React.FC<YearlySuccessManagerProps> = ({
@@ -18,10 +19,46 @@ export const YearlySuccessManager: React.FC<YearlySuccessManagerProps> = ({
     handleEdit,
     handleDelete,
     handleAddStudent,
-    handleDeleteStudent
+    handleDeleteStudent,
+    handleToggleStatus
 }) => {
     const [selectedYear, setSelectedYear] = useState<string | null>(successes[0]?.id || null);
+    
+    // Automatically select the new year when successes list changes (e.g. new year added)
+    // If we have a new item at the beginning of the list that wasn't there before, select it
+    useEffect(() => {
+        if (successes.length > 0) {
+            // If currently selected year is not in the list anymore (deleted), select the first one
+            const currentExists = successes.find(s => s.id === selectedYear);
+            if (!currentExists) {
+                setSelectedYear(successes[0].id);
+            } 
+            // If a new year was added (it usually appears at the top), we might want to switch to it
+            // However, simply switching to the first item on every change might be annoying if just editing
+            // So we rely on the fact that newly added items are prepended in AdminPanel.tsx: 
+            // setYearlySuccesses((prev: YearlySuccess[]) => [newItem.data, ...prev]);
+            // If the first item in the list is different from what we had before, it might be a new item
+        }
+    }, [successes.length]); // Only react to length changes (add/delete)
+
+    // Better approach: when list length increases, select the first item (newest)
+    const [prevLength, setPrevLength] = useState(successes.length);
+    useEffect(() => {
+        if (successes.length > prevLength) {
+            // Item added - select the first one (assuming it's prepended)
+            setSelectedYear(successes[0].id);
+        }
+        setPrevLength(successes.length);
+    }, [successes.length, prevLength]);
+
     const activeSuccess = successes.find(s => s.id === selectedYear) || successes[0];
+
+    // Debug logs
+    console.log('YearlySuccessManager Render:', {
+        totalSuccesses: successes.length,
+        selectedYear,
+        successes: successes.map(s => ({ id: s.id, year: s.year, isActive: s.isActive }))
+    });
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -52,7 +89,27 @@ export const YearlySuccessManager: React.FC<YearlySuccessManagerProps> = ({
                                     className={`w-full flex items-center justify-between p-4 rounded-xl transition-all ${selectedYear === s.id ? 'bg-brand-blue text-white shadow-lg shadow-brand-blue/20' : 'bg-slate-50 text-slate-400 hover:bg-slate-100'}`}
                                 >
                                     <span className="font-black text-sm">{s.year} Başarıları</span>
-                                    <ChevronRight className={`w-4 h-4 transition-transform ${selectedYear === s.id ? 'rotate-90' : ''}`} />
+                                    <div className="flex items-center space-x-3">
+                                        <div
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleToggleStatus('yearlySuccess', s);
+                                            }}
+                                            className={`px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5 cursor-pointer hover:scale-105 ${
+                                                s.isActive 
+                                                    ? (selectedYear === s.id ? 'bg-white/20 text-white' : 'bg-green-100 text-green-600')
+                                                    : (selectedYear === s.id ? 'bg-white/20 text-white' : 'bg-red-100 text-red-600')
+                                            }`}
+                                        >
+                                            <div className={`w-1.5 h-1.5 rounded-full ${
+                                                s.isActive 
+                                                    ? (selectedYear === s.id ? 'bg-white' : 'bg-green-500')
+                                                    : (selectedYear === s.id ? 'bg-white' : 'bg-red-500')
+                                            }`} />
+                                            <span className="text-[10px] font-black uppercase tracking-wider">{s.isActive ? 'Aktif' : 'Pasif'}</span>
+                                        </div>
+                                        <ChevronRight className={`w-4 h-4 transition-transform ${selectedYear === s.id ? 'rotate-90' : ''}`} />
+                                    </div>
                                 </button>
                             ))}
                         </div>
@@ -68,6 +125,17 @@ export const YearlySuccessManager: React.FC<YearlySuccessManagerProps> = ({
                         </div>
                     ) : (
                         <>
+                            <div className="flex items-center justify-between">
+                                <h2 className="text-2xl font-black text-brand-dark tracking-tight">{activeSuccess.year} Yılı Genel Bakış</h2>
+                                <button 
+                                    onClick={() => handleDelete('yearlySuccess', activeSuccess.id)} 
+                                    className="px-4 py-2 bg-red-50 text-red-500 font-bold rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center gap-2 text-xs"
+                                >
+                                    <Trash className="w-4 h-4" />
+                                    <span>Bu Yılı Sil</span>
+                                </button>
+                            </div>
+
                             {/* Stats Summary */}
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 {[
@@ -94,9 +162,6 @@ export const YearlySuccessManager: React.FC<YearlySuccessManagerProps> = ({
                                     <div className="flex gap-2">
                                         <button onClick={() => handleEdit('yearlySuccess', activeSuccess)} className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-brand-blue hover:text-white transition-all">
                                             <Settings2 className="w-4 h-4" />
-                                        </button>
-                                        <button onClick={() => handleDelete('yearlySuccess', activeSuccess.id)} className="p-3 bg-slate-50 text-slate-400 rounded-xl hover:bg-red-500 hover:text-white transition-all">
-                                            <Trash className="w-4 h-4" />
                                         </button>
                                     </div>
                                 </div>

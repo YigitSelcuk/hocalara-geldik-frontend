@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Phone, Mail, Calendar, CheckCircle, Clock, X, Eye, Trash2 } from 'lucide-react';
-import axios from 'axios';
+import api from '../../services/api';
 
 interface Lead {
   id: string;
@@ -35,11 +35,8 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
   const fetchLeads = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
-      const url = branchId ? `/api/leads?branchId=${branchId}` : '/api/leads';
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const url = branchId ? `/contact?branchId=${branchId}` : '/contact';
+      const response = await api.get(url);
       setLeads(response.data.data || []);
     } catch (error) {
       console.error('Error fetching leads:', error);
@@ -51,11 +48,7 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
   const handleUpdateStatus = async (leadId: string, status: Lead['status'], notes?: string) => {
     try {
       setUpdatingStatus(true);
-      const token = localStorage.getItem('accessToken');
-      await axios.patch(`/api/leads/${leadId}`, 
-        { status, notes },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.patch(`/contact/${leadId}`, { status, notes });
       await fetchLeads();
       setShowDetailModal(false);
       setSelectedLead(null);

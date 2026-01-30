@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit2, Trash2, Clock, X, Save, Upload, Image as ImageIcon } from 'lucide-react';
 import api, { API_BASE_URL } from '../../services/api';
-import axios from 'axios';
+import { mediaService } from '../../services/cms.service';
 import Alert from '../Alert';
 import { useAlert } from '../../hooks/useAlert';
-
-const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 interface BranchPackageManagerProps {
   branchId: string;
@@ -61,19 +59,11 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
 
     try {
       setUploading(true);
-      const formData = new FormData();
-      formData.append('file', file);
-
-      const token = localStorage.getItem('accessToken');
-      const response = await axios.post(`${API_URL}/media/upload`, formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      
+      const response = await mediaService.upload(file);
 
       console.log('Upload response:', response.data);
-      const imageUrl = response.data.url || response.data.data?.url || response.data.path;
+      const imageUrl = response.data.url || response.data.data?.url || response.data.media?.url;
       console.log('Image URL:', imageUrl);
 
       if (imageUrl) {
@@ -167,10 +157,10 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
       };
 
       if (editingPackage) {
-        await api.put(`/packages/${editingPackage.id}`, data);
+        await api.put(`/packages/${editingPackage.id}`, { ...data, branchId });
         showAlert('success', 'Paket güncelleme talebi oluşturuldu!');
       } else {
-        await api.post('/packages', data);
+        await api.post('/packages', { ...data, branchId });
         showAlert('success', 'Paket ekleme talebi oluşturuldu!');
       }
 

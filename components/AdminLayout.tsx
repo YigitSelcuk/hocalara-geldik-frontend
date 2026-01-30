@@ -8,10 +8,7 @@ import {
     MessageSquare, Menu, Layers, Trophy, Bell, X, Newspaper, Award, UserPlus, ArrowLeft
 } from 'lucide-react';
 import { AdminUser, UserRole } from '../types';
-import axios from 'axios';
-import { API_BASE_URL } from '../services/api';
-
-const API_URL = API_BASE_URL || '/api';
+import api from '../services/api';
 
 interface AdminLayoutProps {
     user: AdminUser | null;
@@ -61,10 +58,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
 
     const fetchPendingRequests = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await axios.get(`${API_URL}/change-requests?status=PENDING`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get('/change-requests?status=PENDING');
             setPendingRequests(response.data.data || []);
         } catch (error) {
             console.error('Error fetching pending requests:', error);
@@ -73,10 +67,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
 
     const fetchMyNotifications = async () => {
         try {
-            const token = localStorage.getItem('accessToken');
-            const response = await axios.get(`${API_URL}/notifications/my?isRead=false`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get('/notifications/my?isRead=false');
             setMyNotifications(response.data.data || []);
         } catch (error) {
             console.error('Error fetching notifications:', error);
@@ -85,12 +76,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
 
     const markAsRead = async (notificationId: string) => {
         try {
-            const token = localStorage.getItem('accessToken');
-            await axios.post(
-                `${API_URL}/notifications/${notificationId}/read`,
-                {},
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await api.post(`/notifications/${notificationId}/read`);
             fetchMyNotifications();
         } catch (error) {
             console.error('Error marking notification as read:', error);

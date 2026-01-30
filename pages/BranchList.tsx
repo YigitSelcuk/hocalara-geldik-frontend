@@ -77,7 +77,9 @@ const BranchList: React.FC = () => {
     return content?.[field] || defaultValue;
   };
 
-  const filteredBranches = branches.filter(b =>
+  const filteredBranches = branches
+    .filter(b => b.isActive !== false)
+    .filter(b =>
     b.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     b.address.toLowerCase().includes(searchQuery.toLowerCase())
   );

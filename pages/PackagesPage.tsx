@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Check, Star, Clock, Video, BookOpen, TrendingUp, Zap, ChevronRight, Award } from 'lucide-react';
-import { PackageType, EducationPackage } from '../types';
-import { packageService } from '../services/cms.service';
+import { PackageType, EducationPackage, Category } from '../types';
+import { packageService, categoryService } from '../services/cms.service';
 import { homeSectionService } from '../services/homepage.service';
 import { API_BASE_URL } from '../services/api';
 import { useSEO } from '../hooks/useSEO';
@@ -12,17 +12,19 @@ const PackagesPage: React.FC = () => {
   // SEO Hook
   useSEO('packages');
   
-  const [activeFilter, setActiveFilter] = useState<PackageType | 'ALL'>('ALL');
+  const [activeFilter, setActiveFilter] = useState<string>('ALL');
   const [packages, setPackages] = useState<EducationPackage[]>([]);
   const [sections, setSections] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [packagesRes, sectionsRes] = await Promise.allSettled([
+        const [packagesRes, sectionsRes, categoriesRes] = await Promise.allSettled([
           packageService.getAll(),
-          homeSectionService.getAll()
+          homeSectionService.getAll(),
+          categoryService.getAll()
         ]);
         
         if (packagesRes.status === 'fulfilled') {
@@ -34,6 +36,11 @@ const PackagesPage: React.FC = () => {
           const data = (sectionsRes.value.data as any)?.data || sectionsRes.value.data || [];
           const packageSections = Array.isArray(data) ? data.filter((s: any) => s.page === 'packages') : [];
           setSections(packageSections);
+        }
+
+        if (categoriesRes.status === 'fulfilled') {
+          const cats = categoriesRes.value.data.categories || [];
+          setCategories(cats.filter((c: any) => c.type === 'PACKAGE'));
         }
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -50,13 +57,11 @@ const PackagesPage: React.FC = () => {
   };
 
   const filters = [
-    { id: 'ALL' as const, label: getSection('packages-filter-all', 'title', 'Tüm Paketler') },
-    { id: PackageType.YKS_2026, label: getSection('packages-filter-yks2026', 'title', 'YKS 2026') },
-    { id: PackageType.LGS_2026, label: getSection('packages-filter-lgs2026', 'title', 'LGS 2026') },
-    { id: PackageType.YKS_2027, label: getSection('packages-filter-yks2027', 'title', 'YKS 2027') },
-    { id: PackageType.SINIF_9_10_11, label: getSection('packages-filter-9-10-11', 'title', '9-10-11. Sınıf') },
-    { id: PackageType.KPSS, label: getSection('packages-filter-kpss', 'title', 'KPSS') },
-    { id: PackageType.DGS, label: getSection('packages-filter-dgs', 'title', 'DGS') }
+    { id: 'ALL', label: getSection('packages-filter-all', 'title', 'Tüm Paketler') },
+    ...categories.map(cat => ({
+      id: cat.slug || cat.name,
+      label: cat.name
+    }))
   ];
 
   const filteredPackages = activeFilter === 'ALL'

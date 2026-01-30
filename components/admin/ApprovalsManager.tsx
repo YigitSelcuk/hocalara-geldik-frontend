@@ -1,11 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Check, X, Clock, Eye, User, Building2, Users as UsersIcon } from 'lucide-react';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../../services/api';
 import Alert from '../Alert';
 import { useAlert } from '../../hooks/useAlert';
-import { API_BASE_URL } from '../../services/api';
-
-const API_URL = API_BASE_URL || '/api';
 
 interface ChangeRequest {
   id: string;
@@ -52,14 +49,11 @@ export const ApprovalsManager: React.FC = () => {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
       const url = filter === 'ALL'
-        ? `${API_URL}/change-requests`
-        : `${API_URL}/change-requests?status=${filter}`;
+        ? '/change-requests'
+        : `/change-requests?status=${filter}`;
 
-      const response = await axios.get(url, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get(url);
 
       setRequests(response.data.data || []);
     } catch (error) {
@@ -72,12 +66,7 @@ export const ApprovalsManager: React.FC = () => {
   const handleApprove = async (requestId: string) => {
     try {
       setProcessing(true);
-      const token = localStorage.getItem('accessToken');
-      await axios.post(
-        `${API_URL}/change-requests/${requestId}/approve`,
-        { reviewNote },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post(`/change-requests/${requestId}/approve`, { reviewNote });
 
       showAlert('success', 'Değişiklik onaylandı ve uygulandı!');
       setSelectedRequest(null);
@@ -95,12 +84,7 @@ export const ApprovalsManager: React.FC = () => {
   const handleReject = async (requestId: string) => {
     try {
       setProcessing(true);
-      const token = localStorage.getItem('accessToken');
-      await axios.post(
-        `${API_URL}/change-requests/${requestId}/reject`,
-        { reviewNote },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.post(`/change-requests/${requestId}/reject`, { reviewNote });
 
       showAlert('success', 'Değişiklik reddedildi.');
       setSelectedRequest(null);

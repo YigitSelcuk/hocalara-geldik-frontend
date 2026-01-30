@@ -1,6 +1,7 @@
 import React from 'react';
-import { Plus, Settings2, Trash, FileText, Calendar, Clock } from 'lucide-react';
+import { Plus, Settings2, Trash, FileText, Calendar, Clock, Tag } from 'lucide-react';
 import { API_BASE_URL } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 interface BlogPost {
     id: string;
@@ -26,7 +27,10 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
     handleAdd,
     handleEdit,
     handleDelete
-}) => (
+}) => {
+    const navigate = useNavigate();
+
+    return (
     <div className="space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -38,13 +42,22 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                     Rehberlik yazıları ve blog içeriklerini yönetin.
                 </p>
             </div>
-            <button
-                onClick={() => handleAdd('blog')}
-                className="px-6 py-3 bg-brand-blue text-white font-bold rounded-xl hover:bg-brand-dark transition-all flex items-center space-x-2 shadow-lg shadow-brand-blue/20"
-            >
-                <Plus className="w-4 h-4" />
-                <span>Yeni Yazı</span>
-            </button>
+            <div className="flex gap-3">
+                <button
+                    onClick={() => navigate('/admin/categories')}
+                    className="px-6 py-3 bg-purple-50 text-purple-600 font-bold rounded-xl hover:bg-purple-100 transition-all flex items-center space-x-2"
+                >
+                    <Tag className="w-4 h-4" />
+                    <span>Kategorileri Yönet</span>
+                </button>
+                <button
+                    onClick={() => handleAdd('blog')}
+                    className="px-6 py-3 bg-brand-blue text-white font-bold rounded-xl hover:bg-brand-dark transition-all flex items-center space-x-2 shadow-lg shadow-brand-blue/20"
+                >
+                    <Plus className="w-4 h-4" />
+                    <span>Yeni Yazı</span>
+                </button>
+            </div>
         </div>
 
         {/* Blog Posts Grid */}
@@ -130,3 +143,4 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
         )}
     </div>
 );
+};

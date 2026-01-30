@@ -1,12 +1,10 @@
 import React, { useState, useCallback, useRef } from 'react';
-import { Plus, Settings2, Trash, Star, Sparkles, Video, BookOpen, Clock, GripVertical } from 'lucide-react';
+import { Plus, Settings2, Trash, Star, Sparkles, Video, BookOpen, Clock, GripVertical, Tag } from 'lucide-react';
 import { DndProvider, useDrag, useDrop } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { EducationPackage } from '../../types';
-import { API_BASE_URL } from '../../services/api';
-import axios from 'axios';
-
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+import api, { API_BASE_URL } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
 
 interface PackageManagerProps {
     packages: EducationPackage[];
@@ -40,7 +38,7 @@ const DraggablePackageCard: React.FC<DraggablePackageCardProps> = ({
                 handlerId: monitor.getHandlerId(),
             };
         },
-        hover(item: { index: number }, monitor) {
+        hover(item: any, monitor) {
             if (!ref.current) {
                 return;
             }
@@ -84,7 +82,7 @@ const DraggablePackageCard: React.FC<DraggablePackageCardProps> = ({
     return (
         <div
             ref={ref}
-            data-handler-id={handlerId}
+            data-handler-id={handlerId as any}
             style={{ opacity: isDragging ? 0.5 : 1 }}
             className="bg-white rounded-[24px] border border-slate-100 overflow-hidden hover:shadow-xl transition-all group"
         >
@@ -198,6 +196,7 @@ export const PackageManager: React.FC<PackageManagerProps> = ({
 }) => {
     const [packages, setPackages] = useState(initialPackages);
     const [isSaving, setIsSaving] = useState(false);
+    const navigate = useNavigate();
 
     // Update local state when props change
     React.useEffect(() => {
@@ -217,19 +216,14 @@ export const PackageManager: React.FC<PackageManagerProps> = ({
     const saveOrder = async () => {
         try {
             setIsSaving(true);
-            const token = localStorage.getItem('accessToken');
 
             // Create array with id and order
-            const reorderedPackages = packages.map((pkg, index) => ({
+            const reorderedPackages = packages.map((pkg: any, index) => ({
                 id: pkg.id,
                 order: index
             }));
 
-            await axios.post(
-                `${API_URL}/packages/reorder`,
-                { packages: reorderedPackages },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
+            await api.post('/packages/reorder', { packages: reorderedPackages });
 
             if (onReorder) {
                 onReorder();
@@ -245,7 +239,7 @@ export const PackageManager: React.FC<PackageManagerProps> = ({
     };
 
     const hasOrderChanged = () => {
-        return packages.some((pkg, index) => pkg.order !== index);
+        return packages.some((pkg: any, index) => pkg.order !== index);
     };
 
     return (
@@ -261,6 +255,13 @@ export const PackageManager: React.FC<PackageManagerProps> = ({
                         </p>
                     </div>
                     <div className="flex gap-3">
+                        <button
+                            onClick={() => navigate('/admin/categories')}
+                            className="px-6 py-4 bg-purple-50 text-purple-600 font-bold rounded-2xl hover:bg-purple-100 transition-all flex items-center space-x-2"
+                        >
+                            <Tag className="w-5 h-5" />
+                            <span>Kategorileri Yönet</span>
+                        </button>
                         {hasOrderChanged() && (
                             <button
                                 onClick={saveOrder}

@@ -29,10 +29,7 @@ const FranchiseManager: React.FC = () => {
   const fetchApplications = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('accessToken');
-      const response = await axios.get('/api/franchise', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const response = await api.get('/franchise');
       setApplications(response.data.data || []);
     } catch (error) {
       console.error('Error fetching franchise applications:', error);
@@ -44,11 +41,7 @@ const FranchiseManager: React.FC = () => {
   const handleUpdateStatus = async (applicationId: string, status: FranchiseApplication['status'], notes?: string) => {
     try {
       setUpdatingStatus(true);
-      const token = localStorage.getItem('accessToken');
-      await axios.patch(`/api/franchise/${applicationId}`, 
-        { status, notes },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      await api.patch(`/franchise/${applicationId}`, { status, notes });
       await fetchApplications();
       setShowDetailModal(false);
       setSelectedApplication(null);
@@ -64,10 +57,7 @@ const FranchiseManager: React.FC = () => {
     if (!window.confirm('Bu başvuruyu silmek istediğinize emin misiniz?')) return;
     
     try {
-      const token = localStorage.getItem('accessToken');
-      await axios.delete(`/api/franchise/${applicationId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/franchise/${applicationId}`);
       await fetchApplications();
     } catch (error) {
       console.error('Error deleting application:', error);

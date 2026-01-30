@@ -35,6 +35,7 @@ export interface Branch {
   successBanner?: string;
   logo?: string;
   primaryColor?: string;
+  isActive?: boolean;
 }
 
 export interface Teacher {
@@ -62,6 +63,12 @@ export interface NewsItem {
   branchId?: string;
   isFeatured: boolean;
   image: string;
+  category?: string;
+  readTime?: string;
+  author?: string;
+  seoTitle?: string;
+  seoDescription?: string;
+  seoKeywords?: string;
 }
 
 export interface SliderItem {
@@ -164,7 +171,7 @@ export enum PackageType {
 export interface EducationPackage {
   id: string;
   name: string;
-  type: PackageType;
+  type: string;
   description: string;
   shortDescription: string;
   price?: number;
@@ -201,6 +208,7 @@ export interface Category {
   slug: string;
   parentId?: string;
   description?: string;
+  type?: 'BLOG' | 'PACKAGE' | string;
 }
 
 export interface Page {

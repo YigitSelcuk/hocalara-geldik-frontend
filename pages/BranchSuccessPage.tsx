@@ -26,11 +26,12 @@ const BranchSuccessPage: React.FC = () => {
                     
                     // Then fetch successes filtered by branchId
                     const successRes = await yearlySuccessService.getAll();
-                    const allSuccesses = successRes.data?.data || successRes.data || [];
+                    const responseData = successRes.data as any;
+                    const allSuccesses = responseData.data || responseData || [];
                     
-                    // Filter by branchId
+                    // Filter by branchId and isActive
                     const branchSuccesses = Array.isArray(allSuccesses) 
-                        ? allSuccesses.filter((s: any) => s.branchId === branchData.id)
+                        ? allSuccesses.filter((s: any) => s.branchId === branchData.id && s.isActive !== false)
                         : [];
                     
                     setYearlySuccesses(branchSuccesses);

@@ -36,9 +36,16 @@ const SuccessPage: React.FC = () => {
         const successes = successRes.data.data || successRes.data;
 
         if (Array.isArray(successes) && successes.length > 0) {
-          setYearlySuccesses(successes);
-          setActiveYear(successes[0].year);
-          setDataLoaded(true);
+          // Filter active successes only (isActive defaults to true if undefined)
+          const activeSuccesses = successes.filter((s: any) => s.isActive !== false);
+          
+          if (activeSuccesses.length > 0) {
+            setYearlySuccesses(activeSuccesses);
+            setActiveYear(activeSuccesses[0].year);
+            setDataLoaded(true);
+          } else {
+            setYearlySuccesses([]);
+          }
         }
         
         // Process page content

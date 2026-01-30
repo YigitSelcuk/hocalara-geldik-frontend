@@ -17,7 +17,13 @@ export const UserManager: React.FC<UserManagerProps> = ({
     handleAdd,
     handleEdit,
     handleDelete
-}) => (
+}) => {
+    // Only show SUPER_ADMIN and BRANCH_ADMIN
+    const filteredUsers = adminUsers.filter(user => 
+        user.role === UserRole.SUPER_ADMIN || user.role === UserRole.BRANCH_ADMIN
+    );
+
+    return (
     <div className="space-y-8 animate-in fade-in duration-500">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-8 rounded-[24px] border border-slate-100 shadow-sm">
             <div>
@@ -34,10 +40,9 @@ export const UserManager: React.FC<UserManagerProps> = ({
         </div>
 
         <div className="grid grid-cols-1 gap-4">
-            {adminUsers.map((admin) => (
+            {filteredUsers.map((admin) => (
                 <div key={admin.id} className="bg-white p-6 rounded-[24px] border border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 hover:shadow-lg transition-all">
                     <div className="flex items-center space-x-4 w-full md:w-auto">
-                        <img src={admin.avatar?.startsWith('http') ? admin.avatar : (admin.avatar?.startsWith('/assets') ? admin.avatar : `${API_BASE_URL}${admin.avatar}`)} className="w-14 h-14 rounded-2xl object-cover shadow-sm shrink-0" alt="" />
                         <div className="min-w-0">
                             <h3 className="font-black text-brand-dark capitalize tracking-tight truncate">{admin.name}</h3>
                             <p className="text-xs text-slate-400 font-bold truncate">{admin.email}</p>
@@ -50,7 +55,7 @@ export const UserManager: React.FC<UserManagerProps> = ({
                             <span className={`px-4 py-1.5 rounded-full text-[10px] font-black capitalize tracking-widest inline-block ${admin.role === UserRole.SUPER_ADMIN ? 'bg-red-50 text-red-600' :
                                 admin.role === UserRole.BRANCH_ADMIN ? 'bg-amber-50 text-amber-600' : 'bg-blue-50 text-blue-600'
                                 }`}>
-                                {admin.role.replace('_', ' ')}
+                                {admin.role === UserRole.SUPER_ADMIN ? 'Admin' : admin.role === UserRole.BRANCH_ADMIN ? 'Şube Yöneticisi' : admin.role}
                             </span>
                         </div>
 
@@ -80,4 +85,5 @@ export const UserManager: React.FC<UserManagerProps> = ({
             ))}
         </div>
     </div>
-);
+    );
+};

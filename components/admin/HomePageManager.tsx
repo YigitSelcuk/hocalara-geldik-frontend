@@ -1,7 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { DndProvider, useDrag, useDrop } from 'react-dnd';
+import { HTML5Backend } from 'react-dnd-html5-backend';
 import { 
   Plus, Edit2, Trash2, Save, X, Image as ImageIcon, 
-  LayoutGrid, BarChart3, Sparkles, Youtube, RefreshCw, Upload, Laptop, Globe, BookOpen, Calculator, Timer, Package, Megaphone, FileText
+  LayoutGrid, BarChart3, Sparkles, Youtube, RefreshCw, Upload, Laptop, Globe, BookOpen, Calculator, Timer, Package, Megaphone, FileText, GripVertical,
+  GraduationCap, School, Users, Trophy, Target, Star, Lightbulb, Rocket, Award, Briefcase, Building, Phone, Mail, CheckCircle,
+  Book, Library, Pencil, PenTool, Backpack, Microscope, Atom, Pi, Sigma, Ruler, Monitor, Smartphone, Tablet, Wifi, MousePointer, Code, Medal, Crown, ThumbsUp, Info, HelpCircle, Bell, Calendar, Clock, Zap, Video, MapPin, Brain, MessageCircle, Database, Search, Home, Heart, TrendingUp
 } from 'lucide-react';
 import { 
   sliderService, mediaService, packageService
@@ -16,6 +20,158 @@ import { useAlert } from '../../hooks/useAlert';
 import Alert from '../Alert';
 
 type TabType = 'sliders' | 'bannerCards' | 'statistics' | 'features' | 'youtube' | 'digital' | 'global' | 'blog' | 'calculator' | 'tools' | 'packages' | 'cta' | 'header' | 'footer';
+
+// Tab configuration with metadata
+const TAB_CONFIG: { id: TabType; label: string; count: (data: any) => number }[] = [
+  { id: 'sliders', label: 'Slider', count: (data) => data.sliders?.length || 0 },
+  { id: 'bannerCards', label: 'Banner Kartları', count: (data) => data.bannerCards?.length || 0 },
+  { id: 'statistics', label: 'İstatistikler', count: (data) => data.statistics?.length || 0 },
+  { id: 'packages', label: 'Eğitim Paketleri', count: (data) => data.packages?.length || 0 },
+  { id: 'cta', label: 'CTA Bölümü', count: () => 0 },
+  { id: 'header', label: 'Header', count: () => 0 },
+  { id: 'footer', label: 'Footer', count: () => 0 },
+  { id: 'digital', label: 'Dijital Platform', count: (data) => data.features?.filter((f: any) => f.section === 'digital').length || 0 },
+  { id: 'global', label: 'Yurt Dışı', count: (data) => data.features?.filter((f: any) => f.section === 'international').length || 0 },
+  { id: 'youtube', label: 'YouTube & Sosyal Medya', count: (data) => (data.youtubeChannels?.length || 0) + (data.socialMedia?.length || 0) },
+  { id: 'blog', label: 'Rehberlik & Blog', count: () => 0 },
+  { id: 'calculator', label: 'Puan Hesaplama', count: () => 0 },
+  { id: 'tools', label: 'Çalışma Araçları', count: () => 0 },
+  { id: 'features', label: 'Özellikler', count: (data) => data.features?.filter((f: any) => !['digital', 'international'].includes(f.section)).length || 0 },
+];
+
+const ICON_MAP: { [key: string]: any } = {
+  'FileText': FileText,
+  'GraduationCap': GraduationCap,
+  'School': School,
+  'Laptop': Laptop,
+  'Users': Users,
+  'Trophy': Trophy,
+  'Target': Target,
+  'BookOpen': BookOpen,
+  'Lightbulb': Lightbulb,
+  'Rocket': Rocket,
+  'Award': Award,
+  'Briefcase': Briefcase,
+  'Building': Building,
+  'Phone': Phone,
+  'Mail': Mail,
+  'CheckCircle': CheckCircle,
+  'Star': Star,
+  'Megaphone': Megaphone,
+  'Package': Package,
+  'Timer': Timer,
+  'Calculator': Calculator,
+  'Globe': Globe,
+  'Youtube': Youtube,
+  'Sparkles': Sparkles,
+  'BarChart3': BarChart3,
+  'LayoutGrid': LayoutGrid,
+  'Book': Book,
+  'Library': Library,
+  'Pencil': Pencil,
+  'PenTool': PenTool,
+  'Backpack': Backpack,
+  'Microscope': Microscope,
+  'Atom': Atom,
+  'Pi': Pi,
+  'Sigma': Sigma,
+  'Ruler': Ruler,
+  'Monitor': Monitor,
+  'Smartphone': Smartphone,
+  'Tablet': Tablet,
+  'Wifi': Wifi,
+  'MousePointer': MousePointer,
+  'Code': Code,
+  'Medal': Medal,
+  'Crown': Crown,
+  'ThumbsUp': ThumbsUp,
+  'Info': Info,
+  'HelpCircle': HelpCircle,
+  'Bell': Bell,
+  'Calendar': Calendar,
+  'Clock': Clock,
+  'Zap': Zap,
+  'Video': Video,
+  'MapPin': MapPin,
+  'Brain': Brain,
+  'MessageCircle': MessageCircle,
+  'Database': Database,
+  'Search': Search,
+  'Home': Home,
+  'Heart': Heart,
+  'TrendingUp': TrendingUp
+};
+
+interface DraggableTabProps {
+  tab: { id: TabType; label: string; icon: any; count: number };
+  index: number;
+  activeTab: TabType;
+  moveTab: (dragIndex: number, hoverIndex: number) => void;
+  setActiveTab: (tab: TabType) => void;
+}
+
+const DraggableTab = ({ tab, index, activeTab, moveTab, setActiveTab }: DraggableTabProps) => {
+  const ref = useRef<HTMLButtonElement>(null);
+
+  const [{ handlerId }, drop] = useDrop({
+    accept: 'TAB',
+    collect(monitor) {
+      return {
+        handlerId: monitor.getHandlerId(),
+      };
+    },
+    hover(item: any, monitor) {
+      if (!ref.current) {
+        return;
+      }
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      moveTab(dragIndex, hoverIndex);
+      item.index = hoverIndex;
+    },
+  });
+
+  const [{ isDragging }, drag] = useDrag({
+    type: 'TAB',
+    item: () => {
+      return { id: tab.id, index };
+    },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const opacity = isDragging ? 0 : 1;
+  drag(drop(ref));
+
+  return (
+    <button
+      ref={ref}
+      onClick={() => setActiveTab(tab.id)}
+      className={`flex items-center space-x-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${
+        activeTab === tab.id
+          ? 'bg-brand-blue text-white shadow-lg'
+          : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-100'
+      }`}
+      style={{ opacity, cursor: 'move' }}
+      data-handler-id={handlerId}
+    >
+      <GripVertical className={`w-4 h-4 ${activeTab === tab.id ? 'text-white/50' : 'text-slate-300'}`} />
+      <tab.icon className="w-4 h-4" />
+      <span>{tab.label}</span>
+      <span className={`px-2 py-0.5 rounded-full text-xs ${
+        activeTab === tab.id ? 'bg-white/20' : 'bg-slate-100'
+      }`}>
+        {tab.count}
+      </span>
+    </button>
+  );
+};
 
 export const HomePageManager = () => {
   const [activeTab, setActiveTab] = useState<TabType>('sliders');
@@ -32,6 +188,34 @@ export const HomePageManager = () => {
   const [socialMedia, setSocialMedia] = useState<any[]>([]);
   const [examDates, setExamDates] = useState<any[]>([]);
   const [packages, setPackages] = useState<EducationPackage[]>([]);
+
+  // Tab order state
+  const [tabOrder, setTabOrder] = useState<TabType[]>(() => {
+    try {
+      const saved = localStorage.getItem('homePageTabOrder');
+      const defaultOrder = TAB_CONFIG.map(t => t.id);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // validation: filter valid keys, add missing keys
+        const validKeys = parsed.filter((k: string) => defaultOrder.includes(k));
+        const missingKeys = defaultOrder.filter(k => !validKeys.includes(k));
+        return [...validKeys, ...missingKeys];
+      }
+      return defaultOrder;
+    } catch (e) {
+      return TAB_CONFIG.map(t => t.id);
+    }
+  });
+
+  const moveTab = useCallback((dragIndex: number, hoverIndex: number) => {
+    setTabOrder((prevOrder) => {
+      const newOrder = [...prevOrder];
+      const [draggedItem] = newOrder.splice(dragIndex, 1);
+      newOrder.splice(hoverIndex, 0, draggedItem);
+      localStorage.setItem('homePageTabOrder', JSON.stringify(newOrder));
+      return newOrder;
+    });
+  }, []);
 
   // Modal states
   const [showModal, setShowModal] = useState(false);
@@ -912,6 +1096,10 @@ export const HomePageManager = () => {
     { id: 'features' as TabType, label: 'Özellikler', icon: Sparkles, count: features.length },
   ];
 
+  const sortedTabs = tabOrder
+    .map(id => tabs.find(t => t.id === id))
+    .filter((t): t is typeof tabs[0] => t !== undefined);
+
   const renderContent = () => {
     switch (activeTab) {
       case 'sliders':
@@ -949,24 +1137,31 @@ export const HomePageManager = () => {
       case 'bannerCards':
         return (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {bannerCards.sort((a, b) => a.order - b.order).map(card => (
-              <div key={card.id} className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-lg transition-shadow">
-                <div className="flex items-start justify-between mb-3">
-                  <span className="text-2xl">{card.icon}</span>
-                  <span className="text-xs font-bold text-slate-400">#{card.order}</span>
+            {bannerCards.sort((a, b) => a.order - b.order).map(card => {
+              const IconComponent = ICON_MAP[card.icon];
+              return (
+                <div key={card.id} className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start justify-between mb-3">
+                    {IconComponent ? (
+                      <IconComponent className="w-8 h-8 text-brand-blue" />
+                    ) : (
+                      <span className="text-2xl">{card.icon}</span>
+                    )}
+                    <span className="text-xs font-bold text-slate-400">#{card.order}</span>
+                  </div>
+                  <h3 className="font-bold mb-1">{card.title}</h3>
+                  <p className="text-sm text-slate-600 mb-3">{card.description}</p>
+                  <div className="flex items-center space-x-2">
+                    <button onClick={() => handleEdit(card)} className="flex-1 p-2 hover:bg-blue-50 rounded-lg text-blue-600 text-sm">
+                      <Edit2 className="w-4 h-4 mx-auto" />
+                    </button>
+                    <button onClick={() => handleDelete('bannerCards', card.id)} className="flex-1 p-2 hover:bg-red-50 rounded-lg text-red-600 text-sm">
+                      <Trash2 className="w-4 h-4 mx-auto" />
+                    </button>
+                  </div>
                 </div>
-                <h3 className="font-bold mb-1">{card.title}</h3>
-                <p className="text-sm text-slate-600 mb-3">{card.description}</p>
-                <div className="flex items-center space-x-2">
-                  <button onClick={() => handleEdit(card)} className="flex-1 p-2 hover:bg-blue-50 rounded-lg text-blue-600 text-sm">
-                    <Edit2 className="w-4 h-4 mx-auto" />
-                  </button>
-                  <button onClick={() => handleDelete('bannerCards', card.id)} className="flex-1 p-2 hover:bg-red-50 rounded-lg text-red-600 text-sm">
-                    <Trash2 className="w-4 h-4 mx-auto" />
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         );
 
@@ -1018,21 +1213,30 @@ export const HomePageManager = () => {
             <div>
               <h3 className="text-sm font-bold text-slate-700 mb-3">İstatistik Kartları</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {statistics.sort((a, b) => a.order - b.order).map(stat => (
-                  <div key={stat.id} className="bg-white rounded-xl border border-slate-100 p-6 text-center hover:shadow-lg transition-shadow">
-                    <div className="text-3xl mb-2">{stat.icon}</div>
-                    <div className="text-3xl font-black text-brand-blue mb-1">{stat.value}</div>
-                    <div className="text-sm font-bold text-slate-600">{stat.label}</div>
-                    <div className="flex items-center justify-center space-x-2 mt-4">
-                      <button onClick={() => handleEdit(stat)} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600">
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button onClick={() => handleDelete('statistics', stat.id)} className="p-2 hover:bg-red-50 rounded-lg text-red-600">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                {statistics.sort((a, b) => a.order - b.order).map(stat => {
+                  const IconComponent = ICON_MAP[stat.icon];
+                  return (
+                    <div key={stat.id} className="bg-white rounded-xl border border-slate-100 p-6 text-center hover:shadow-lg transition-shadow">
+                      <div className="text-3xl mb-2 flex justify-center">
+                        {IconComponent ? (
+                          <IconComponent className="w-8 h-8 text-brand-blue" />
+                        ) : (
+                          <span>{stat.icon}</span>
+                        )}
+                      </div>
+                      <div className="text-3xl font-black text-brand-blue mb-1">{stat.value}</div>
+                      <div className="text-sm font-bold text-slate-600">{stat.label}</div>
+                      <div className="flex items-center justify-center space-x-2 mt-4">
+                        <button onClick={() => handleEdit(stat)} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600">
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => handleDelete('statistics', stat.id)} className="p-2 hover:bg-red-50 rounded-lg text-red-600">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1087,7 +1291,7 @@ export const HomePageManager = () => {
                 <button
                   onClick={() => {
                     setEditingItem(null);
-                    setFormData({ section: 'digital', icon: '💻' });
+                    setFormData({ section: 'digital', icon: 'Laptop' });
                     setShowModal(true);
                   }}
                   className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors text-sm"
@@ -1097,14 +1301,20 @@ export const HomePageManager = () => {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {features.filter(f => f.section === 'digital').sort((a, b) => a.order - b.order).map(feature => (
-                  <div key={feature.id} className="bg-white rounded-xl border border-slate-100 p-6 hover:shadow-lg transition-shadow">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3 flex-1">
-                        <span className="text-3xl">{feature.icon}</span>
-                        <h3 className="font-bold text-lg">{feature.title}</h3>
-                      </div>
-                      <div className="flex items-center space-x-2">
+                {features.filter(f => f.section === 'digital').sort((a, b) => a.order - b.order).map(feature => {
+                  const IconComponent = ICON_MAP[feature.icon];
+                  return (
+                    <div key={feature.id} className="bg-white rounded-xl border border-slate-100 p-6 hover:shadow-lg transition-shadow">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center space-x-3 flex-1">
+                          {IconComponent ? (
+                            <IconComponent className="w-8 h-8 text-brand-blue" />
+                          ) : (
+                            <span className="text-3xl">{feature.icon}</span>
+                          )}
+                          <h3 className="font-bold text-lg">{feature.title}</h3>
+                        </div>
+                        <div className="flex items-center space-x-2">
                         <button onClick={() => handleEdit(feature)} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600">
                           <Edit2 className="w-4 h-4" />
                         </button>
@@ -1125,7 +1335,8 @@ export const HomePageManager = () => {
                       </div>
                     )}
                   </div>
-                ))}
+                );
+              })}
               </div>
             </div>
           </div>
@@ -1175,7 +1386,7 @@ export const HomePageManager = () => {
                 <button
                   onClick={() => {
                     setEditingItem(null);
-                    setFormData({ section: 'global', icon: '🎯' });
+                    setFormData({ section: 'global', icon: 'Target' });
                     setShowModal(true);
                   }}
                   className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg font-bold hover:bg-green-700 transition-colors text-sm"
@@ -1185,35 +1396,42 @@ export const HomePageManager = () => {
                 </button>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {features.filter(f => f.section === 'global').sort((a, b) => a.order - b.order).map(feature => (
-                  <div key={feature.id} className="bg-white rounded-xl border border-slate-100 p-6 hover:shadow-lg transition-shadow">
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center space-x-3 flex-1">
-                        <span className="text-3xl">{feature.icon}</span>
-                        <h3 className="font-bold text-lg">{feature.title}</h3>
+                {features.filter(f => f.section === 'global').sort((a, b) => a.order - b.order).map(feature => {
+                  const IconComponent = ICON_MAP[feature.icon];
+                  return (
+                    <div key={feature.id} className="bg-white rounded-xl border border-slate-100 p-6 hover:shadow-lg transition-shadow">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center space-x-3 flex-1">
+                          {IconComponent ? (
+                            <IconComponent className="w-8 h-8 text-brand-blue" />
+                          ) : (
+                            <span className="text-3xl">{feature.icon}</span>
+                          )}
+                          <h3 className="font-bold text-lg">{feature.title}</h3>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <button onClick={() => handleEdit(feature)} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600">
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button onClick={() => handleDelete('features', feature.id)} className="p-2 hover:bg-red-50 rounded-lg text-red-600">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <button onClick={() => handleEdit(feature)} className="p-2 hover:bg-blue-50 rounded-lg text-blue-600">
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button onClick={() => handleDelete('features', feature.id)} className="p-2 hover:bg-red-50 rounded-lg text-red-600">
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <p className="text-sm text-slate-600 mb-4">{feature.description}</p>
+                      {feature.features && feature.features.length > 0 && (
+                        <div className="space-y-2 pt-3 border-t border-slate-100">
+                          {feature.features.map((item, idx) => (
+                            <div key={idx} className="flex items-center space-x-2 text-xs">
+                              <div className="w-1.5 h-1.5 rounded-full bg-brand-blue"></div>
+                              <span className="text-slate-600 font-medium">{item}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                    <p className="text-sm text-slate-600 mb-4">{feature.description}</p>
-                    {feature.features && feature.features.length > 0 && (
-                      <div className="space-y-2 pt-3 border-t border-slate-100">
-                        {feature.features.map((item, idx) => (
-                          <div key={idx} className="flex items-center space-x-2 text-xs">
-                            <div className="w-1.5 h-1.5 rounded-full bg-brand-blue"></div>
-                            <span className="text-slate-600 font-medium">{item}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -1222,15 +1440,21 @@ export const HomePageManager = () => {
       case 'features':
         return (
           <div className="space-y-4">
-            {features.sort((a, b) => a.order - b.order).map(feature => (
-              <div key={feature.id} className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-lg transition-shadow">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <span className="text-2xl">{feature.icon}</span>
-                      <h3 className="font-bold text-lg">{feature.title}</h3>
-                      <span className="text-xs px-2 py-1 bg-slate-100 rounded">{feature.section}</span>
-                    </div>
+            {features.sort((a, b) => a.order - b.order).map(feature => {
+              const IconComponent = ICON_MAP[feature.icon];
+              return (
+                <div key={feature.id} className="bg-white rounded-xl border border-slate-100 p-4 hover:shadow-lg transition-shadow">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        {IconComponent ? (
+                          <IconComponent className="w-8 h-8 text-brand-blue" />
+                        ) : (
+                          <span className="text-2xl">{feature.icon}</span>
+                        )}
+                        <h3 className="font-bold text-lg">{feature.title}</h3>
+                        <span className="text-xs px-2 py-1 bg-slate-100 rounded">{feature.section}</span>
+                      </div>
                     <p className="text-sm text-slate-600">{feature.description}</p>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -1243,7 +1467,7 @@ export const HomePageManager = () => {
                   </div>
                 </div>
               </div>
-            ))}
+            ); })}
           </div>
         );
 
@@ -3747,28 +3971,37 @@ export const HomePageManager = () => {
       case 'bannerCards':
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-bold mb-2">Emoji</label>
-                <input
-                  type="text"
-                  value={formData.icon || ''}
-                  onChange={e => setFormData({ ...formData, icon: e.target.value })}
-                  placeholder="📄 (Emoji yapıştırın)"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-brand-blue text-2xl text-center"
-                  maxLength={2}
-                />
-                <p className="text-xs text-slate-500 mt-1">Windows: Win + . | Mac: Cmd + Ctrl + Space</p>
+            <div>
+              <label className="block text-sm font-bold mb-2">İkon Seçin</label>
+              <div className="grid grid-cols-8 gap-2 mb-4 p-4 border rounded-xl bg-slate-50 max-h-48 overflow-y-auto">
+                {Object.keys(ICON_MAP).map(iconName => {
+                  const Icon = ICON_MAP[iconName];
+                  return (
+                    <button
+                      key={iconName}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, icon: iconName })}
+                      className={`aspect-square rounded-lg flex items-center justify-center transition-all ${
+                        formData.icon === iconName 
+                          ? 'bg-brand-blue text-white shadow-lg ring-2 ring-brand-blue ring-offset-2' 
+                          : 'bg-white text-slate-400 hover:text-brand-blue hover:shadow-md'
+                      }`}
+                      title={iconName}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </button>
+                  );
+                })}
               </div>
-              <div>
-                <label className="block text-sm font-bold mb-2">Sıra</label>
-                <input
-                  type="number"
-                  value={formData.order || 0}
-                  onChange={e => setFormData({ ...formData, order: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-brand-blue"
-                />
-              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-bold mb-2">Sıra</label>
+              <input
+                type="number"
+                value={formData.order || 0}
+                onChange={e => setFormData({ ...formData, order: parseInt(e.target.value) })}
+                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-brand-blue"
+              />
             </div>
             <div>
               <label className="block text-sm font-bold mb-2">Başlık</label>
@@ -3884,15 +4117,27 @@ export const HomePageManager = () => {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-bold mb-2">Emoji</label>
-                <input
-                  type="text"
-                  value={formData.icon || ''}
-                  onChange={e => setFormData({ ...formData, icon: e.target.value })}
-                  placeholder="🏛️"
-                  className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-brand-blue text-2xl text-center"
-                  maxLength={2}
-                />
+                <label className="block text-sm font-bold mb-2">İkon Seçin</label>
+                <div className="grid grid-cols-6 gap-2 mb-4 p-4 border rounded-xl bg-slate-50 max-h-48 overflow-y-auto">
+                  {Object.keys(ICON_MAP).map(iconName => {
+                    const Icon = ICON_MAP[iconName];
+                    return (
+                      <button
+                        key={iconName}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, icon: iconName })}
+                        className={`aspect-square rounded-lg flex items-center justify-center transition-all ${
+                          formData.icon === iconName 
+                            ? 'bg-brand-blue text-white shadow-lg ring-2 ring-brand-blue ring-offset-2' 
+                            : 'bg-white text-slate-400 hover:text-brand-blue hover:shadow-md'
+                        }`}
+                        title={iconName}
+                      >
+                        <Icon className="w-5 h-5" />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-bold mb-2">Sıra</label>
@@ -4030,15 +4275,27 @@ export const HomePageManager = () => {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold mb-2">Emoji</label>
-              <input
-                type="text"
-                value={formData.icon || ''}
-                onChange={e => setFormData({ ...formData, icon: e.target.value })}
-                placeholder="💻"
-                className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:border-brand-blue text-2xl text-center"
-                maxLength={2}
-              />
+              <label className="block text-sm font-bold mb-2">İkon Seçin</label>
+              <div className="grid grid-cols-8 gap-2 mb-4 p-4 border rounded-xl bg-slate-50 max-h-48 overflow-y-auto">
+                {Object.keys(ICON_MAP).map(iconName => {
+                  const Icon = ICON_MAP[iconName];
+                  return (
+                    <button
+                      key={iconName}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, icon: iconName })}
+                      className={`aspect-square rounded-lg flex items-center justify-center transition-all ${
+                        formData.icon === iconName 
+                          ? 'bg-brand-blue text-white shadow-lg ring-2 ring-brand-blue ring-offset-2' 
+                          : 'bg-white text-slate-400 hover:text-brand-blue hover:shadow-md'
+                      }`}
+                      title={iconName}
+                    >
+                      <Icon className="w-5 h-5" />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <div>
               <label className="block text-sm font-bold mb-2">Alt Özellikler (Her satıra bir özellik)</label>
@@ -4216,27 +4473,20 @@ export const HomePageManager = () => {
       )}
       
       {/* Tabs */}
-      <div className="flex flex-wrap gap-2">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center space-x-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${
-              activeTab === tab.id
-                ? 'bg-brand-blue text-white shadow-lg'
-                : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-100'
-            }`}
-          >
-            <tab.icon className="w-4 h-4" />
-            <span>{tab.label}</span>
-            <span className={`px-2 py-0.5 rounded-full text-xs ${
-              activeTab === tab.id ? 'bg-white/20' : 'bg-slate-100'
-            }`}>
-              {tab.count}
-            </span>
-          </button>
-        ))}
-      </div>
+      <DndProvider backend={HTML5Backend}>
+        <div className="flex flex-wrap gap-2">
+          {sortedTabs.map((tab, index) => (
+            <DraggableTab
+              key={tab.id}
+              index={index}
+              tab={tab}
+              activeTab={activeTab}
+              moveTab={moveTab}
+              setActiveTab={setActiveTab}
+            />
+          ))}
+        </div>
+      </DndProvider>
 
       {/* Add Button */}
       <div className="flex justify-end">

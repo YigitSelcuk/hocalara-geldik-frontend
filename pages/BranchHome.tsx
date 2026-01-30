@@ -4,8 +4,7 @@ import { Branch, SliderItem, NewsItem } from '../types';
 import { MapPin, MessageCircle, Calendar, Users, Phone, GraduationCap, Zap, Cpu, ChevronRight, FileText, TrendingUp, Mail, Award } from 'lucide-react';
 import { sliderService, pageService } from '../services/cms.service';
 import { Link } from 'react-router-dom';
-import { API_BASE_URL } from '../services/api';
-import axios from 'axios';
+import api, { API_BASE_URL } from '../services/api';
 import Alert from '../components/Alert';
 import { useAlert } from '../hooks/useAlert';
 
@@ -31,7 +30,7 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
     const fetchData = async () => {
       try {
         const [newsRes, slidersRes] = await Promise.all([
-          axios.get(`/api/blog-posts?branchId=${branch.id}&isActive=true`),
+          api.get(`/blog-posts?branchId=${branch.id}&isActive=true`),
           sliderService.getAll({ target: branch.id, isActive: true })
         ]);
         setNews(newsRes.data.data || []);
@@ -54,7 +53,7 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
     setSubmitting(true);
     
     try {
-      const response = await axios.post('/api/leads', {
+      const response = await api.post('/leads', {
         ...formData,
         branchId: branch.id
       });

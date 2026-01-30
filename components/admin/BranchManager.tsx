@@ -9,13 +9,15 @@ interface BranchManagerProps {
     handleAdd: (type: 'branch') => void;
     handleEdit: (type: 'branch', item: Branch) => void;
     handleDelete: (type: 'branch', id: string) => void;
+    handleToggleStatus?: (type: 'branch', item: Branch) => void;
 }
 
 export const BranchManager: React.FC<BranchManagerProps> = ({
     branches,
     handleAdd,
     handleEdit,
-    handleDelete
+    handleDelete,
+    handleToggleStatus
 }) => {
     const navigate = useNavigate();
 
@@ -36,7 +38,10 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {branches.map((branch) => (
+            {branches.map((branch) => {
+                const logoUrl = branch.logo ? (branch.logo.startsWith('http') ? branch.logo : (branch.logo.startsWith('/assets') ? branch.logo : `${API_BASE_URL}${branch.logo}`)) : null;
+                
+                return (
                 <div key={branch.id} className="bg-white rounded-[28px] border border-slate-100 p-6 space-y-6 shadow-sm hover:shadow-2xl transition-all duration-500 group relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-full -mr-16 -mt-16 group-hover:bg-brand-blue/5 transition-all duration-700"></div>
 
@@ -45,8 +50,8 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
                             className="w-16 h-16 bg-slate-50 rounded-[20px] flex items-center justify-center group-hover:rotate-6 transition-all overflow-hidden border border-slate-50"
                             style={{ borderTop: `4px solid ${branch.primaryColor || '#0052FF'}` }}
                         >
-                            {branch.logo ? (
-                                <img src={branch.logo.startsWith('http') ? branch.logo : (branch.logo.startsWith('/assets') ? branch.logo : `${API_BASE_URL}${branch.logo}`)} className="w-10 h-10 object-contain" alt={branch.name} />
+                            {logoUrl ? (
+                                <img src={logoUrl} className="w-10 h-10 object-contain" alt={branch.name} />
                             ) : (
                                 <Building2 className="w-7 h-7 text-brand-blue group-hover:text-brand-dark transition-colors" />
                             )}
@@ -84,11 +89,18 @@ export const BranchManager: React.FC<BranchManagerProps> = ({
                         </div>
                         <div className="flex justify-between items-center text-xs">
                             <span className="text-slate-400 font-bold">Durum</span>
-                            <span className="text-green-600 font-black flex items-center"><div className="w-1.5 h-1.5 rounded-full bg-green-500 mr-2"></div> Aktif</span>
+                            <button 
+                                onClick={() => handleToggleStatus && handleToggleStatus('branch', branch)}
+                                className={`flex items-center space-x-2 px-3 py-1.5 rounded-full transition-all ${branch.isActive !== false ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-500'}`}
+                            >
+                                <div className={`w-2 h-2 rounded-full ${branch.isActive !== false ? 'bg-green-500' : 'bg-slate-400'}`}></div>
+                                <span className="font-black">{branch.isActive !== false ? 'Aktif' : 'Pasif'}</span>
+                            </button>
                         </div>
                     </div>
                 </div>
-            ))}
+            );
+        })}
         </div>
     </div>
     );

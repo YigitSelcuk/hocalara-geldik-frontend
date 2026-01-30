@@ -178,8 +178,8 @@ const NewsDetail: React.FC = () => {
                     prose-p:text-slate-700 prose-p:leading-relaxed prose-p:mb-5 prose-p:text-base
                     prose-a:text-brand-blue prose-a:underline hover:prose-a:no-underline
                     prose-strong:text-brand-dark prose-strong:font-bold
-                    prose-ul:my-4 prose-ol:my-4
-                    prose-li:text-slate-700 prose-li:leading-relaxed
+                    prose-ul:my-4 prose-ol:my-4 prose-ul:list-disc prose-ol:list-decimal prose-ul:pl-5 prose-ol:pl-5
+                    prose-li:text-slate-700 prose-li:leading-relaxed prose-li:marker:text-brand-blue
                     prose-blockquote:border-l-4 prose-blockquote:border-slate-300 prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-slate-600
                     prose-img:rounded-xl prose-img:my-8"
                   dangerouslySetInnerHTML={{ __html: news.content }}

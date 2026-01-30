@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Backend API base URL - empty string for relative paths when using proxy
-export const API_BASE_URL = '';
+// Backend API base URL
+export const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000';
 
 const api = axios.create({
     baseURL: '/api',
