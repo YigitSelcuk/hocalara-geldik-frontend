@@ -456,8 +456,11 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         throw new Error('Görsel URL alınamadı');
       }
       return url;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Image upload failed:', error);
+      if (error.response?.status === 413) {
+        throw new Error('Dosya boyutu çok büyük (Maksimum 5MB)');
+      }
       throw error;
     }
   };
@@ -541,7 +544,8 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
         switch (type) {
           case 'slider':
             updatedItem = await sliderService.update(editingItem.id, data);
-            setSliders((prev: SliderItem[]) => prev.map((item: SliderItem) => item.id === editingItem.id ? updatedItem.data : item));
+            const updatedSlider = updatedItem.data.slider || updatedItem.data.data || updatedItem.data;
+            setSliders((prev: SliderItem[]) => prev.map((item: SliderItem) => item.id === editingItem.id ? updatedSlider : item));
             break;
           case 'news':
             updatedItem = await pageService.update(editingItem.id, data);
@@ -1051,10 +1055,6 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                 
                 // Validate slider fields
                 if (modalType === 'slider') {
-                  if (!finalData.title) {
-                    showAlert('error', 'Lütfen başlık giriniz');
-                    return;
-                  }
                   if (!finalData.image) {
                     showAlert('error', 'Lütfen görsel yükleyiniz');
                     return;

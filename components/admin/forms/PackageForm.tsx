@@ -134,8 +134,8 @@ export const PackageForm: React.FC<PackageFormProps> = ({
                 try {
                   const url = await handleImageUpload(file);
                   setFormData({ ...formData, image: url });
-                } catch (error) {
-                  showAlert('error', 'Görsel yüklenemedi');
+                } catch (error: any) {
+                  showAlert('error', error.message || 'Görsel yüklenemedi');
                 }
               }
             }}

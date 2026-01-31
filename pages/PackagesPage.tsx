@@ -242,7 +242,7 @@ const PackagesPage: React.FC = () => {
 
                 {/* CTA Button */}
                 <Link
-                  to="#"
+                  to={`/paketler/${pkg.id}`}
                   className="block w-full px-6 py-3.5 bg-brand-blue text-white font-black rounded-lg hover:bg-brand-dark hover:shadow-lg hover:shadow-brand-blue/30 transition-all duration-300 text-center text-xs group"
                 >
                   <span className="flex items-center justify-center space-x-2">

@@ -73,8 +73,8 @@ export interface NewsItem {
 
 export interface SliderItem {
   id: string;
-  title: string;
-  subtitle: string;
+  title?: string;
+  subtitle?: string;
   image: string;
   link: string;
   target: 'main' | string; // 'main' or branchId

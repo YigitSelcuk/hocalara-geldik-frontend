@@ -91,8 +91,8 @@ export const YearlySuccessForm: React.FC<YearlySuccessFormProps> = ({
                   try {
                     const url = await handleImageUpload(file);
                     setFormData({ ...formData, banner: { ...formData.banner, image: url } });
-                  } catch (error) {
-                    showAlert('error', 'Görsel yüklenemedi');
+                  } catch (error: any) {
+                    showAlert('error', error.message || 'Görsel yüklenemedi');
                   }
                 }
               }}

@@ -1028,7 +1028,7 @@ export const HomePageManager = () => {
           case 'sliders':
             result = await sliderService.create(dataToSave);
             console.log('✅ Create result:', result);
-            const newSlider = result.data.slider || result.data;
+            const newSlider = result.data.slider || result.data.data || result.data;
             setSliders(prev => [newSlider, ...prev]);
             break;
           case 'bannerCards':
@@ -1064,8 +1064,13 @@ export const HomePageManager = () => {
       setShowModal(false);
       setSelectedFile(null);
       setPreviewUrl('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('❌ Save error:', error);
+      if (error.response?.status === 413) {
+            showAlert('error', 'Dosya boyutu çok büyük (Maksimum 5MB)');
+          } else {
+            showAlert('error', 'Kaydetme hatası: ' + (error.response?.data?.message || error.message || 'Bilinmeyen hata'));
+          }
     } finally {
       setUploading(false);
     }
@@ -4473,20 +4478,18 @@ export const HomePageManager = () => {
       )}
       
       {/* Tabs */}
-      <DndProvider backend={HTML5Backend}>
-        <div className="flex flex-wrap gap-2">
-          {sortedTabs.map((tab, index) => (
-            <DraggableTab
-              key={tab.id}
-              index={index}
-              tab={tab}
-              activeTab={activeTab}
-              moveTab={moveTab}
-              setActiveTab={setActiveTab}
-            />
-          ))}
-        </div>
-      </DndProvider>
+      <div className="flex flex-wrap gap-2">
+        {sortedTabs.map((tab, index) => (
+          <DraggableTab
+            key={tab.id}
+            index={index}
+            tab={tab}
+            activeTab={activeTab}
+            moveTab={moveTab}
+            setActiveTab={setActiveTab}
+          />
+        ))}
+      </div>
 
       {/* Add Button */}
       <div className="flex justify-end">

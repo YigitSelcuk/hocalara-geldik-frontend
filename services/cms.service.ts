@@ -102,6 +102,7 @@ export const videoService = {
 // Education Package Service
 export const packageService = {
     getAll: () => api.get('/packages'),
+    getById: (id: string) => api.get(`/packages/${id}`),
     create: (data: any) => api.post('/packages', data),
     update: (id: string, data: any) => api.put(`/packages/${id}`, data),
     delete: (id: string) => api.delete(`/packages/${id}`),

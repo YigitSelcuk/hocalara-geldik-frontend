@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { HashRouter, Routes, Route, useParams, Navigate, useLocation } from 'react-router-dom';
+import { BranchProvider, useBranch } from './contexts/BranchContext';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import MainHome from './pages/MainHome';
@@ -15,6 +16,7 @@ import BranchSuccessPage from './pages/BranchSuccessPage';
 import FranchisePage from './pages/FranchisePage';
 import VideoGallery from './pages/VideoGallery';
 import PackagesPage from './pages/PackagesPage';
+import PackageDetail from './pages/PackageDetail';
 import CalculatorPage from './pages/CalculatorPage';
 import AboutPage from './pages/AboutPage';
 import TeachersPage from './pages/TeachersPage';
@@ -44,21 +46,32 @@ const BranchWrapper: React.FC = () => {
   const [branch, setBranch] = React.useState<Branch | null>(null);
   const [loading, setLoading] = React.useState(true);
   const { slug } = useParams<{ slug: string }>();
+  const { setCurrentBranch } = useBranch();
+
+  React.useEffect(() => {
+    // Reset branch when slug changes or component unmounts
+    return () => {
+      setCurrentBranch(null);
+    };
+  }, [setCurrentBranch]);
 
   React.useEffect(() => {
     const fetchBranch = async () => {
       try {
         if (!slug) return;
         const res = await branchService.getBySlug(slug);
-        setBranch(res.data.branch);
+        const branchData = res.data.branch;
+        setBranch(branchData);
+        setCurrentBranch(branchData);
       } catch (error) {
         console.error('Error fetching branch:', error);
+        setCurrentBranch(null);
       } finally {
         setLoading(false);
       }
     };
     fetchBranch();
-  }, [slug]);
+  }, [slug, setCurrentBranch]);
 
   if (loading) {
     return (
@@ -190,49 +203,52 @@ const App: React.FC = () => {
   }
 
   return (
-    <HashRouter>
-      <ScrollToTop />
-      <Routes>
-        {/* Admin Routes - No Site Header/Footer */}
-        <Route path="/admin/login" element={<AdminLogin />} />
-        <Route path="/admin/*" element={<ProtectedAdminRoute user={user} setUser={setUser} />} />
+    <BranchProvider>
+      <HashRouter>
+        <ScrollToTop />
+        <Routes>
+          {/* Admin Routes - No Site Header/Footer */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/*" element={<ProtectedAdminRoute user={user} setUser={setUser} />} />
 
-        {/* Public Routes - Wrapped in SiteLayout */}
-        <Route
-          path="*"
-          element={
-            maintenanceMode ? (
-              <MaintenancePage />
-            ) : (
-              <SiteLayout>
-                <Routes>
-                <Route path="/" element={<MainHome />} />
-                <Route path="/hakkimizda" element={<AboutPage />} />
-                <Route path="/egitmenler" element={<TeachersPage />} />
-                <Route path="/iletisim" element={<ContactPage />} />
-                <Route path="/basari-merkezleri" element={<BranchesFeaturePage />} />
-                <Route path="/dijital-platform" element={<DigitalPlatformPage />} />
-                <Route path="/yurtdisi-egitim" element={<InternationalPage />} />
-                <Route path="/video-kutuphanesi" element={<VideoLibraryPage />} />
-                <Route path="/rehberlik" element={<GuidancePage />} />
-                <Route path="/haberler" element={<NewsList />} />
-                <Route path="/haberler/:id" element={<NewsDetail />} />
-                <Route path="/subeler" element={<BranchList />} />
-                <Route path="/subeler/:slug" element={<BranchWrapper />} />
-                <Route path="/subeler/:slug/basarilar" element={<BranchSuccessPage />} />
-                <Route path="/basarilarimiz" element={<SuccessPage />} />
-                <Route path="/franchise" element={<FranchisePage />} />
-                <Route path="/videolar" element={<VideoGallery />} />
-                <Route path="/paketler" element={<PackagesPage />} />
-                <Route path="/hesaplama" element={<CalculatorPage />} />
-                <Route path="/:slug" element={<BranchWrapper />} />
-              </Routes>
-            </SiteLayout>
-            )
-          }
-        />
-      </Routes>
-    </HashRouter>
+          {/* Public Routes - Wrapped in SiteLayout */}
+          <Route
+            path="*"
+            element={
+              maintenanceMode ? (
+                <MaintenancePage />
+              ) : (
+                <SiteLayout>
+                  <Routes>
+                  <Route path="/" element={<MainHome />} />
+                  <Route path="/hakkimizda" element={<AboutPage />} />
+                  <Route path="/egitmenler" element={<TeachersPage />} />
+                  <Route path="/iletisim" element={<ContactPage />} />
+                  <Route path="/basari-merkezleri" element={<BranchesFeaturePage />} />
+                  <Route path="/dijital-platform" element={<DigitalPlatformPage />} />
+                  <Route path="/yurtdisi-egitim" element={<InternationalPage />} />
+                  <Route path="/video-kutuphanesi" element={<VideoLibraryPage />} />
+                  <Route path="/rehberlik" element={<GuidancePage />} />
+                  <Route path="/haberler" element={<NewsList />} />
+                  <Route path="/haberler/:id" element={<NewsDetail />} />
+                  <Route path="/subeler" element={<BranchList />} />
+                  <Route path="/subeler/:slug" element={<BranchWrapper />} />
+                  <Route path="/subeler/:slug/basarilar" element={<BranchSuccessPage />} />
+                  <Route path="/basarilarimiz" element={<SuccessPage />} />
+                  <Route path="/franchise" element={<FranchisePage />} />
+                  <Route path="/videolar" element={<VideoGallery />} />
+                  <Route path="/paketler" element={<PackagesPage />} />
+                  <Route path="/paketler/:id" element={<PackageDetail />} />
+                  <Route path="/hesaplama" element={<CalculatorPage />} />
+                  <Route path="/:slug" element={<BranchWrapper />} />
+                </Routes>
+              </SiteLayout>
+              )
+            }
+          />
+        </Routes>
+      </HashRouter>
+    </BranchProvider>
   );
 };
 

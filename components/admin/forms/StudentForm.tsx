@@ -74,8 +74,8 @@ export const StudentForm: React.FC<StudentFormProps> = ({
                 try {
                   const url = await handleImageUpload(file);
                   setFormData({ ...formData, image: url });
-                } catch (error) {
-                  showAlert('error', 'Görsel yüklenemedi');
+                } catch (error: any) {
+                  showAlert('error', error.message || 'Görsel yüklenemedi');
                 }
               }
             }}

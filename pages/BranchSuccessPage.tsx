@@ -14,6 +14,13 @@ const BranchSuccessPage: React.FC = () => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        // Reset branch context on unmount
+        return () => {
+            setCurrentBranch(null);
+        };
+    }, [setCurrentBranch]);
+
+    useEffect(() => {
         const fetchData = async () => {
             if (!slug) return;
             try {
@@ -23,6 +30,7 @@ const BranchSuccessPage: React.FC = () => {
                 if (branchRes.data?.branch) {
                     const branchData = branchRes.data.branch;
                     setBranch(branchData);
+                    setCurrentBranch(branchData);
                     
                     // Then fetch successes filtered by branchId
                     const successRes = await yearlySuccessService.getAll();

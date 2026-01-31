@@ -38,7 +38,12 @@ const Header: React.FC = () => {
   };
 
   const getLogoUrl = () => {
-    const logoPath = getSection('header-logo', 'buttonLink', '/assets/images/logoblue.svg');
+    let logoPath = getSection('header-logo', 'buttonLink', '/assets/images/logoblue.svg');
+
+    if (currentBranch && currentBranch.logo) {
+      logoPath = currentBranch.logo;
+    }
+
     // If it's a full URL (http/https), use it as is
     if (logoPath.startsWith('http')) {
       return logoPath;

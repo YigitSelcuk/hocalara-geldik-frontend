@@ -70,9 +70,13 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
       } else {
         showAlert('error', 'Resim URL\'si alınamadı');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error uploading image:', error);
-      showAlert('error', 'Resim yüklenemedi');
+      if (error.response?.status === 413) {
+        showAlert('error', 'Dosya boyutu çok büyük (Maksimum 5MB)');
+      } else {
+        showAlert('error', error.response?.data?.message || error.message || 'Resim yüklenemedi');
+      }
     } finally {
       setUploading(false);
     }

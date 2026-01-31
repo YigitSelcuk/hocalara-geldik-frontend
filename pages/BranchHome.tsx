@@ -216,7 +216,7 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
                   </div>
 
                   <h1 className={`text-6xl md:text-8xl font-black text-white tracking-tighter leading-[0.9] transition-all duration-1000 delay-500 ${index === activeSlide ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
-                    {slide.title.split(' ').map((word, i) => (
+                    {(slide.title || '').split(' ').map((word, i) => (
                         <span key={i} className={i >= 1 ? 'text-brand-blue italic' : ''}>{word} </span>
                       ))}
                   </h1>
@@ -476,6 +476,16 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
                   </div>
                 </a>
 
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${branch.lat},${branch.lng}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center justify-center space-x-2 w-full py-3 bg-slate-100 text-slate-700 font-bold rounded-xl hover:bg-brand-blue hover:text-white transition-colors text-sm"
+                >
+                  <MapPin className="w-4 h-4" />
+                  <span>Yol Tarifi Al</span>
+                </a>
+
                 <button
                   onClick={() => setShowRegistrationForm(true)}
                   className="w-full py-4 bg-brand-blue text-white font-bold rounded-xl hover:bg-brand-dark transition-colors text-sm"
@@ -487,31 +497,37 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
           </div>
 
           {/* WhatsApp Card - Minimal */}
-          <div className="bg-brand-dark p-6 rounded-2xl text-white shadow-lg">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-bold mb-1">Hızlı Destek</h3>
-                <p className="text-slate-400 text-sm">WhatsApp üzerinden bize ulaşın</p>
-              </div>
-
-              <a
-                href={`https://wa.me/${branch.whatsapp}`}
-                target="_blank" rel="noreferrer"
-                className="flex items-center justify-between p-4 bg-white/10 rounded-xl hover:bg-green-600 transition-colors group"
-              >
-                <div className="flex items-center space-x-3">
-                  <MessageCircle className="w-5 h-5 text-green-400 group-hover:text-white" />
-                  <span className="font-bold text-sm">WhatsApp Hattı</span>
+          {(branch.whatsapp || branch.email) && (
+            <div className="bg-brand-dark p-6 rounded-2xl text-white shadow-lg">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-bold mb-1">Hızlı Destek</h3>
+                  <p className="text-slate-400 text-sm">Bize kolayca ulaşın</p>
                 </div>
-                <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-white" />
-              </a>
 
-              <div className="flex items-center space-x-3 p-4 bg-white/5 rounded-xl">
-                <Mail className="w-5 h-5 text-brand-blue" />
-                <span className="font-medium text-xs">{branch.email || 'bilgi@hocalarageldik.com'}</span>
+                {branch.whatsapp && (
+                  <a
+                    href={`https://wa.me/${branch.whatsapp}`}
+                    target="_blank" rel="noreferrer"
+                    className="flex items-center justify-between p-4 bg-white/10 rounded-xl hover:bg-green-600 transition-colors group"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <MessageCircle className="w-5 h-5 text-green-400 group-hover:text-white" />
+                      <span className="font-bold text-sm">WhatsApp Hattı</span>
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-400 group-hover:text-white" />
+                  </a>
+                )}
+
+                {branch.email && (
+                  <div className="flex items-center space-x-3 p-4 bg-white/5 rounded-xl">
+                    <Mail className="w-5 h-5 text-brand-blue" />
+                    <span className="font-medium text-xs">{branch.email}</span>
+                  </div>
+                )}
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div >

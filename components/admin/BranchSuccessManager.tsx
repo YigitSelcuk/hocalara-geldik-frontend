@@ -147,8 +147,12 @@ const BranchSuccessManager: React.FC<BranchSuccessManagerProps> = ({ branchId })
       const url = response.data?.data?.url || response.data?.url;
       setForm({ ...form, bannerImage: url });
       showAlert('success', 'Görsel yüklendi');
-    } catch (error) {
-      showAlert('error', 'Görsel yüklenemedi');
+    } catch (error: any) {
+      if (error.response?.status === 413) {
+        showAlert('error', 'Dosya boyutu çok büyük (Maksimum 5MB)');
+      } else {
+        showAlert('error', error.response?.data?.message || error.message || 'Görsel yüklenemedi');
+      }
     } finally {
       setUploading(false);
     }

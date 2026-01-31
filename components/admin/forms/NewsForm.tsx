@@ -76,8 +76,8 @@ export const NewsForm: React.FC<NewsFormProps> = ({
                 try {
                   const url = await handleImageUpload(file);
                   setFormData({ ...formData, featuredImage: url });
-                } catch (error) {
-                  showAlert('error', 'Görsel yüklenemedi');
+                } catch (error: any) {
+                  showAlert('error', error.message || 'Görsel yüklenemedi');
                 }
               }
             }}

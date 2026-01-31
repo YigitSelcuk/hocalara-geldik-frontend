@@ -163,8 +163,11 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user, branch
     try {
       const response = await mediaService.upload(file);
       return response.data?.data?.url || response.data?.url || response.data?.media?.url;
-    } catch (error) {
+    } catch (error: any) {
       console.error('Image upload failed:', error);
+      if (error.response?.status === 413) {
+        throw new Error('Dosya boyutu çok büyük (Maksimum 5MB)');
+      }
       throw error;
     }
   };
@@ -861,8 +864,8 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user, branch
                             setBasicInfo({ ...basicInfo, logo: url });
                             setHasChanges(true);
                             showAlert('success', '✅ Logo yüklendi! Kaydetmeyi unutmayın.');
-                          } catch (error) {
-                            showAlert('error', '❌ Görsel yüklenemedi');
+                          } catch (error: any) {
+                            showAlert('error', error.message || '❌ Görsel yüklenemedi');
                           }
                         }
                       }}
@@ -892,8 +895,8 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user, branch
                             setBasicInfo({ ...basicInfo, image: url });
                             setHasChanges(true);
                             showAlert('success', '✅ Kapak görseli yüklendi! Kaydetmeyi unutmayın.');
-                          } catch (error) {
-                            showAlert('error', '❌ Görsel yüklenemedi');
+                          } catch (error: any) {
+                            showAlert('error', error.message || '❌ Görsel yüklenemedi');
                           }
                         }
                       }}
@@ -921,8 +924,8 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user, branch
                             setBasicInfo({ ...basicInfo, successBanner: url });
                             setHasChanges(true);
                             showAlert('success', '✅ Başarı banner yüklendi! Kaydetmeyi unutmayın.');
-                          } catch (error) {
-                            showAlert('error', '❌ Görsel yüklenemedi');
+                          } catch (error: any) {
+                            showAlert('error', error.message || '❌ Görsel yüklenemedi');
                           }
                         }
                       }}

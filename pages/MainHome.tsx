@@ -188,58 +188,70 @@ const MainHome: React.FC = () => {
         {mainSliders.map((slide, index) => {
           const Icon = (slide as any).key === 'hero' ? IconMap['Zap'] : null;
           const imageUrl = slide.image?.startsWith('http') ? slide.image : (slide.image?.startsWith('/assets') ? slide.image : `${API_BASE_URL}${slide.image}`);
+          
+          // Check if there is any content to display
+          const hasContent = slide.title || slide.subtitle || slide.primaryButtonText || slide.secondaryButtonText;
+
           return (
             <div
               key={slide.id}
               className={`absolute inset-0 transition-all duration-[2000ms] ease-out ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
             >
               <div className="absolute inset-0 z-0">
-                <img src={imageUrl} alt={slide.title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-r from-brand-dark via-brand-dark/40 to-transparent"></div>
-                <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-transparent to-transparent"></div>
+                <img src={imageUrl} alt={slide.title || 'Slider'} className="w-full h-full object-cover" />
+                {hasContent && (
+                  <>
+                    <div className="absolute inset-0 bg-gradient-to-r from-brand-dark via-brand-dark/40 to-transparent"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-transparent to-transparent"></div>
+                  </>
+                )}
               </div>
 
-              <div className="relative z-10 h-full max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12 flex flex-col justify-center">
-                <div className="max-w-4xl space-y-6">
-                  {slide.subtitle && (
-                    <div className={`inline-flex items-center space-x-4 px-6 py-2.5 ${isStyle2 ? 'bg-brand-warm-orange/20 border-brand-warm-orange/30 text-brand-warm-orange' : 'bg-brand-blue/20 border-brand-blue/30 text-brand-blue'} backdrop-blur-xl rounded-2xl border text-[12px] font-black tracking-widest transition-all duration-1000 delay-300 ${index === currentSlide ? 'translate-x-0 opacity-100' : '-translate-x-12 opacity-0'}`}>
-                      {Icon && <Icon className="w-4 h-4" />}
-                      <span>{slide.subtitle}</span>
+              {hasContent && (
+                <div className="relative z-10 h-full max-w-[1600px] mx-auto px-4 md:px-8 lg:px-12 flex flex-col justify-center">
+                  <div className="max-w-4xl space-y-6">
+                    {slide.subtitle && (
+                      <div className={`inline-flex items-center space-x-4 px-6 py-2.5 ${isStyle2 ? 'bg-brand-warm-orange/20 border-brand-warm-orange/30 text-brand-warm-orange' : 'bg-brand-blue/20 border-brand-blue/30 text-brand-blue'} backdrop-blur-xl rounded-2xl border text-[12px] font-black tracking-widest transition-all duration-1000 delay-300 ${index === currentSlide ? 'translate-x-0 opacity-100' : '-translate-x-12 opacity-0'}`}>
+                        {Icon && <Icon className="w-4 h-4" />}
+                        <span>{slide.subtitle}</span>
+                      </div>
+                    )}
+
+                    {slide.title && (
+                      <h1 className={`text-4xl md:text-6xl lg:text-[90px] font-black text-white leading-[0.9] tracking-tighter transition-all duration-1000 delay-500 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
+                        {slide.title.split(' ').map((word, i) => (
+                          <span key={i} className={i >= 2 ? `${isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'} italic` : ''}>{word} </span>
+                        ))}
+                      </h1>
+                    )}
+
+                    <div className={`flex flex-wrap gap-5 pt-6 transition-all duration-1000 delay-900 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+                      {(slide.primaryButtonText || slide.primaryButtonLink) && (
+                        <Link 
+                          to={slide.primaryButtonLink || slide.link || '#'} 
+                          className={`px-12 py-5 ${isStyle2 ? 'bg-brand-warm-orange shadow-brand-warm-orange/40 hover:shadow-brand-warm-orange/60' : 'bg-brand-blue shadow-brand-blue/40 hover:shadow-brand-blue/60'} text-white font-black rounded-2xl transition-all duration-300 shadow-2xl hover:scale-105 hover:-translate-y-1 text-[13px] tracking-wide group`}
+                        >
+                          <span className="flex items-center space-x-2">
+                            <span>{slide.primaryButtonText}</span>
+                            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                          </span>
+                        </Link>
+                      )}
+                      {(slide.secondaryButtonText || slide.secondaryButtonLink) && (
+                        <Link 
+                          to={slide.secondaryButtonLink || '/franchise'} 
+                          className="px-12 py-5 bg-white/10 backdrop-blur-md text-white border border-white/20 font-black rounded-2xl hover:bg-white hover:text-brand-dark hover:border-white transition-all duration-300 hover:scale-105 hover:-translate-y-1 text-[13px] tracking-wide group"
+                        >
+                          <span className="flex items-center space-x-2">
+                            <span>{slide.secondaryButtonText}</span>
+                            <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                          </span>
+                        </Link>
+                      )}
                     </div>
-                  )}
-
-                  <h1 className={`text-4xl md:text-6xl lg:text-[90px] font-black text-white leading-[0.9] tracking-tighter transition-all duration-1000 delay-500 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0'}`}>
-                    {slide.title.split(' ').map((word, i) => (
-                      <span key={i} className={i >= 2 ? `${isStyle2 ? 'text-brand-warm-orange' : 'text-brand-blue'} italic` : ''}>{word} </span>
-                    ))}
-                  </h1>
-
-                  <div className={`flex flex-wrap gap-5 pt-6 transition-all duration-1000 delay-900 ${index === currentSlide ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
-                    {(slide.primaryButtonText || slide.primaryButtonLink) && (
-                      <Link 
-                        to={slide.primaryButtonLink || slide.link || '#'} 
-                        className={`px-12 py-5 ${isStyle2 ? 'bg-brand-warm-orange shadow-brand-warm-orange/40 hover:shadow-brand-warm-orange/60' : 'bg-brand-blue shadow-brand-blue/40 hover:shadow-brand-blue/60'} text-white font-black rounded-2xl transition-all duration-300 shadow-2xl hover:scale-105 hover:-translate-y-1 text-[13px] tracking-wide group`}
-                      >
-                        <span className="flex items-center space-x-2">
-                          <span>{slide.primaryButtonText}</span>
-                          <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                        </span>
-                      </Link>
-                    )}
-                    {(slide.secondaryButtonText || slide.secondaryButtonLink) && (
-                      <Link 
-                        to={slide.secondaryButtonLink || '/franchise'} 
-                        className="px-12 py-5 bg-white/10 backdrop-blur-md text-white border border-white/20 font-black rounded-2xl hover:bg-white hover:text-brand-dark hover:border-white transition-all duration-300 hover:scale-105 hover:-translate-y-1 text-[13px] tracking-wide group"
-                      >
-                        <span className="flex items-center space-x-2">
-                          <span>{slide.secondaryButtonText}</span>
-                          <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                        </span>
-                      </Link>
-                    )}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           );
         })}
