@@ -553,7 +553,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             break;
           case 'branch':
             updatedItem = await branchService.update(editingItem.id, data);
-            setBranches((prev: Branch[]) => prev.map((item: Branch) => item.id === editingItem.id ? updatedItem.data : item));
+            setBranches((prev: Branch[]) => prev.map((item: Branch) => item.id === editingItem.id ? (updatedItem.data.branch || updatedItem.data) : item));
             break;
           case 'video':
             updatedItem = await videoService.update(editingItem.id, cleanedData);
