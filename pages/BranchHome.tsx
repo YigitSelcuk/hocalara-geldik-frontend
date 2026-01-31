@@ -190,21 +190,29 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
       {/* Hero Slider - Enhanced */}
       <section className="relative h-[700px] bg-brand-dark overflow-hidden">
         {slidersToDisplay.map((slide, index) => {
-          const imageUrl = slide.image?.startsWith('http') || slide.image?.startsWith('/assets') 
-            ? slide.image 
-            : `${API_BASE_URL}${slide.image}`;
+          const getImageUrl = (img: string) => img?.startsWith('http') || img?.startsWith('/assets') 
+            ? img 
+            : `${API_BASE_URL}${img}`;
+          
+          const imageUrl = getImageUrl(slide.image);
+          const mobileImageUrl = slide.mobileImage ? getImageUrl(slide.mobileImage) : null;
 
           return (
             <div
               key={slide.id}
             className={`absolute inset-0 transition-all duration-[2000ms] ease-out ${index === activeSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
           >
-            <img
-              src={imageUrl}
-              alt={slide.title}
-              className="w-full h-full"
-              style={{ objectFit: 'fill' }}
-            />
+            <picture>
+              {mobileImageUrl && (
+                <source media="(max-width: 768px)" srcSet={mobileImageUrl} />
+              )}
+              <img
+                src={imageUrl}
+                alt={slide.title}
+                className="w-full h-full"
+                style={{ objectFit: 'fill' }}
+              />
+            </picture>
             <div className="absolute inset-0 bg-gradient-to-r from-brand-dark via-brand-dark/60 to-transparent"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-transparent to-transparent"></div>
 

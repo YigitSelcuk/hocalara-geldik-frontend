@@ -187,7 +187,9 @@ const MainHome: React.FC = () => {
       <section className="relative h-[500px] lg:h-[600px] w-full overflow-hidden bg-brand-dark mx-auto max-w-[1920px]">
         {mainSliders.map((slide, index) => {
           const Icon = (slide as any).key === 'hero' ? IconMap['Zap'] : null;
-          const imageUrl = slide.image?.startsWith('http') ? slide.image : (slide.image?.startsWith('/assets') ? slide.image : `${API_BASE_URL}${slide.image}`);
+          const getImageUrl = (img: string) => img?.startsWith('http') ? img : (img?.startsWith('/assets') ? img : `${API_BASE_URL}${img}`);
+          const imageUrl = getImageUrl(slide.image);
+          const mobileImageUrl = slide.mobileImage ? getImageUrl(slide.mobileImage) : null;
           
           // Check if there is any content to display
           const hasContent = slide.title || slide.subtitle || slide.primaryButtonText || slide.secondaryButtonText;
@@ -198,12 +200,17 @@ const MainHome: React.FC = () => {
               className={`absolute inset-0 transition-all duration-[2000ms] ease-out ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
             >
               <div className="absolute inset-0 z-0">
-                <img 
-                  src={imageUrl} 
-                  alt={slide.title || 'Slider'} 
-                  className="w-full h-full" 
-                  style={{ objectFit: 'fill' }}
-                />
+                <picture>
+                  {mobileImageUrl && (
+                    <source media="(max-width: 768px)" srcSet={mobileImageUrl} />
+                  )}
+                  <img 
+                    src={imageUrl} 
+                    alt={slide.title || 'Slider'} 
+                    className="w-full h-full" 
+                    style={{ objectFit: 'fill' }}
+                  />
+                </picture>
                 {hasContent && (
                   <>
                     <div className="absolute inset-0 bg-gradient-to-r from-brand-dark via-brand-dark/40 to-transparent"></div>

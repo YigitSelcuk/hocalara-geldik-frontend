@@ -245,6 +245,9 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
   const [formData, setFormData] = useState<any>({});
   const [previewUrl, setPreviewUrl] = useState<string>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Mobile Image State
+  const [mobilePreviewUrl, setMobilePreviewUrl] = useState<string>('');
+  const [selectedMobileFile, setSelectedMobileFile] = useState<File | null>(null);
 
   // Initialize form data when modal opens or editing item changes
   useEffect(() => {
@@ -273,15 +276,21 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
       } else {
         setFormData(data);
       }
-      
+
       // Set preview url
       setPreviewUrl(data.image || '');
       setSelectedFile(null);
+      
+      // Set mobile preview url
+      setMobilePreviewUrl(data.mobileImage || '');
+      setSelectedMobileFile(null);
     } else {
       // Reset form when modal closes
       setFormData({});
       setPreviewUrl('');
       setSelectedFile(null);
+      setMobilePreviewUrl('');
+      setSelectedMobileFile(null);
     }
   }, [isModalOpen, editingItem, modalType]);
 
@@ -292,6 +301,18 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewUrl(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleMobileFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedMobileFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setMobilePreviewUrl(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -447,20 +468,30 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
   };
 
   const handleImageUpload = async (file: File): Promise<string> => {
+    // Check file size (10MB limit)
+    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_SIZE) {
+      showAlert('error', 'Dosya boyutu çok büyük! Maksimum 10MB yükleyebilirsiniz.');
+      throw new Error('File too large');
+    }
+
     try {
       const response = await mediaService.upload(file);
       // Response yapısını kontrol et
       const url = response.data?.data?.url || response.data?.url || response.data?.media?.url;
       if (!url) {
         console.error('No URL in response:', response);
+        showAlert('error', 'Sunucudan görsel URL alınamadı.');
         throw new Error('Görsel URL alınamadı');
       }
       return url;
     } catch (error: any) {
       console.error('Image upload failed:', error);
       if (error.response?.status === 413) {
-        throw new Error('Dosya boyutu çok büyük (Maksimum 10MB)');
+        showAlert('error', 'Dosya boyutu sunucu limitini aşıyor (Maksimum 10MB).');
+        throw new Error('Dosya boyutu çok büyük');
       }
+      showAlert('error', 'Görsel yüklenirken bir hata oluştu.');
       throw error;
     }
   };
@@ -774,6 +805,11 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             selectedFile={selectedFile}
             setSelectedFile={setSelectedFile}
             handleFileSelect={handleFileSelect}
+            mobilePreviewUrl={mobilePreviewUrl}
+            setMobilePreviewUrl={setMobilePreviewUrl}
+            selectedMobileFile={selectedMobileFile}
+            setSelectedMobileFile={setSelectedMobileFile}
+            handleMobileFileSelect={handleMobileFileSelect}
           />
         );
       case 'news':
@@ -1052,7 +1088,22 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
                     return;
                   }
                 }
+
+                if (modalType === 'slider' && selectedMobileFile) {
+                  try {
+                    const url = await handleImageUpload(selectedMobileFile);
+                    finalData.mobileImage = url;
+                  } catch (e) {
+                    return;
+                  }
+                }
                 
+                // If mobile image is explicitly removed (cleared in form but no new file selected)
+                // we need to make sure we send null or empty string to backend if supported
+                if (modalType === 'slider' && !selectedMobileFile && !mobilePreviewUrl) {
+                     finalData.mobileImage = null;
+                }
+
                 // Validate slider fields
                 if (modalType === 'slider') {
                   if (!finalData.image) {

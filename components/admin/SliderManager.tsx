@@ -44,6 +44,9 @@ export const SliderManager: React.FC<SliderManagerProps> = ({
                                     {slider.target === 'main' ? 'Global Vitrin' : 'Şube Özel'}
                                 </span>
                                 <span className="px-4 py-1.5 bg-green-500 text-white rounded-full text-[10px] font-black capitalize tracking-widest">Aktif</span>
+                                {slider.mobileImage && (
+                                    <span className="px-4 py-1.5 bg-purple-500 text-white rounded-full text-[10px] font-black capitalize tracking-widest">Mobil</span>
+                                )}
                             </div>
                             <h3 className="text-2xl font-black text-white leading-tight capitalize tracking-tight">{slider.title}</h3>
                         </div>

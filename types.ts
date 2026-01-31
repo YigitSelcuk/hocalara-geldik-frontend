@@ -76,6 +76,7 @@ export interface SliderItem {
   title?: string;
   subtitle?: string;
   image: string;
+  mobileImage?: string;
   link: string;
   target: 'main' | string; // 'main' or branchId
   order: number;

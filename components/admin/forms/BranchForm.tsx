@@ -65,7 +65,7 @@ export const BranchForm: React.FC<BranchFormProps> = ({
       {/* Logo Upload */}
       <div className="space-y-2">
         <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">
-          Logo <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 500x500px, PNG)</span>
+          Logo <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 500x500px, PNG, Max 10MB)</span>
         </label>
         <div className="flex gap-4 items-end">
           <input
@@ -74,11 +74,23 @@ export const BranchForm: React.FC<BranchFormProps> = ({
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (file) {
+                // Pre-check file size to avoid double alerting if handleImageUpload also alerts
+                if (file.size > 10 * 1024 * 1024) {
+                  showAlert('error', 'Dosya boyutu çok büyük! Maksimum 10MB yükleyebilirsiniz.');
+                  e.target.value = ''; // Reset input
+                  return;
+                }
+                
                 try {
                   const url = await handleImageUpload(file);
                   setFormData({ ...formData, logo: url });
                 } catch (error: any) {
-                  showAlert('error', error.message || 'Görsel yüklenemedi');
+                  // handleImageUpload handles alerts for size, so we only alert for other errors if needed
+                  // or if handleImageUpload throws but doesn't alert (which is not the case now)
+                  // preventing double alert by checking message
+                  if (error.message !== 'File too large') {
+                     showAlert('error', error.message || 'Görsel yüklenemedi');
+                  }
                 }
               }
             }}
@@ -93,7 +105,7 @@ export const BranchForm: React.FC<BranchFormProps> = ({
       {/* Kapak Görseli Upload */}
       <div className="space-y-2">
         <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">
-          Kapak Görseli <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 1920x700px)</span>
+          Kapak Görseli <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 1920x700px, Max 10MB)</span>
         </label>
         <div className="flex gap-4 items-end">
           <input
@@ -102,11 +114,20 @@ export const BranchForm: React.FC<BranchFormProps> = ({
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (file) {
+                // Pre-check file size
+                if (file.size > 10 * 1024 * 1024) {
+                  showAlert('error', 'Dosya boyutu çok büyük! Maksimum 10MB yükleyebilirsiniz.');
+                  e.target.value = ''; // Reset input
+                  return;
+                }
+
                 try {
                   const url = await handleImageUpload(file);
                   setFormData({ ...formData, image: url });
                 } catch (error: any) {
-                  showAlert('error', error.message || 'Görsel yüklenemedi');
+                  if (error.message !== 'File too large') {
+                    showAlert('error', error.message || 'Görsel yüklenemedi');
+                  }
                 }
               }
             }}
@@ -121,7 +142,7 @@ export const BranchForm: React.FC<BranchFormProps> = ({
       {/* Başarı Banner Upload */}
       <div className="space-y-2">
         <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">
-          Başarı Banner <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 1920x500px)</span>
+          Başarı Banner <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 1920x500px, Max 10MB)</span>
         </label>
         <div className="flex gap-4 items-end">
           <input
@@ -130,11 +151,20 @@ export const BranchForm: React.FC<BranchFormProps> = ({
             onChange={async (e) => {
               const file = e.target.files?.[0];
               if (file) {
+                // Pre-check file size
+                if (file.size > 10 * 1024 * 1024) {
+                  showAlert('error', 'Dosya boyutu çok büyük! Maksimum 10MB yükleyebilirsiniz.');
+                  e.target.value = ''; // Reset input
+                  return;
+                }
+
                 try {
                   const url = await handleImageUpload(file);
                   setFormData({ ...formData, successBanner: url });
                 } catch (error: any) {
-                  showAlert('error', error.message || 'Görsel yüklenemedi');
+                  if (error.message !== 'File too large') {
+                    showAlert('error', error.message || 'Görsel yüklenemedi');
+                  }
                 }
               }
             }}

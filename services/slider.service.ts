@@ -5,6 +5,7 @@ export interface Slider {
     title: string;
     subtitle?: string;
     image: string;
+    mobileImage?: string;
     link?: string;
     target: string;
     order: number;
