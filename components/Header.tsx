@@ -81,8 +81,11 @@ const Header: React.FC = () => {
         
         setBranches(branchesRes.data.branches);
         
-        if (sectionsRes.data?.data) {
-          setHomeSections(sectionsRes.data.data.filter((s: any) => s.page === 'home'));
+        if (sectionsRes.data) {
+          const sectionsData = Array.isArray(sectionsRes.data) ? sectionsRes.data : (sectionsRes.data as any).data;
+          if (Array.isArray(sectionsData)) {
+            setHomeSections(sectionsData.filter((s: any) => s.page === 'home'));
+          }
         }
 
         if (socialMediaRes.data) {
@@ -117,7 +120,21 @@ const Header: React.FC = () => {
       ? location.pathname.split('/')[1]
       : null);
 
-  const currentBranch = branchSlug ? branches.find(b => b.slug === branchSlug) : null;
+  console.log('DEBUG: Header Logic', {
+    pathname: location.pathname,
+    branchSlug,
+    allBranches: branches,
+    matchedBranch: branchSlug ? branches.find(b => b.slug === branchSlug) : null,
+    decodedSlug: branchSlug ? decodeURIComponent(branchSlug) : null
+  });
+
+  const currentBranch = branchSlug ? branches.find(b => {
+     const decoded = decodeURIComponent(branchSlug);
+     return b.slug === branchSlug || 
+            b.slug === decoded || 
+            b.slug.toLowerCase() === decoded.toLowerCase() ||
+            b.slug.toLocaleLowerCase('tr') === decoded.toLocaleLowerCase('tr');
+  }) : null;
 
   useEffect(() => {
     const handleScroll = () => {
