@@ -197,6 +197,22 @@
       animation: staggerFadeIn 0.6s ease-out forwards;
     }
 
+    /* Leaflet Popup Fixes */
+    .leaflet-popup-content-wrapper {
+      padding: 0 !important;
+      border-radius: 12px !important;
+      overflow: hidden !important;
+    }
+    
+    .leaflet-popup-content {
+      margin: 0 !important;
+      width: 300px !important;
+    }
+
+    .leaflet-popup-tip {
+      background: white !important;
+    }
+
     .stagger-item:nth-child(1) {
       animation-delay: 0.1s;
     }
@@ -232,12 +248,9 @@
 
     /* Banner gradient animation */
     @keyframes gradientShift {
-
-      0%,
-      100% {
+      0%, 100% {
         background-position: 0% 50%;
       }
-
       50% {
         background-position: 100% 50%;
       }
@@ -252,22 +265,6 @@
     .custom-marker {
       background: transparent !important;
       border: none !important;
-    }
-
-    .leaflet-popup-content-wrapper {
-      padding: 0 !important;
-      border-radius: 12px !important;
-      overflow: hidden;
-      box-shadow: 0 10px 40px -10px rgba(15, 23, 42, 0.2) !important;
-    }
-
-    .leaflet-popup-content {
-      margin: 0 !important;
-      width: 100% !important;
-    }
-
-    .leaflet-popup-tip {
-      background: white !important;
     }
   </style>
   <script type="importmap">

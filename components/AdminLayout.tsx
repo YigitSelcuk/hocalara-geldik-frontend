@@ -20,8 +20,60 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
     const [pendingRequests, setPendingRequests] = useState<any[]>([]);
     const [myNotifications, setMyNotifications] = useState<any[]>([]);
     const [showNotifications, setShowNotifications] = useState(false);
+    const [franchiseCount, setFranchiseCount] = useState(0);
+    const [leadCount, setLeadCount] = useState(0);
     const location = useLocation();
     const navigate = useNavigate();
+
+    // Helper to get branch ID from URL if present (for Super Admin viewing branch)
+    const getBranchIdFromUrl = () => {
+        const match = location.pathname.match(/\/admin\/branch\/([^\/]+)/);
+        return match ? match[1] : null;
+    };
+
+    const viewedBranchId = user?.role === UserRole.BRANCH_ADMIN ? user.branchId : getBranchIdFromUrl();
+    const isBranchView = !!viewedBranchId && (user?.role === UserRole.BRANCH_ADMIN || (user?.role === UserRole.SUPER_ADMIN && location.pathname.includes('/admin/branch/')));
+
+
+
+    // Fetch sidebar counts (Franchise & Leads)
+    useEffect(() => {
+        const fetchCounts = async () => {
+            if (!user) return;
+
+            try {
+                // Franchise count (only for Super/Center admin in general view)
+                if (!isBranchView && ['SUPER_ADMIN', 'CENTER_ADMIN'].includes(user.role)) {
+                    const franchiseRes = await api.get('/franchise?status=NEW');
+                    if (franchiseRes.data.success && Array.isArray(franchiseRes.data.data)) {
+                        setFranchiseCount(franchiseRes.data.data.length);
+                    }
+                } else {
+                    setFranchiseCount(0);
+                }
+
+                // Lead count
+                let leadUrl = '/leads?status=NEW';
+                if (isBranchView && viewedBranchId) {
+                    leadUrl += `&branchId=${viewedBranchId}`;
+                }
+
+                // Only fetch if user has appropriate role
+                if (['SUPER_ADMIN', 'CENTER_ADMIN', 'BRANCH_ADMIN'].includes(user.role)) {
+                     const leadRes = await api.get(leadUrl);
+                     if (leadRes.data.success && Array.isArray(leadRes.data.data)) {
+                         setLeadCount(leadRes.data.data.length);
+                     }
+                }
+            } catch (error) {
+                console.error('Error fetching sidebar counts:', error);
+            }
+        };
+
+        fetchCounts();
+        const interval = setInterval(fetchCounts, 30000);
+        return () => clearInterval(interval);
+    }, [user, isBranchView, viewedBranchId]);
 
     // Fetch pending change requests for admins
     useEffect(() => {
@@ -100,14 +152,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
         badge?: number;
     }
 
-    // Helper to get branch ID from URL if present (for Super Admin viewing branch)
-    const getBranchIdFromUrl = () => {
-        const match = location.pathname.match(/\/admin\/branch\/([^\/]+)/);
-        return match ? match[1] : null;
-    };
 
-    const viewedBranchId = user?.role === UserRole.BRANCH_ADMIN ? user.branchId : getBranchIdFromUrl();
-    const isBranchView = !!viewedBranchId && (user?.role === UserRole.BRANCH_ADMIN || (user?.role === UserRole.SUPER_ADMIN && location.pathname.includes('/admin/branch/')));
 
     // Branch admin menu items (Dynamic based on viewedBranchId)
     const getBranchMenuItems = (branchId: string): MenuItem[] => [
@@ -140,7 +185,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
             label: 'Ön Kayıtlar', 
             icon: UserPlus, 
             path: user?.role === UserRole.SUPER_ADMIN ? `/admin/branch/${branchId}/leads` : '/admin/branch-leads', 
-            roles: [UserRole.BRANCH_ADMIN, UserRole.SUPER_ADMIN] 
+            roles: [UserRole.BRANCH_ADMIN, UserRole.SUPER_ADMIN],
+            badge: leadCount
         },
         // Add a "Back to Dashboard" for SUPER_ADMIN
         ...(user?.role === UserRole.SUPER_ADMIN ? [{
@@ -162,8 +208,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ user, children }) => {
         { label: 'Videolar', icon: Video, path: '/admin/videos', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
         { label: 'Paketler', icon: Package, path: '/admin/packages', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
         { label: 'Başarılar', icon: Trophy, path: '/admin/successes', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
-        { label: 'Ön Kayıtlar', icon: UserPlus, path: '/admin/leads', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
-        { label: 'Franchise Başvuruları', icon: Building2, path: '/admin/franchise', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN] },
+        { label: 'Ön Kayıtlar', icon: UserPlus, path: '/admin/leads', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN], badge: leadCount },
+        { label: 'Franchise Başvuruları', icon: Building2, path: '/admin/franchise', roles: [UserRole.SUPER_ADMIN, UserRole.CENTER_ADMIN], badge: franchiseCount },
         { label: 'Kullanıcılar', icon: Users, path: '/admin/users', roles: [UserRole.SUPER_ADMIN] },
         { label: 'Ayarlar', icon: Settings, path: '/admin/settings', roles: [UserRole.SUPER_ADMIN] },
     ];

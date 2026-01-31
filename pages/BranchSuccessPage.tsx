@@ -5,9 +5,11 @@ import { branchService } from '../services/cms.service';
 import { API_BASE_URL } from '../services/api';
 import { yearlySuccessService } from '../services/homepage.service';
 import { Branch, YearlySuccess } from '../types';
+import { useBranch } from '../contexts/BranchContext';
 
 const BranchSuccessPage: React.FC = () => {
     const { slug } = useParams<{ slug: string }>();
+    const { setCurrentBranch } = useBranch();
     const [branch, setBranch] = useState<Branch | null>(null);
     const [yearlySuccesses, setYearlySuccesses] = useState<YearlySuccess[]>([]);
     const [selectedYear, setSelectedYear] = useState('2024');

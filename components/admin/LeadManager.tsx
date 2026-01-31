@@ -35,8 +35,10 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
   const fetchLeads = async () => {
     try {
       setLoading(true);
-      const url = branchId ? `/contact?branchId=${branchId}` : '/contact';
+      const url = branchId ? `/leads?branchId=${branchId}` : '/leads';
+      console.log('Fetching leads from:', url);
       const response = await api.get(url);
+      console.log('Leads response:', response.data);
       setLeads(response.data.data || []);
     } catch (error) {
       console.error('Error fetching leads:', error);
@@ -48,7 +50,7 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
   const handleUpdateStatus = async (leadId: string, status: Lead['status'], notes?: string) => {
     try {
       setUpdatingStatus(true);
-      await api.patch(`/contact/${leadId}`, { status, notes });
+      await api.patch(`/leads/${leadId}`, { status, notes });
       await fetchLeads();
       setShowDetailModal(false);
       setSelectedLead(null);
@@ -67,7 +69,7 @@ const LeadManager: React.FC<LeadManagerProps> = ({ branchId }) => {
       CONVERTED: { bg: 'bg-green-100', text: 'text-green-700', label: 'Kayıt Oldu' },
       REJECTED: { bg: 'bg-red-100', text: 'text-red-700', label: 'İptal' }
     };
-    const badge = badges[status];
+    const badge = badges[status] || { bg: 'bg-gray-100', text: 'text-gray-700', label: status };
     return (
       <span className={`px-3 py-1 rounded-full text-xs font-black ${badge.bg} ${badge.text}`}>
         {badge.label}

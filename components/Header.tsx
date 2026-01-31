@@ -164,7 +164,7 @@ const Header: React.FC = () => {
   return (
     <header className={`fixed top-0 left-0 right-0 z-[100] transition-all duration-500 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       {/* Top Bar */}
-      <div className={`bg-brand-dark text-white/70 transition-all duration-500 ${isScrolled ? 'py-1.5' : 'py-2'}`}>
+      <div className={`bg-brand-dark text-white/70 transition-all duration-300 ease-in-out ${isScrolled ? 'py-0 h-0 opacity-0 overflow-hidden' : 'py-2 h-auto opacity-100'}`}>
         <div className="max-w-[1600px] mx-auto px-4 lg:px-12 flex flex-wrap justify-between items-center text-[9px] md:text-[11px] font-bold tracking-wider gap-y-2">
           {/* Left: Quick Links */}
           <div className="flex items-center space-x-3 md:space-x-6 flex-wrap">
@@ -255,14 +255,19 @@ const Header: React.FC = () => {
       </div>
 
       {/* Main Nav */}
-      <div className={`transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-2xl py-1.5' : 'bg-white/90 backdrop-blur-md py-3 border-b border-black/5'}`}>
-        <div className="max-w-[1600px] mx-auto px-4 lg:px-12 flex justify-between items-center h-14">
+      <div className={`transition-all duration-300 ease-in-out ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-2xl py-2' : 'bg-white/90 backdrop-blur-md py-3 border-b border-black/5'}`}>
+        <div className="max-w-[1600px] mx-auto px-4 lg:px-12 flex justify-between items-center min-h-[56px]">
 
-          <Link to="/" className="flex items-center shrink-0 group">
-            <div className="flex flex-col">
-              <img src={getLogoUrl()} alt="Hocalara Geldik" className="h-7 md:h-8 w-auto transition-transform group-hover:scale-105" />
-              {currentBranch && (
-                <span className="text-[10px] font-black text-brand-blue capitalize tracking-[0.2em] mt-1 pl-1">{currentBranch.name}</span>
+          <Link to="/" className="flex items-center shrink-0 group relative">
+            <div className={`flex flex-col items-center ${currentBranch ? 'relative' : ''}`}>
+              <img 
+                src={getLogoUrl()} 
+                alt="Hocalara Geldik" 
+                className={`${currentBranch ? 'h-[100px] w-[100px] object-contain absolute top-1/2 -translate-y-1/2 mt-4' : 'h-7 md:h-8 w-auto'} transition-all duration-300 group-hover:scale-105 ${!isVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} 
+              />
+              {currentBranch && <div className="w-[100px]"></div>}
+              {!currentBranch && (
+                 <span className="hidden">Logo</span>
               )}
             </div>
           </Link>

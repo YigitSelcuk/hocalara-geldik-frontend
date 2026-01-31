@@ -202,7 +202,8 @@ const BranchHome: React.FC<BranchHomeProps> = ({ branch }) => {
             <img
               src={imageUrl}
               alt={slide.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full"
+              style={{ objectFit: 'fill' }}
             />
             <div className="absolute inset-0 bg-gradient-to-r from-brand-dark via-brand-dark/60 to-transparent"></div>
             <div className="absolute inset-0 bg-gradient-to-t from-brand-dark via-transparent to-transparent"></div>

@@ -64,7 +64,9 @@ export const BranchForm: React.FC<BranchFormProps> = ({
 
       {/* Logo Upload */}
       <div className="space-y-2">
-        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Logo</label>
+        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">
+          Logo <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 500x500px, PNG)</span>
+        </label>
         <div className="flex gap-4 items-end">
           <input
             type="file"
@@ -90,7 +92,9 @@ export const BranchForm: React.FC<BranchFormProps> = ({
 
       {/* Kapak Görseli Upload */}
       <div className="space-y-2">
-        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapak Görseli</label>
+        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">
+          Kapak Görseli <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 1920x700px)</span>
+        </label>
         <div className="flex gap-4 items-end">
           <input
             type="file"
@@ -116,7 +120,9 @@ export const BranchForm: React.FC<BranchFormProps> = ({
 
       {/* Başarı Banner Upload */}
       <div className="space-y-2">
-        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Başarı Banner</label>
+        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">
+          Başarı Banner <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 1920x500px)</span>
+        </label>
         <div className="flex gap-4 items-end">
           <input
             type="file"

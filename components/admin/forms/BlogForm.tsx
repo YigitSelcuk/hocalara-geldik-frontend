@@ -112,7 +112,9 @@ export const BlogForm: React.FC<BlogFormProps> = ({
         </div>
       </div>
       <div className="space-y-2">
-        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapak Görseli <span className="text-red-500">*</span></label>
+        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">
+          Kapak Görseli <span className="text-red-500">*</span> <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 800x600px)</span>
+        </label>
         <div className="flex gap-4 items-end">
           <input
             type="file"

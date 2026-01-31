@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Building2, Phone, Mail, MapPin, Calendar, CheckCircle, Clock, X, Eye, Trash2 } from 'lucide-react';
-import axios from 'axios';
+import api from '../../services/api';
 
 interface FranchiseApplication {
   id: string;

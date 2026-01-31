@@ -65,7 +65,9 @@ export const NewsForm: React.FC<NewsFormProps> = ({
       </div>
 
       <div className="space-y-2">
-        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapak Görseli *</label>
+        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">
+          Öne Çıkan Görsel <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 800x600px)</span>
+        </label>
         <div className="flex gap-4 items-end">
           <input
             type="file"

@@ -198,7 +198,12 @@ const MainHome: React.FC = () => {
               className={`absolute inset-0 transition-all duration-[2000ms] ease-out ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}`}
             >
               <div className="absolute inset-0 z-0">
-                <img src={imageUrl} alt={slide.title || 'Slider'} className="w-full h-full object-cover" />
+                <img 
+                  src={imageUrl} 
+                  alt={slide.title || 'Slider'} 
+                  className="w-full h-full" 
+                  style={{ objectFit: 'fill' }}
+                />
                 {hasContent && (
                   <>
                     <div className="absolute inset-0 bg-gradient-to-r from-brand-dark via-brand-dark/40 to-transparent"></div>

@@ -36,7 +36,9 @@ export const SliderForm: React.FC<SliderFormProps> = ({
       
       {/* File Upload */}
       <div className="space-y-2">
-        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Görsel</label>
+        <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">
+          Görsel <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 1920x800px)</span>
+        </label>
         <div className="space-y-3">
           {previewUrl && (
             <div className="relative w-full h-48 rounded-lg overflow-hidden border border-slate-200">

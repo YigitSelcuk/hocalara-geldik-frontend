@@ -222,28 +222,32 @@ const BranchList: React.FC = () => {
                       click: () => setSelectedBranch(branch.id),
                     }}
                   >
-                    <Popup className="custom-popup" maxWidth={300}>
-                      <div className="flex flex-col overflow-hidden">
-                        <div className="relative h-32 overflow-hidden rounded-t-lg">
-                          <img src={branch.image?.startsWith('http') ? branch.image : (branch.image?.startsWith('/assets') ? branch.image : `${API_BASE_URL}${branch.image}`)} alt={branch.name} className="w-full h-full object-cover" />
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
+                    <Popup className="custom-popup" maxWidth={300} minWidth={280}>
+                      <div className="flex flex-col overflow-hidden bg-white rounded-lg shadow-lg">
+                        <div className="relative h-32 overflow-hidden w-full">
+                          <img 
+                            src={branch.image?.startsWith('http') ? branch.image : (branch.image?.startsWith('/assets') ? branch.image : `${API_BASE_URL}${branch.image}`)} 
+                            alt={branch.name} 
+                            className="w-full h-full object-cover" 
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                           <div className="absolute bottom-3 left-3 right-3">
-                            <h4 className="font-black text-white text-sm drop-shadow-lg">{branch.name}</h4>
+                            <h4 className="font-black text-white text-sm drop-shadow-md line-clamp-1">{branch.name}</h4>
                           </div>
                         </div>
-                        <div className="p-4 space-y-4 bg-white">
+                        <div className="p-4 space-y-3 bg-white w-full">
                           <div className="flex items-start space-x-2 text-xs text-slate-600">
-                            <MapPin className="w-4 h-4 text-brand-blue shrink-0 mt-0.5" />
-                            <span className="line-clamp-2 leading-relaxed">{branch.address}</span>
+                            <MapPin className="w-3.5 h-3.5 text-brand-blue shrink-0 mt-0.5" />
+                            <span className="line-clamp-2 leading-relaxed font-medium">{branch.address}</span>
                           </div>
                           <div className="flex items-center space-x-2 text-xs font-bold text-brand-dark">
-                            <Phone className="w-4 h-4 text-brand-blue shrink-0" />
+                            <Phone className="w-3.5 h-3.5 text-brand-blue shrink-0" />
                             <span>{branch.phone}</span>
                           </div>
-                          <div className="flex gap-2 pt-2 border-t border-slate-100">
+                          <div className="flex gap-2 pt-3 border-t border-slate-100 mt-1">
                             <Link
                               to={`/subeler/${branch.slug}`}
-                              className="flex-1 py-2.5 bg-brand-blue text-white text-center text-[10px] font-black capitalize tracking-widest rounded-lg hover:bg-brand-dark transition-all"
+                              className="flex-1 py-2 bg-brand-blue text-white text-center text-[10px] font-black capitalize tracking-widest rounded-lg hover:bg-brand-dark transition-all flex items-center justify-center"
                             >
                               {getSection('branches-map-detail-button', 'title', 'Şube Detayları')}
                             </Link>
@@ -251,7 +255,7 @@ const BranchList: React.FC = () => {
                               href={`https://www.google.com/maps?q=${branch.lat},${branch.lng}`}
                               target="_blank"
                               rel="noreferrer"
-                              className="p-2.5 bg-slate-100 text-brand-blue rounded-lg hover:bg-brand-blue hover:text-white transition-all"
+                              className="p-2 bg-slate-100 text-brand-blue rounded-lg hover:bg-brand-blue hover:text-white transition-all flex items-center justify-center"
                             >
                               <ExternalLink className="w-4 h-4" />
                             </a>
