@@ -468,10 +468,10 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
   };
 
   const handleImageUpload = async (file: File): Promise<string> => {
-    // Check file size (10MB limit)
-    const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+    // Check file size (5MB limit)
+    const MAX_SIZE = 5 * 1024 * 1024; // 5MB
     if (file.size > MAX_SIZE) {
-      showAlert('error', 'Dosya boyutu çok büyük! Maksimum 10MB yükleyebilirsiniz.');
+      showAlert('error', 'Dosya boyutu çok büyük! Maksimum 5MB yükleyebilirsiniz.');
       throw new Error('File too large');
     }
 
@@ -488,7 +488,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
     } catch (error: any) {
       console.error('Image upload failed:', error);
       if (error.response?.status === 413) {
-        showAlert('error', 'Dosya boyutu sunucu limitini aşıyor (Maksimum 10MB).');
+        showAlert('error', 'Dosya boyutu sunucu limitini aşıyor (Maksimum 5MB).');
         throw new Error('Dosya boyutu çok büyük');
       }
       showAlert('error', 'Görsel yüklenirken bir hata oluştu.');

@@ -65,7 +65,7 @@ export const BranchForm: React.FC<BranchFormProps> = ({
       {/* Logo Upload */}
       <div className="space-y-2">
         <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">
-          Logo <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 500x500px, PNG, Max 10MB)</span>
+          Logo <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 500x500px, PNG, Max 5MB)</span>
         </label>
         <div className="flex gap-4 items-end">
           <input
@@ -75,8 +75,8 @@ export const BranchForm: React.FC<BranchFormProps> = ({
               const file = e.target.files?.[0];
               if (file) {
                 // Pre-check file size to avoid double alerting if handleImageUpload also alerts
-                if (file.size > 10 * 1024 * 1024) {
-                  showAlert('error', 'Dosya boyutu çok büyük! Maksimum 10MB yükleyebilirsiniz.');
+                if (file.size > 5 * 1024 * 1024) {
+                  showAlert('error', 'Dosya boyutu çok büyük! Maksimum 5MB yükleyebilirsiniz.');
                   e.target.value = ''; // Reset input
                   return;
                 }
@@ -105,7 +105,7 @@ export const BranchForm: React.FC<BranchFormProps> = ({
       {/* Kapak Görseli Upload */}
       <div className="space-y-2">
         <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">
-          Kapak Görseli <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 1920x700px, Max 10MB)</span>
+          Kapak Görseli <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 1920x700px, Max 5MB)</span>
         </label>
         <div className="flex gap-4 items-end">
           <input
@@ -115,8 +115,8 @@ export const BranchForm: React.FC<BranchFormProps> = ({
               const file = e.target.files?.[0];
               if (file) {
                 // Pre-check file size
-                if (file.size > 10 * 1024 * 1024) {
-                  showAlert('error', 'Dosya boyutu çok büyük! Maksimum 10MB yükleyebilirsiniz.');
+                if (file.size > 5 * 1024 * 1024) {
+                  showAlert('error', 'Dosya boyutu çok büyük! Maksimum 5MB yükleyebilirsiniz.');
                   e.target.value = ''; // Reset input
                   return;
                 }
@@ -142,7 +142,7 @@ export const BranchForm: React.FC<BranchFormProps> = ({
       {/* Başarı Banner Upload */}
       <div className="space-y-2">
         <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">
-          Başarı Banner <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 1920x500px, Max 10MB)</span>
+          Başarı Banner <span className="text-brand-blue normal-case tracking-normal">(Önerilen: 1920x500px, Max 5MB)</span>
         </label>
         <div className="flex gap-4 items-end">
           <input
@@ -152,8 +152,8 @@ export const BranchForm: React.FC<BranchFormProps> = ({
               const file = e.target.files?.[0];
               if (file) {
                 // Pre-check file size
-                if (file.size > 10 * 1024 * 1024) {
-                  showAlert('error', 'Dosya boyutu çok büyük! Maksimum 10MB yükleyebilirsiniz.');
+                if (file.size > 5 * 1024 * 1024) {
+                  showAlert('error', 'Dosya boyutu çok büyük! Maksimum 5MB yükleyebilirsiniz.');
                   e.target.value = ''; // Reset input
                   return;
                 }
