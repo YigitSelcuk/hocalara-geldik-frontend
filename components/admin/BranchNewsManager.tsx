@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { Newspaper, Plus, Edit2, Trash2, Clock, X, Save, Upload, Image as ImageIcon } from 'lucide-react';
 import api, { API_BASE_URL } from '../../services/api';
 import { mediaService } from '../../services/cms.service';
@@ -32,6 +34,23 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
     seoDescription: '',
     seoKeywords: '',
   });
+
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike', 'blockquote'],
+      [{'list': 'ordered'}, {'list': 'bullet'}, {'indent': '-1'}, {'indent': '+1'}],
+      ['link', 'image'],
+      ['clean']
+    ],
+  };
+
+  const formats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike', 'blockquote',
+    'list', 'bullet', 'indent',
+    'link', 'image'
+  ];
 
   useEffect(() => {
     fetchNews();
@@ -204,8 +223,8 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-slate-100 px-8 py-6 flex items-center justify-between rounded-t-3xl">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="sticky top-0 bg-white border-b border-slate-100 px-8 py-6 flex items-center justify-between z-10">
               <h3 className="text-2xl font-black text-brand-dark">
                 {editingNews ? 'Haber Düzenle' : 'Yeni Haber Ekle'}
               </h3>
@@ -214,71 +233,59 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
               </button>
             </div>
 
-            <div className="p-8 space-y-6">
+            <div className="flex-1 overflow-y-auto p-10 space-y-6">
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase">Haber Başlığı *</label>
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Haber Başlığı *</label>
                 <input
                   type="text"
                   value={form.title}
                   onChange={e => setForm({ ...form, title: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                   placeholder="Örn: 2024 YKS Sonuçları Açıklandı"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase">URL Slug</label>
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">URL Slug</label>
                 <input
                   type="text"
                   value={form.slug}
                   onChange={e => setForm({ ...form, slug: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                   placeholder="Otomatik oluşturulacak"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase">Özet (Excerpt) *</label>
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Özet (Excerpt) *</label>
                 <textarea
                   rows={2}
                   value={form.excerpt}
                   onChange={e => setForm({ ...form, excerpt: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-brand-blue resize-none"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                   placeholder="Kısa özet (liste görünümünde gösterilir)"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase">Haber İçeriği *</label>
-                <textarea
-                  rows={8}
-                  value={form.content}
-                  onChange={e => setForm({ ...form, content: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-brand-blue resize-none"
-                  placeholder="HTML içerik desteklenir"
-                />
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Haber İçeriği *</label>
+                <div className="bg-white border border-slate-100 rounded-xl overflow-hidden">
+                  <ReactQuill
+                    theme="snow"
+                    value={form.content}
+                    onChange={(content) => setForm({ ...form, content })}
+                    modules={modules}
+                    formats={formats}
+                    className="h-64 mb-12"
+                  />
+                </div>
               </div>
 
               {/* Image Upload */}
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase">Kapak Görseli *</label>
-                <div className="flex items-center space-x-4">
-                  {form.featuredImage ? (
-                    <div className="relative flex-1">
-                      <img
-                        src={form.featuredImage.startsWith('http') ? form.featuredImage : (form.featuredImage.startsWith('/assets') ? form.featuredImage : `${API_BASE_URL}${form.featuredImage}`)}
-                        alt="News"
-                        className="w-full h-48 object-contain rounded-xl border-2 border-slate-200 bg-slate-50"
-                      />
-                      <button
-                        onClick={() => setForm({ ...form, featuredImage: '' })}
-                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="flex-1 flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-brand-blue hover:bg-slate-50 transition-all">
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kapak Görseli *</label>
+                <div className="flex gap-4 items-end">
+                    <label className="flex-1 cursor-pointer">
                       <input
                         type="file"
                         accept="image/*"
@@ -286,24 +293,30 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
                         className="hidden"
                         disabled={uploading}
                       />
-                      {uploading ? (
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-blue mx-auto mb-2"></div>
-                          <p className="text-sm text-slate-500">Yükleniyor...</p>
-                        </div>
-                      ) : (
-                        <>
-                          <Upload className="w-8 h-8 text-slate-400 mb-2" />
-                          <p className="text-sm font-bold text-slate-600">Görsel Yükle</p>
-                          <p className="text-xs text-slate-400 mt-1">PNG, JPG (Max 5MB)</p>
-                        </>
-                      )}
+                      <div className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm font-bold text-slate-500 hover:text-brand-blue transition-colors flex items-center justify-between">
+                        <span>{uploading ? 'Yükleniyor...' : 'Görsel Seç'}</span>
+                        <Upload className="w-4 h-4" />
+                      </div>
                     </label>
+                  {form.featuredImage && (
+                    <div className="relative">
+                        <img
+                            src={form.featuredImage.startsWith('http') ? form.featuredImage : (form.featuredImage.startsWith('/assets') ? form.featuredImage : `${API_BASE_URL}${form.featuredImage}`)}
+                            alt="Preview"
+                            className="w-24 h-16 object-cover border border-slate-200 rounded-lg"
+                        />
+                         <button
+                            onClick={() => setForm({ ...form, featuredImage: '' })}
+                            className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 shadow-md"
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                    </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex items-center space-x-4 pt-2">
+              <div className="flex items-center space-x-6 pt-2">
                 <label className="flex items-center space-x-2 cursor-pointer">
                   <input
                     type="checkbox"
@@ -317,57 +330,56 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
 
               {/* SEO Section */}
               <div className="border-t border-slate-200 pt-4 mt-4">
-                <h3 className="text-sm font-black text-slate-700 mb-3">SEO Ayarları (Opsiyonel)</h3>
+                <h3 className="text-xs font-black text-slate-600 mb-3">SEO Ayarları</h3>
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">SEO Başlık</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">SEO Başlık</label>
                     <input
                       type="text"
                       value={form.seoTitle}
                       onChange={e => setForm({ ...form, seoTitle: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                       placeholder="Arama motorları için başlık"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">SEO Açıklama</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">SEO Açıklama</label>
                     <textarea
                       rows={2}
                       value={form.seoDescription}
                       onChange={e => setForm({ ...form, seoDescription: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-brand-blue resize-none"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                       placeholder="Arama motorları için açıklama"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">SEO Anahtar Kelimeler</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">SEO Anahtar Kelimeler</label>
                     <input
                       type="text"
                       value={form.seoKeywords}
                       onChange={e => setForm({ ...form, seoKeywords: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                      placeholder="Virgülle ayırın"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                      placeholder="Virgülle ayırın (kelime1,kelime2)"
                     />
                   </div>
                 </div>
               </div>
+            </div>
 
-              <div className="flex items-center space-x-4 pt-4">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-6 py-3 bg-slate-100 text-slate-600 font-black rounded-xl hover:bg-slate-200"
-                >
-                  İptal
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex-1 px-6 py-3 bg-brand-blue text-white font-black rounded-xl hover:bg-brand-dark disabled:opacity-50 flex items-center justify-center space-x-2"
-                >
-                  <Save className="w-5 h-5" />
-                  <span>{saving ? 'Kaydediliyor...' : 'Kaydet'}</span>
-                </button>
-              </div>
+            <div className="px-10 py-8 bg-slate-50/50 border-t border-slate-50 flex items-center justify-end space-x-3">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-6 py-4 text-slate-400 font-black text-sm capitalize tracking-widest hover:text-brand-dark transition-colors"
+              >
+                İptal
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="px-6 py-4 bg-brand-blue text-white font-black text-sm capitalize tracking-widest rounded-xl hover:bg-brand-dark disabled:opacity-50 transition-colors"
+              >
+                {saving ? 'Kaydediliyor...' : 'Kaydet'}
+              </button>
             </div>
           </div>
         </div>

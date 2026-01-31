@@ -60,6 +60,8 @@ const BranchSuccessManager: React.FC<BranchSuccessManagerProps> = ({ branchId })
   const [addingStudent, setAddingStudent] = useState(false);
   const { alert, showAlert, hideAlert } = useAlert();
   
+  const years = Array.from({ length: 15 }, (_, i) => new Date().getFullYear() + 1 - i);
+
   const [form, setForm] = useState({
     year: new Date().getFullYear(),
     title: '',
@@ -463,8 +465,8 @@ const BranchSuccessManager: React.FC<BranchSuccessManagerProps> = ({ branchId })
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-slate-100 px-8 py-6 flex items-center justify-between rounded-t-3xl">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="sticky top-0 bg-white border-b border-slate-100 px-8 py-6 flex items-center justify-between z-10">
               <h3 className="text-2xl font-black text-brand-dark">
                 {editingSuccess ? 'Başarı Düzenle' : 'Yeni Başarı Ekle'}
               </h3>
@@ -473,139 +475,158 @@ const BranchSuccessManager: React.FC<BranchSuccessManagerProps> = ({ branchId })
               </button>
             </div>
 
-            <div className="p-8 space-y-6">
+            <div className="flex-1 overflow-y-auto p-10 space-y-6">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Yıl *</label>
-                  <input
-                    type="number"
-                    value={form.year}
-                    onChange={e => setForm({ ...form, year: parseInt(e.target.value) })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                  />
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Yıl *</label>
+                  {editingSuccess ? (
+                    <input
+                      type="number"
+                      value={form.year}
+                      onChange={e => setForm({ ...form, year: parseInt(e.target.value) })}
+                      className="w-full bg-slate-100 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-500"
+                    />
+                  ) : (
+                    <div className="relative">
+                      <select
+                        value={form.year}
+                        onChange={e => setForm({ ...form, year: parseInt(e.target.value) })}
+                        className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold appearance-none cursor-pointer"
+                      >
+                        {years.map(year => (
+                          <option key={year} value={year}>{year}</option>
+                        ))}
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none text-slate-500">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Başlık *</label>
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Başlık *</label>
                   <input
                     type="text"
                     value={form.title}
                     onChange={e => setForm({ ...form, title: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                     placeholder="Örn: YKS Başarıları"
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase">Açıklama</label>
+                <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Açıklama</label>
                 <textarea
                   rows={3}
                   value={form.description}
                   onChange={e => setForm({ ...form, description: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-brand-blue resize-none"
+                  className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none"
                   placeholder="Başarı hakkında kısa açıklama"
                 />
               </div>
 
               {/* İstatistikler */}
-              <div className="pt-4 border-t border-slate-200">
-                <h4 className="text-sm font-black text-slate-600 mb-4">📊 İstatistikler</h4>
+              <div className="pt-4 border-t border-slate-100">
+                <h4 className="text-[10px] font-black text-slate-600 mb-4 uppercase tracking-widest">📊 İstatistikler</h4>
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">Toplam Derece</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Toplam Derece</label>
                     <input
                       type="number"
                       value={form.totalDegrees}
                       onChange={e => setForm({ ...form, totalDegrees: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">Yerleşen Sayısı</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Yerleşen Sayısı</label>
                     <input
                       type="number"
                       value={form.placementCount}
                       onChange={e => setForm({ ...form, placementCount: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">Başarı Oranı (%)</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Başarı Oranı (%)</label>
                     <input
                       type="number"
                       value={form.successRate}
                       onChange={e => setForm({ ...form, successRate: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">İlk 100</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">İlk 100</label>
                     <input
                       type="number"
                       value={form.top100Count}
                       onChange={e => setForm({ ...form, top100Count: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">İlk 1000</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">İlk 1000</label>
                     <input
                       type="number"
                       value={form.top1000Count}
                       onChange={e => setForm({ ...form, top1000Count: parseInt(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">YKS Ortalaması</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">YKS Ortalaması</label>
                     <input
                       type="number"
                       step="0.01"
                       value={form.yksAverage}
                       onChange={e => setForm({ ...form, yksAverage: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">LGS Ortalaması</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">LGS Ortalaması</label>
                     <input
                       type="number"
                       step="0.01"
                       value={form.lgsAverage}
                       onChange={e => setForm({ ...form, lgsAverage: parseFloat(e.target.value) || 0 })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-slate-200">
-                <h4 className="text-sm font-black text-slate-600 mb-4">🎨 Banner Ayarları (Opsiyonel)</h4>
+              <div className="bg-slate-50/50 p-6 rounded-2xl border border-slate-100 space-y-4">
+                <h4 className="text-[10px] font-black text-brand-blue uppercase tracking-widest">Banner Bilgileri</h4>
                 
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">Banner Başlık</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Banner Başlık</label>
                     <input
                       type="text"
                       value={form.bannerTitle}
                       onChange={e => setForm({ ...form, bannerTitle: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                      className="w-full bg-white border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">Banner Alt Başlık</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Banner Alt Başlık</label>
                     <input
                       type="text"
                       value={form.bannerSubtitle}
                       onChange={e => setForm({ ...form, bannerSubtitle: e.target.value })}
-                      className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
+                      className="w-full bg-white border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-xs font-black text-slate-400 uppercase">Banner Görseli</label>
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Banner Görseli</label>
                     <div className="flex items-center space-x-4">
                       {form.bannerImage ? (
                         <div className="relative flex-1">
@@ -649,29 +670,19 @@ const BranchSuccessManager: React.FC<BranchSuccessManagerProps> = ({ branchId })
               </div>
             </div>
 
-            <div className="sticky bottom-0 bg-slate-50 px-8 py-6 flex items-center justify-end space-x-4 rounded-b-3xl border-t border-slate-200">
+            <div className="px-10 py-8 bg-slate-50/50 border-t border-slate-50 flex items-center justify-end space-x-3">
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="px-6 py-3 bg-white border-2 border-slate-200 text-slate-700 rounded-xl font-bold hover:bg-slate-50 transition-all"
+                className="px-6 py-4 text-slate-400 font-black text-sm capitalize tracking-widest hover:text-brand-dark transition-colors"
               >
                 İptal
               </button>
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-6 py-3 bg-brand-blue text-white rounded-xl font-bold hover:bg-brand-dark transition-all disabled:opacity-50 flex items-center space-x-2"
+                className="px-6 py-4 bg-brand-blue text-white font-black text-sm capitalize tracking-widest rounded-xl hover:bg-brand-dark disabled:opacity-50 transition-colors"
               >
-                {saving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
-                    <span>Kaydediliyor...</span>
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    <span>Kaydet</span>
-                  </>
-                )}
+                {saving ? 'Kaydediliyor...' : 'Kaydet'}
               </button>
             </div>
           </div>

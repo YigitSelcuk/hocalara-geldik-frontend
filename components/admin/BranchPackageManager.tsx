@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Package, Plus, Edit2, Trash2, Clock, X, Save, Upload, Image as ImageIcon } from 'lucide-react';
 import api, { API_BASE_URL } from '../../services/api';
-import { mediaService } from '../../services/cms.service';
+import { mediaService, categoryService } from '../../services/cms.service';
 import Alert from '../Alert';
 import { useAlert } from '../../hooks/useAlert';
 
@@ -11,6 +11,7 @@ interface BranchPackageManagerProps {
 
 const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId }) => {
   const [packages, setPackages] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<any | null>(null);
@@ -21,7 +22,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
 
   const [form, setForm] = useState({
     name: '',
-    type: 'STANDARD',
+    type: '',
     shortDescription: '',
     description: '',
     price: '',
@@ -39,7 +40,18 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
 
   useEffect(() => {
     fetchPackages();
+    fetchCategories();
   }, [branchId]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await categoryService.getAll();
+      const allCategories = response.data.categories || response.data.data || [];
+      setCategories(allCategories.filter((c: any) => c.type === 'PACKAGE'));
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    }
+  };
 
   const fetchPackages = async () => {
     try {
@@ -87,7 +99,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
     setEditingPackage(null);
     setForm({
       name: '',
-      type: 'STANDARD',
+      type: '',
       shortDescription: '',
       description: '',
       price: '',
@@ -109,7 +121,7 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
     setEditingPackage(pkg);
     setForm({
       name: pkg.name || '',
-      type: pkg.type || 'STANDARD',
+      type: pkg.type || '',
       shortDescription: pkg.shortDescription || '',
       description: pkg.description || '',
       price: pkg.price?.toString() || '',
@@ -197,266 +209,232 @@ const BranchPackageManager: React.FC<BranchPackageManagerProps> = ({ branchId })
 
       {/* Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-slate-100 px-8 py-6 flex items-center justify-between rounded-t-3xl">
-              <h3 className="text-2xl font-black text-brand-dark">
-                {editingPackage ? 'Paket Düzenle' : 'Yeni Paket Ekle'}
-              </h3>
-              <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-xl">
-                <X className="w-5 h-5" />
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-brand-dark/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
+          <div className="bg-white rounded-[32px] w-full max-w-2xl relative z-10 overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+            <div className="px-10 py-8 border-b border-slate-50 flex items-center justify-between bg-white sticky top-0">
+              <div>
+                <h2 className="text-2xl font-black text-brand-dark capitalize tracking-tight">
+                  {editingPackage ? 'Düzenle' : 'Yeni Ekle'} <span className="text-brand-blue">Paket</span>
+                </h2>
+                <p className="text-xs text-slate-400 font-bold mt-1">Lütfen tüm alanları profesyonel bir dille doldurun.</p>
+              </div>
+              <button onClick={() => setIsModalOpen(false)} className="p-2.5 bg-slate-50 text-slate-400 rounded-xl hover:bg-brand-gray transition-colors">
+                <X className="w-6 h-6" />
               </button>
             </div>
 
-            <div className="p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Paket Adı *</label>
-                  <input
-                    type="text"
-                    value={form.name}
-                    onChange={e => setForm({ ...form, name: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Paket Tipi</label>
-                  <select
-                    value={form.type}
-                    onChange={e => setForm({ ...form, type: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                  >
-                    <option value="STANDARD">Standart</option>
-                    <option value="PREMIUM">Premium</option>
-                    <option value="VIP">VIP</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase">Kısa Açıklama *</label>
-                <input
-                  type="text"
-                  value={form.shortDescription}
-                  onChange={e => setForm({ ...form, shortDescription: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase">Detaylı Açıklama</label>
-                <textarea
-                  rows={4}
-                  value={form.description}
-                  onChange={e => setForm({ ...form, description: e.target.value })}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-medium focus:outline-none focus:border-brand-blue resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Fiyat (₺)</label>
-                  <input
-                    type="number"
-                    value={form.price}
-                    onChange={e => setForm({ ...form, price: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Orijinal Fiyat (₺)</label>
-                  <input
-                    type="number"
-                    value={form.originalPrice}
-                    onChange={e => setForm({ ...form, originalPrice: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">İndirim Oranı (%)</label>
-                  <input
-                    type="number"
-                    value={form.discount}
-                    onChange={e => setForm({ ...form, discount: e.target.value })}
-                    placeholder="Örn: 20"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-5">
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Video Sayısı</label>
-                  <input
-                    type="number"
-                    value={form.videoCount}
-                    onChange={e => setForm({ ...form, videoCount: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Ders Sayısı</label>
-                  <input
-                    type="number"
-                    value={form.subjectCount}
-                    onChange={e => setForm({ ...form, subjectCount: e.target.value })}
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-xs font-black text-slate-400 uppercase">Süre</label>
-                  <input
-                    type="text"
-                    value={form.duration}
-                    onChange={e => setForm({ ...form, duration: e.target.value })}
-                    placeholder="Örn: 6 Ay"
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-brand-blue"
-                  />
-                </div>
-              </div>
-
-              {/* Özellikler */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-black text-slate-400 uppercase">Özellikler</label>
-                  <button
-                    type="button"
-                    onClick={() => setForm({ ...form, features: [...form.features, ''] })}
-                    className="px-3 py-1 bg-brand-blue text-white text-xs font-bold rounded-lg hover:bg-brand-dark transition-all flex items-center space-x-1"
-                  >
-                    <Plus className="w-3 h-3" />
-                    <span>Özellik Ekle</span>
-                  </button>
+            <div className="p-10 max-h-[70vh] overflow-y-auto">
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Paket Adı <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      value={form.name}
+                      onChange={e => setForm({ ...form, name: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Tür <span className="text-red-500">*</span></label>
+                    <select
+                      value={form.type}
+                      onChange={e => setForm({ ...form, type: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold appearance-none"
+                    >
+                      <option value="">Seçiniz</option>
+                      {categories.map((cat) => (
+                        <option key={cat.id} value={cat.slug || cat.name}>
+                          {cat.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <div className="space-y-2">
-                  {form.features.map((feature, index) => (
-                    <div key={index} className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={feature}
-                        onChange={e => {
-                          const newFeatures = [...form.features];
-                          newFeatures[index] = e.target.value;
-                          setForm({ ...form, features: newFeatures });
-                        }}
-                        placeholder="Özellik açıklaması"
-                        className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-lg font-bold focus:outline-none focus:border-brand-blue"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const newFeatures = form.features.filter((_, i) => i !== index);
-                          setForm({ ...form, features: newFeatures });
-                        }}
-                        className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-all"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Kısa Açıklama <span className="text-red-500">*</span></label>
+                  <textarea
+                    rows={2}
+                    value={form.shortDescription}
+                    onChange={e => setForm({ ...form, shortDescription: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none"
+                  />
+                </div>
 
-                  {form.features.length === 0 && (
-                    <p className="text-sm text-slate-400 italic text-center py-4">
-                      Henüz özellik eklenmemiş. "Özellik Ekle" butonuna tıklayarak başlayın.
-                    </p>
-                  )}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Detaylı Açıklama <span className="text-red-500">*</span></label>
+                  <textarea
+                    rows={4}
+                    value={form.description}
+                    onChange={e => setForm({ ...form, description: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Fiyat (₺) <span className="text-red-500">*</span></label>
+                    <input
+                      type="number"
+                      value={form.price}
+                      onChange={e => setForm({ ...form, price: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Orijinal Fiyat (₺)</label>
+                    <input
+                      type="number"
+                      value={form.originalPrice}
+                      onChange={e => setForm({ ...form, originalPrice: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">İndirim Oranı (%)</label>
+                    <input
+                      type="number"
+                      value={form.discount}
+                      onChange={e => setForm({ ...form, discount: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Video Sayısı</label>
+                    <input
+                      type="number"
+                      value={form.videoCount}
+                      onChange={e => setForm({ ...form, videoCount: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Ders Sayısı</label>
+                    <input
+                      type="number"
+                      value={form.subjectCount}
+                      onChange={e => setForm({ ...form, subjectCount: e.target.value })}
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Süre</label>
+                    <input
+                      type="text"
+                      value={form.duration}
+                      onChange={e => setForm({ ...form, duration: e.target.value })}
+                      placeholder="Örn: 12 Ay"
+                      className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Özellikler</label>
+                  <div className="space-y-2">
+                    {form.features.map((feature, index) => (
+                      <div key={index} className="flex gap-2">
+                        <input
+                          type="text"
+                          value={feature}
+                          onChange={e => {
+                            const newFeatures = [...form.features];
+                            newFeatures[index] = e.target.value;
+                            setForm({ ...form, features: newFeatures });
+                          }}
+                          placeholder={`Özellik ${index + 1}`}
+                          className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const newFeatures = form.features.filter((_, i) => i !== index);
+                            setForm({ ...form, features: newFeatures });
+                          }}
+                          className="px-4 py-3 bg-red-50 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all font-black text-xs"
+                        >
+                          Sil
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setForm({ ...form, features: [...form.features, ''] })}
+                      className="w-full px-4 py-3 bg-brand-blue/10 text-brand-blue rounded-xl hover:bg-brand-blue hover:text-white transition-all font-black text-xs"
+                    >
+                      + Özellik Ekle
+                    </button>
+                  </div>
+                </div>
+
+                {/* Paket Görseli Upload */}
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Paket Görseli <span className="text-red-500">*</span></label>
+                  <div className="flex gap-4 items-end">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      disabled={uploading}
+                      className="flex-1 bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+                    />
+                    {form.image && (
+                      <img src={form.image} alt="Paket" className="w-32 h-20 object-cover border border-slate-200 rounded-lg" />
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isPopular"
+                      checked={form.isPopular}
+                      onChange={e => setForm({ ...form, isPopular: e.target.checked })}
+                      className="w-4 h-4 text-brand-blue rounded focus:ring-brand-blue"
+                    />
+                    <label htmlFor="isPopular" className="text-xs font-black text-slate-600">Popüler</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isNew"
+                      checked={form.isNew}
+                      onChange={e => setForm({ ...form, isNew: e.target.checked })}
+                      className="w-4 h-4 text-brand-blue rounded focus:ring-brand-blue"
+                    />
+                    <label htmlFor="isNew" className="text-xs font-black text-slate-600">Yeni</label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="isActive"
+                      checked={form.isActive}
+                      onChange={e => setForm({ ...form, isActive: e.target.checked })}
+                      className="w-4 h-4 text-brand-blue rounded focus:ring-brand-blue"
+                    />
+                    <label htmlFor="isActive" className="text-xs font-black text-slate-600">Aktif</label>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              {/* Image Upload */}
-              <div className="space-y-2">
-                <label className="text-xs font-black text-slate-400 uppercase">Paket Görseli</label>
-                <div className="flex items-center space-x-4">
-                  {form.image ? (
-                    <div className="relative">
-                      <img
-                        src={form.image}
-                        alt="Package"
-                        className="w-32 h-32 object-cover rounded-xl border-2 border-slate-200"
-                      />
-                      <button
-                        onClick={() => setForm({ ...form, image: '' })}
-                        className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="flex-1 flex flex-col items-center justify-center h-32 border-2 border-dashed border-slate-300 rounded-xl cursor-pointer hover:border-brand-blue hover:bg-slate-50 transition-all">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageUpload}
-                        className="hidden"
-                        disabled={uploading}
-                      />
-                      {uploading ? (
-                        <div className="text-center">
-                          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-brand-blue mx-auto mb-2"></div>
-                          <p className="text-sm text-slate-500">Yükleniyor...</p>
-                        </div>
-                      ) : (
-                        <>
-                          <Upload className="w-8 h-8 text-slate-400 mb-2" />
-                          <p className="text-sm font-bold text-slate-600">Görsel Yükle</p>
-                          <p className="text-xs text-slate-400 mt-1">PNG, JPG (Max 5MB)</p>
-                        </>
-                      )}
-                    </label>
-                  )}
-                </div>
-              </div>
-
-              {/* Checkboxes */}
-              <div className="grid grid-cols-3 gap-5">
-                <label className="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-all">
-                  <input
-                    type="checkbox"
-                    checked={form.isPopular}
-                    onChange={e => setForm({ ...form, isPopular: e.target.checked })}
-                    className="w-5 h-5 text-brand-blue rounded focus:ring-brand-blue"
-                  />
-                  <span className="text-sm font-bold text-slate-700">Popüler</span>
-                </label>
-
-                <label className="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-all">
-                  <input
-                    type="checkbox"
-                    checked={form.isNew}
-                    onChange={e => setForm({ ...form, isNew: e.target.checked })}
-                    className="w-5 h-5 text-brand-blue rounded focus:ring-brand-blue"
-                  />
-                  <span className="text-sm font-bold text-slate-700">Yeni</span>
-                </label>
-
-                <label className="flex items-center space-x-3 p-4 bg-slate-50 rounded-xl cursor-pointer hover:bg-slate-100 transition-all">
-                  <input
-                    type="checkbox"
-                    checked={form.isActive}
-                    onChange={e => setForm({ ...form, isActive: e.target.checked })}
-                    className="w-5 h-5 text-brand-blue rounded focus:ring-brand-blue"
-                  />
-                  <span className="text-sm font-bold text-slate-700">Aktif</span>
-                </label>
-              </div>
-
-              <div className="flex items-center space-x-4 pt-4">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-6 py-3 bg-slate-100 text-slate-600 font-black rounded-xl hover:bg-slate-200"
-                >
-                  İptal
-                </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="flex-1 px-6 py-3 bg-brand-blue text-white font-black rounded-xl hover:bg-brand-dark disabled:opacity-50 flex items-center justify-center space-x-2"
-                >
-                  <Save className="w-5 h-5" />
-                  <span>{saving ? 'Kaydediliyor...' : 'Kaydet'}</span>
-                </button>
-              </div>
+            <div className="px-10 py-8 bg-slate-50/50 border-t border-slate-50 flex items-center justify-end space-x-3">
+              <button onClick={() => setIsModalOpen(false)} className="px-6 py-4 text-slate-400 font-black text-sm capitalize tracking-widest hover:text-brand-dark transition-colors">
+                İptal
+              </button>
+              <button 
+                onClick={handleSave} 
+                disabled={saving}
+                className="px-10 py-4 bg-brand-blue text-white font-black text-sm capitalize tracking-widest rounded-2xl shadow-xl shadow-brand-blue/20 hover:bg-brand-dark transition-all disabled:opacity-50"
+              >
+                {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
+              </button>
             </div>
           </div>
         </div>
