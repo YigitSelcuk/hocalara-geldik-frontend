@@ -92,7 +92,7 @@ const BranchNewsManager: React.FC<BranchNewsManagerProps> = ({ branchId }) => {
     } catch (error: any) {
       console.error('Error uploading image:', error);
       if (error.response?.status === 413) {
-        showAlert('error', 'Dosya boyutu çok büyük (Maksimum 5MB)');
+        showAlert('error', 'Dosya boyutu çok büyük (Maksimum 10MB)');
       } else {
         showAlert('error', error.response?.data?.message || error.message || 'Resim yüklenemedi');
       }

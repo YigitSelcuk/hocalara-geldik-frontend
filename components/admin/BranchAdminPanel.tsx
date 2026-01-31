@@ -166,7 +166,7 @@ export const BranchAdminPanel: React.FC<BranchAdminPanelProps> = ({ user, branch
     } catch (error: any) {
       console.error('Image upload failed:', error);
       if (error.response?.status === 413) {
-        throw new Error('Dosya boyutu çok büyük (Maksimum 5MB)');
+        throw new Error('Dosya boyutu çok büyük (Maksimum 10MB)');
       }
       throw error;
     }

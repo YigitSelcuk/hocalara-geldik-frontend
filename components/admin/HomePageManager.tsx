@@ -1067,7 +1067,7 @@ export const HomePageManager = () => {
     } catch (error: any) {
       console.error('❌ Save error:', error);
       if (error.response?.status === 413) {
-            showAlert('error', 'Dosya boyutu çok büyük (Maksimum 5MB)');
+            showAlert('error', 'Dosya boyutu çok büyük (Maksimum 10MB)');
           } else {
             showAlert('error', 'Kaydetme hatası: ' + (error.response?.data?.message || error.message || 'Bilinmeyen hata'));
           }
