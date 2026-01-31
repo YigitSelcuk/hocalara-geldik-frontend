@@ -1079,23 +1079,34 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             <div className="px-10 py-8 bg-slate-50/50 border-t border-slate-50 flex items-center justify-end space-x-3">
               <button onClick={() => setIsModalOpen(false)} className="px-6 py-4 text-slate-400 font-black text-sm capitalize tracking-widest hover:text-brand-dark transition-colors">İptal</button>
               <button onClick={async () => {
+                // Set loading state if you have one, or disable button
                 let finalData = { ...formData };
-                if (modalType === 'slider' && selectedFile) {
-                  try {
-                    const url = await handleImageUpload(selectedFile);
-                    finalData.image = url;
-                  } catch (e) {
-                    return;
+                
+                // Upload images in parallel to speed up
+                try {
+                  const uploadPromises = [];
+                  
+                  if (modalType === 'slider' && selectedFile) {
+                    uploadPromises.push(
+                      handleImageUpload(selectedFile).then(url => {
+                        finalData.image = url;
+                      })
+                    );
                   }
-                }
-
-                if (modalType === 'slider' && selectedMobileFile) {
-                  try {
-                    const url = await handleImageUpload(selectedMobileFile);
-                    finalData.mobileImage = url;
-                  } catch (e) {
-                    return;
+                  
+                  if (modalType === 'slider' && selectedMobileFile) {
+                    uploadPromises.push(
+                      handleImageUpload(selectedMobileFile).then(url => {
+                        finalData.mobileImage = url;
+                      })
+                    );
                   }
+                  
+                  if (uploadPromises.length > 0) {
+                    await Promise.all(uploadPromises);
+                  }
+                } catch (e) {
+                  return; // handleImageUpload already shows alert
                 }
                 
                 // If mobile image is explicitly removed (cleared in form but no new file selected)
