@@ -263,9 +263,9 @@ const Header: React.FC = () => {
               <img 
                 src={getLogoUrl()} 
                 alt="Hocalara Geldik" 
-                className={`${currentBranch ? 'h-[100px] w-[100px] object-contain absolute top-1/2 -translate-y-1/2 mt-4' : 'h-7 md:h-8 w-auto'} transition-all duration-300 group-hover:scale-105 ${!isVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} 
+                className={`${currentBranch ? 'h-[110px] w-[110px] object-contain absolute top-1/2 -translate-y-1/2 mt-4 bg-white rounded-full p-2 shadow-sm' : 'h-7 md:h-8 w-auto'} transition-all duration-300 group-hover:scale-105 ${!isVisible ? 'opacity-0 pointer-events-none' : 'opacity-100'}`} 
               />
-              {currentBranch && <div className="w-[100px]"></div>}
+              {currentBranch && <div className="w-[110px]"></div>}
               {!currentBranch && (
                  <span className="hidden">Logo</span>
               )}
