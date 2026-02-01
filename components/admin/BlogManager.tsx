@@ -29,6 +29,12 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
     handleDelete
 }) => {
     const navigate = useNavigate();
+    
+    console.log('📰 BlogManager - blogPosts:', blogPosts);
+    console.log('📰 BlogManager - blogPosts count:', blogPosts?.length);
+    if (blogPosts && blogPosts.length > 0) {
+        console.log('📰 BlogManager - First blog post:', blogPosts[0]);
+    }
 
     return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -106,7 +112,12 @@ export const BlogManager: React.FC<BlogManagerProps> = ({
                             <span className="text-xs font-bold text-slate-500">{post.author}</span>
                             <div className="flex items-center space-x-2">
                                 <button
-                                    onClick={() => handleEdit('blog', post)}
+                                    onClick={() => {
+                                        console.log('📰 Edit button clicked for post:', post);
+                                        console.log('📰 Post ID:', post.id);
+                                        console.log('📰 Post title:', post.title);
+                                        handleEdit('blog', post);
+                                    }}
                                     className="p-1.5 bg-slate-50 text-slate-600 rounded-lg hover:bg-brand-blue hover:text-white transition-all"
                                 >
                                     <Settings2 className="w-3.5 h-3.5" />

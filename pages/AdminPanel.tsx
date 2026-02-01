@@ -252,6 +252,9 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
   // Initialize form data when modal opens or editing item changes
   useEffect(() => {
     if (isModalOpen) {
+      console.log('🔵 Modal opened - modalType:', modalType);
+      console.log('🔵 editingItem:', editingItem);
+      
       const data = editingItem || {};
       
       // Initialize features array if it doesn't exist or is not an array
@@ -274,6 +277,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
           score: ''
         });
       } else {
+        console.log('🔵 Setting formData to:', data);
         setFormData(data);
       }
 
@@ -456,6 +460,7 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
   };
 
   const handleEdit = (type: typeof modalType, item: any) => {
+    console.log('✏️ handleEdit called - type:', type, 'item:', item);
     setModalType(type);
     setEditingItem(item);
     setIsModalOpen(true);
@@ -597,7 +602,11 @@ export const AdminPanel = ({ user }: { user: AdminUser | null }) => {
             break;
           case 'user':
             updatedItem = await userService.update(editingItem.id, data);
-            setAdminUsers((prev: AdminUser[]) => prev.map((item: AdminUser) => item.id === editingItem.id ? updatedItem.data : item));
+            console.log('👤 User update response:', updatedItem);
+            console.log('👤 Updated user data:', updatedItem.data);
+            const updatedUser = updatedItem.data.user || updatedItem.data;
+            console.log('👤 Extracted user:', updatedUser);
+            setAdminUsers((prev: AdminUser[]) => prev.map((item: AdminUser) => item.id === editingItem.id ? updatedUser : item));
             break;
           case 'menu':
             updatedItem = await menuService.update(editingItem.id, data);

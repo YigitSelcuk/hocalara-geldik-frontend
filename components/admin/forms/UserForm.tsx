@@ -34,7 +34,11 @@ export const UserForm: React.FC<UserFormProps> = ({
         </div>
         <div className="space-y-2">
           <label className="text-[10px] font-black capitalize tracking-widest text-slate-400">Atanan Şube (Opsiyonel)</label>
-          <select value={formData.branchId || ''} onChange={e => setFormData({ ...formData, branchId: e.target.value || undefined })} className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold">
+          <select 
+            value={formData.branchId || ''} 
+            onChange={e => setFormData({ ...formData, branchId: e.target.value || null })} 
+            className="w-full bg-slate-50 border border-slate-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-blue font-bold"
+          >
             <option value="">Yok (Genel)</option>
             {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
           </select>
